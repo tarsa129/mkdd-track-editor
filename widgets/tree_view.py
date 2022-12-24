@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem
-from lib.libbol import BOL, get_full_name, get_kmp_name
+from lib.libbol import BOL, get_full_name
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QAction, QMenu
 
@@ -193,10 +193,8 @@ class ObjectEntry(NamedItem):
         
 
     
-        if self.bound_to.unk_2f == 1:
-            text_descrip = get_kmp_name(self.bound_to.unk_28)
-        else:
-            text_descrip = get_full_name(self.bound_to.objectid)
+
+        text_descrip = get_full_name(self.bound_to.objectid)
             
         if self.bound_to.route != -1:
             text_descrip += " (Route: {0})".format(self.bound_to.route)

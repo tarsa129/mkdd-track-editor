@@ -1385,9 +1385,6 @@ class JugemPoint(object):
 
         return jugem
 
-    @classmethod
-   
-
     def write(self, f):
         f.write(pack(">fff", self.position.x, self.position.y, self.position.z))
         self.rotation.write(f)
