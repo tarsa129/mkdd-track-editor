@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem
-from lib.libbol import BOL, get_full_name
+from lib.libbol import BOL, get_full_name, get_kmp_name
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QAction, QMenu
 
@@ -86,12 +86,12 @@ class CheckpointGroup(ObjectGroup):
 
 class ObjectPointGroup(ObjectGroup):
     def __init__(self, parent, bound_to):
-        super().__init__("Route", parent=parent, bound_to=bound_to)
+        super().__init__("Object Path", parent=parent, bound_to=bound_to)
         self.update_name()
 
     def update_name(self):
         index = self.parent().indexOfChild(self)
-        self.setText(0, "Route {0}".format(index))
+        self.setText(0, "Object Path {0}".format(index))
 
 
 
@@ -174,7 +174,7 @@ class ObjectRoutePoint(NamedItem):
 
         index = group.points.index(self.bound_to)
 
-        self.setText(0, "Route Point {0}".format(index))
+        self.setText(0, "Object Point {0}".format(index))
 
 class CameraRoutePoint(NamedItem):
     def update_name(self):
@@ -193,7 +193,11 @@ class ObjectEntry(NamedItem):
         
 
     
-       
+        if self.bound_to.unk_2f == 1:
+            text_descrip = get_kmp_name(self.bound_to.unk_28)
+        else:
+            text_descrip = get_full_name(self.bound_to.objectid)
+            
         if self.bound_to.route != -1:
             text_descrip += " (Route: {0})".format(self.bound_to.route)
            
@@ -272,6 +276,7 @@ class LevelDataTreeView(QTreeWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args)
+        #self.setMaximumWidth(600)
         self.resize(200, self.height())
         self.setColumnCount(1)
         self.setHeaderLabel("Track Data Entries")
@@ -403,7 +408,7 @@ class LevelDataTreeView(QTreeWidget):
                 point_item = Checkpoint(group_item, "Checkpoint", point)
 
         for route in boldata.routes:
-            route_item = ObjectPointGroup(self.routes, route)
+            route_item = ObjectPointGroup(self.objectroutes, route)
 
             for point in route.points:
                 point_item = ObjectRoutePoint(route_item, "Object route point", point)
