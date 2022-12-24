@@ -8,5 +8,7 @@
             "Unused",
             "Unused",
             "Unused"],
-  "Assets": ["heyho1.bca", "heyho1.bmd", "heyho1.btp", "heyho1shadow.bmd"]
+  "Assets": ["heyho1.bca", "heyho1.bmd", "heyho1.btp", "heyho1shadow.bmd"],
+  "Default Values" : [15, 0, 0,null, null, null, null, null],
+  "Route Info": 3
 }

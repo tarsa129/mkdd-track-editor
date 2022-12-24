@@ -8,5 +8,7 @@
             "Unused",
             "Unused",
             "Unused"],
-  "Assets": ["wanwan1.bca", "wanwan1.bla", "wanwan1.bls", "wanwan1.bmd", "wanwan1pile.bmd", "wanwan1shadow.bmd"]
+  "Assets": ["wanwan1.bca", "wanwan1.bla", "wanwan1.bls", "wanwan1.bmd", "wanwan1pile.bmd", "wanwan1shadow.bmd"],
+    "Default Values" : [20, 200, 5000,null, null, null, null, null],
+  "Route Info": null
 }

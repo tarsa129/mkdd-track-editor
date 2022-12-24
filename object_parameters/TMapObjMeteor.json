@@ -8,5 +8,7 @@
             "Unused",
             "Unused",
             "Unused"],
-  "Assets": ["geostar.bmd"]
+  "Assets": ["geostar.bmd"],
+    "Default Values" : [0, 80, 0,0, null, null, null, null],
+  "Route Info": null
 }

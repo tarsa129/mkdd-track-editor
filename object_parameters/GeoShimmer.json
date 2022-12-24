@@ -8,5 +8,7 @@
             "Unused",
             "Unused",
             "Unused"],
-  "Assets": ["shimmer_ind.bti"]
+  "Assets": ["shimmer_ind.bti"],
+  "Default Values": [0, 4000, 4080, 64, 255, null, null, null],
+  "Route Info": null
 }

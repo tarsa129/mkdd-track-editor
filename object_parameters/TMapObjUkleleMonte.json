@@ -8,5 +8,7 @@
             "Unknown 6",
             "Unknown 7",
             "Unknown 8"],
-  "Assets": ["uklele_monte.bck", "uklele_monte.bmd"]
+  "Assets": ["uklele_monte.bck", "uklele_monte.bmd"],
+      "Default Values" : [1100, 10000, null,null, null, null, null, null],
+  "Route Info": null
 }

@@ -8,7 +8,7 @@
             "Unknown 6",
             "Unknown 7",
             "Unknown 8"],
-  "Assets": ["marel_b.bmd", "marel_a_bye1.bck", "marel_a_clap1.bck", "marel_a_sh.bmd"],
-      "Default Values" : [4000, 10000, null,null, null, null, null, null],
-  "Route Info": null
+  "Assets": ["testwall1.bmd"],
+  "Default Values": [0, 0, 0, 0, 0, 0, 0, 0],
+  "Route Info": 2
 }

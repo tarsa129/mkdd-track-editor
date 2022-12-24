@@ -1,6 +1,6 @@
 {
   "Object Parameters":
-          ["Unknown 1",
+          ["Radius",
             "Unknown 2",
             "Unused",
             "Unused",
@@ -8,5 +8,7 @@
             "Unused",
             "Unused",
             "Unused"],
-  "Assets": ["yoshiheli.bmd", "yoshiheli.btk"]
+  "Assets": ["yoshiheli.bmd", "yoshiheli.btk"],
+    "Default Values": [10000, 40000, null, null, null, null, null, null],
+  "Route Info": 3
 }

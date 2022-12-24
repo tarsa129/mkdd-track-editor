@@ -1,12 +1,14 @@
 {
   "Object Parameters":
-          ["Unknown 1",
+          ["Group ID Bitfield?",
             "Unused",
             "Unused",
             "Unused",
             "Unused",
-            "Unknown 6",
-            "Unknown 7",
-            "Unknown 8"],
-  "Assets": [""]
+            "Transition Speed",
+            "Low water level Y value",
+            "High water level Y value"],
+  "Assets": [""],
+    "Default Values" : [0, null, null,null, null, 40, 405, 685],
+  "Route Info": null
 }

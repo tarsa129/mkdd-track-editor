@@ -8,5 +8,7 @@
             "Unused",
             "Unused",
             "Unused"],
-  "Assets": ["bubble1.bmd", "bubble1.btk"]
+  "Assets": ["bubble1.bmd", "bubble1.btk"],
+    "Default Values" : [1, 0, 0,3, 13, null, null, null],
+  "Route Info": null
 }

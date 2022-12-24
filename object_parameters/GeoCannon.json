@@ -8,5 +8,7 @@
             "Unused",
             "Unused",
             "Unused"],
-  "Assets": ["cannon1.bca", "cannon1.bmd", "cannon1.brk"]
+  "Assets": ["cannon1.bca", "cannon1.bmd", "cannon1.brk"],
+  "Default Values": [0, 0, 0, 2, null, null, null, null],
+  "Route Info": null
 }

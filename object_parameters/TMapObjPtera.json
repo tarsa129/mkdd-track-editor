@@ -8,5 +8,7 @@
             "Unused",
             "Unknown 7",
             "Unused"],
-  "Assets": ["ptera.bmd", "pteraflya.bck", "pteraflyb.bck"]
+  "Assets": ["ptera.bmd", "pteraflya.bck", "pteraflyb.bck"],
+  "Default Values": [0, null, null, null, 0, null, 0, null],
+  "Route Info": 3
 }

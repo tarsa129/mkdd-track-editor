@@ -80,6 +80,9 @@ class Vector3(object):
     def __str__(self):
         return str((self.x, self.y, self.z))
 
+    def distance(self, other):
+        #this is not true distance - changes in y are punished so that overlapping stuff doesn't affect calculations.
+        return sqrt( (self.x - other.x) ** 2 + 2 * (self.y - other.y) ** 2 + (self.z - other.z) ** 2  )
 
 class Vector4(Vector3):
     def __init__(self, x, y, z, w):
@@ -154,7 +157,7 @@ class Plane(object):
 
 
 class Triangle(object):
-    def __init__(self, p1, p2, p3):
+    def __init__(self, p1, p2, p3, material = None):
         self.origin = p1
         self.p2 = p2
         self.p3 = p3
@@ -162,6 +165,8 @@ class Triangle(object):
         self.p1_to_p3 = p3 - p1
 
         self.normal = self.p1_to_p2.cross(self.p1_to_p3)
+        
+        self.material = material
 
         if not self.normal.is_zero():
             self.normal.normalize()

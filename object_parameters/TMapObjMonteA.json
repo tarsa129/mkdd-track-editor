@@ -8,5 +8,7 @@
             "Unknown 6",
             "Unknown 7",
             "Unknown 8"],
-  "Assets": ["monl_a.bmd", "monl_a_bye1.bck", "monl_a_clap1.bck", "monl_a_sh.bmd"]
+  "Assets": ["monl_a.bmd", "monl_a_bye1.bck", "monl_a_clap1.bck", "monl_a_sh.bmd"],
+      "Default Values" : [4000, 10000, null,null, null, null, null, null],
+  "Route Info": null
 }

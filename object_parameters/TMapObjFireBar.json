@@ -1,12 +1,14 @@
 {
   "Object Parameters":
           ["Number of Fire Balls",
-            "Unknown 2",
-            "Unknown 3",
-            "Unknown 4",
+            "Rotation Seed",
+            "Fireball Distance",
+            "Number of Arms",
             "Unused",
             "Unused",
             "Unused",
             "Unused"],
-  "Assets": ["firebar1fire.bmd", "firebar1fire.btk", "firebar1.bmd"]
+  "Assets": ["firebar1fire.bmd", "firebar1fire.btk", "firebar1.bmd"],
+  "Default Values": [9, 60, 280, 3, null, null, null, null],
+  "Route Info": null
 }

@@ -9,5 +9,7 @@
             "Unused",
             "Unused"],
   "Assets": ["sanbo1.bmd", "sanbo1_breack_body.bmd", "sanbo1_breack_head.bmd",
-			"sanbo1_fall_left.bca", "sanbo1_fall_right.bca", "sanbo1_revivie.bca", "sanbo1_wait.bca"]
+			"sanbo1_fall_left.bca", "sanbo1_fall_right.bca", "sanbo1_revivie.bca", "sanbo1_wait.bca"],
+  "Default Values": [89, 0, 90, null, null, null, null, null],
+  "Route Info": null
 }

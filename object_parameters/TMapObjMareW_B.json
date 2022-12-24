@@ -8,5 +8,7 @@
             "Unknown 6",
             "Unknown 7",
             "Unknown 8"],
-  "Assets": ["marew_b.bmd", "marew_a_dance.bck"]
+  "Assets": ["marew_b.bmd", "marew_a_dance.bck"],
+      "Default Values" : [4000, 10000, null,null, null, null, null, null],
+  "Route Info": null
 }

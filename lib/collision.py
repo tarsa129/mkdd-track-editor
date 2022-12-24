@@ -64,7 +64,8 @@ def subdivide_grid(minx, minz,
 
 
     for i, face in triangles:
-        v1_index, v2_index, v3_index = face
+        v1_index, v2_index, v3_index = face[0:3]
+
 
         v1 = vertices[v1_index[0]-1]
         v2 = vertices[v2_index[0]-1]
@@ -112,12 +113,21 @@ MAX_X = 200000
 MAX_Z = 200000
 
 
+
 class Collision(object):
     def __init__(self, verts, faces):
         self.verts = verts
         self.faces = faces
         self.triangles = []
-        for v1i, v2i, v3i in self.faces:
+        #print(self.faces)
+        for face in self.faces:
+                
+            v1i, v2i, v3i = face[0:3]
+        
+            col_type = 0x0100
+            if len(face) > 3:
+                col_type = face[3]
+        
             #print(v1i, v2i, v3i, len(self.verts))
             x, y, z = verts[v1i[0]-1]
             v1 = Vector3(x, -z, y)
@@ -126,7 +136,8 @@ class Collision(object):
             x, y, z = verts[v3i[0]-1]
             v3 = Vector3(x, -z, y)
 
-            self.triangles.append(Triangle(v1,v2,v3))
+            
+            self.triangles.append(Triangle(v1,v2,v3,col_type))
 
         self.cell_size = 2000
 
@@ -210,10 +221,17 @@ class Collision(object):
             else:
                 return result1
 
-    def _collide(self, verts, triangles, x, y, z, dir_y):
+    def _collide(self, verts, triangles, x, y, z, dir_y, ground = False):
         hit = None
         for i, face in triangles:#face in self.faces:#
-            v1index, v2index, v3index = face
+            #print(face)
+            v1index, v2index, v3index = face[:3]
+            col_type = 0x0100
+            if len(face) > 3:
+                col_type = face[3]
+            if (col_type & 0x0A00) != 0 and ground:
+                print("no grounding on this deadzone")
+                continue
 
             v1 = verts[v1index[0]-1]
             v2 = verts[v2index[0]-1]

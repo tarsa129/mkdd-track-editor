@@ -71,7 +71,11 @@ def draw_collision(verts, faces):
     glBegin(GL_TRIANGLES)
 
     i = -1
-    for v1, v2, v3 in faces:
+    
+    for face in faces:
+    
+    
+        v1, v2, v3 = face[0:3]
         i += 1
         v1x, v1y, v1z = verts[v1[0]-1]
         v2x, v2y, v2z = verts[v2[0]-1]

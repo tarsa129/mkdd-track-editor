@@ -5,7 +5,8 @@ import PyQt5.QtWidgets as QtWidgets
 import PyQt5.QtCore as QtCore
 from PyQt5.QtCore import QSize, pyqtSignal, QPoint, QRect
 from PyQt5.QtCore import Qt
-from widgets.data_editor import choose_data_editor
+from widgets.data_editor import choose_data_editor, ObjectEdit, CameraEdit, AreaEdit
+from widgets.more_buttons import MoreButtons
 
 class PikminSideWidget(QWidget):
     def __init__(self, *args, **kwargs):
@@ -13,7 +14,8 @@ class PikminSideWidget(QWidget):
         parent = args[0]
 
         self.parent = parent
-
+        #self.setMaximumSize(QSize(700, 1500))
+        #self.setMinimumWidth(300)
         self.verticalLayout = QVBoxLayout(self)
         self.verticalLayout.setAlignment(Qt.AlignTop)
 
@@ -26,7 +28,7 @@ class PikminSideWidget(QWidget):
         self.verticalLayout.setObjectName("verticalLayout")
 
         self.button_add_object = QPushButton(parent)
-
+        self.button_stop_object = QPushButton(parent)
         self.button_remove_object = QPushButton(parent)
         self.button_ground_object = QPushButton(parent)
         #self.button_move_object = QPushButton(parent)
@@ -36,10 +38,12 @@ class PikminSideWidget(QWidget):
         #self.button_remove_object.setDisabled(True)
 
         self.button_add_object.setText("Add Object")
+        self.button_stop_object.setText("Stop Adding Object")
         self.button_remove_object.setText("Remove Object(s)")
         self.button_ground_object.setText("Ground Object(s)")
 
         self.button_add_object.setToolTip("Hotkey: Ctrl+A")
+        self.button_stop_object.setToolTip("Hotkey: T")
         self.button_remove_object.setToolTip("Hotkey: Delete")
         self.button_ground_object.setToolTip("Hotkey: G")
 
@@ -55,9 +59,17 @@ class PikminSideWidget(QWidget):
         #self.lineedit_rotationy = QLineEdit(parent)
         #self.lineedit_rotationz = QLineEdit(parent)
         self.verticalLayout.addWidget(self.button_add_object)
+        self.verticalLayout.addWidget(self.button_stop_object)
+        
         self.verticalLayout.addWidget(self.button_remove_object)
         self.verticalLayout.addWidget(self.button_ground_object)
         #self.verticalLayout.addWidget(self.button_move_object)
+        
+
+        self.more_buttons = MoreButtons(parent)
+        self.more_buttons.add_buttons(None)
+        self.more_buttons.setMinimumSize(self.button_add_object.width(), 30)  
+        self.verticalLayout.addWidget(self.more_buttons)
         self.verticalLayout.addStretch(20)
 
         self.name_label = QLabel(parent)
@@ -68,6 +80,8 @@ class PikminSideWidget(QWidget):
         #self.identifier_label.setFont(font)
         #self.identifier_label.setMinimumSize(self.name_label.width(), 50)
         #self.identifier_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        
+
         self.verticalLayout.addWidget(self.name_label)
         #self.verticalLayout.addWidget(self.identifier_label)
 
@@ -120,13 +134,19 @@ class PikminSideWidget(QWidget):
             del self.object_data_edit
             self.object_data_edit = None
 
+
         self.objectlist = []
 
     def update_info(self):
+        #if isinstance(self.object_data_edit, ObjectEdit):
+        #    self.object_data_edit.set_default_values()
         if self.object_data_edit is not None:
             self.object_data_edit.update_data()
 
+
+    #updates the data editor
     def set_info(self, obj, update3d, usedby=[]):
+       
         if usedby:
             self.name_label.setText("Selected: {}\nUsed by: {}".format(type(obj).__name__,
                                     ", ".join(usedby)))
@@ -138,18 +158,35 @@ class PikminSideWidget(QWidget):
             self.object_data_edit.deleteLater()
             del self.object_data_edit
             self.object_data_edit = None
-            print("should be removed")
+            #print("should be removed")
 
+        
+        
+        #return a CLASS to add
         editor = choose_data_editor(obj)
         if editor is not None:
 
             self.object_data_edit = editor(self, obj)
             self.verticalLayout.addWidget(self.object_data_edit)
             self.object_data_edit.emit_3d_update.connect(update3d)
+            
+            if isinstance(self.object_data_edit, ObjectEdit) or isinstance(self.object_data_edit, CameraEdit):
+                #self.object_data_edit.set_default_values()
+                self.object_data_edit.emit_route_update.connect(lambda obj, old, new: self.parent.update_route_used_by(obj, old, new) )
+            elif isinstance(self.object_data_edit, AreaEdit):
+                self.object_data_edit.emit_camera_update.connect(lambda obj, old, new: self.parent.update_camera_used_by(obj, old, new) )
+
 
         self.objectlist = []
         self.comment_label.setText("")
 
+    #updates the side buttons
+    def set_buttons(self, obj):
+        #so obj is used to determined - this is when stuff switches?
+        #print("side info set buttons")
+        self.more_buttons.add_buttons(obj)
+
+    #upon one thing being selected
     def set_objectlist(self, objs):
         self.objectlist = []
         objectnames = []
@@ -168,10 +205,12 @@ class PikminSideWidget(QWidget):
                 text += "\nAnd {0} more object".format(diff)
             elif diff > 1:
                 text += "\nAnd {0} more objects".format(diff)
+                
+            self.more_buttons.add_buttons_multi(objs)
 
         else:
             text = ""
 
         self.comment_label.setText(text)
 
-
+    

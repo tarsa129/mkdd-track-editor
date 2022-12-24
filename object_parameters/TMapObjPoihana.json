@@ -8,5 +8,7 @@
             "Unused",
             "Unused",
             "Unused"],
-  "Assets": ["poihana1.bmd", "poihana1.btp", "poihana1_damamge.bck", "poihana1_throw.bck", "poihana1_wait.bck", "poihana1shadow.bmd"]
+  "Assets": ["poihana1.bmd", "poihana1.btp", "poihana1_damamge.bck", "poihana1_throw.bck", "poihana1_wait.bck", "poihana1shadow.bmd"],
+  "Default Values" : [0, 40, 60,60, null, null, null, null],
+  "Route Info": 2
 }

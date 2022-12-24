@@ -8,5 +8,7 @@
             "Unused",
             "Unused",
             "Unused"],
-  "Assets": ["bird1.bmd", "bird1.bca"]
+  "Assets": ["bird1.bmd", "bird1.bca"],
+    "Default Values" : [9, 1, 15,0, null, null, null, null],
+  "Route Info": 3
 }

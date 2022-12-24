@@ -3,6 +3,7 @@ import traceback
 import os
 from time import sleep
 from timeit import default_timer
+from io import StringIO
 from collections import namedtuple
 from math import sin, cos, atan2, radians, degrees, pi, tan
 import json
@@ -749,10 +750,20 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                     i = 0
                     for idx, route in enumerate(self.level_file.routes):
                         for obj in route.points:
-                            if (not ((idx in object_routes and selectable_objectroutes) or
-                                     (idx in camera_routes and selectable_cameraroutes) or
-                                     (idx not in assigned_routes and selectable_unassignedroutes))):
-                                continue
+                            objlist.append(
+                                ObjectSelectionEntry(obj=obj,
+                                                 pos1=obj.position,
+                                                 pos2=None,
+                                                 pos3=None,
+                                                 rotation=None))
+                            self.models.render_generic_position_colored_id(obj.position, id + (offset+i) * 4)
+                            i += 1
+                offset = len(objlist)
+                #print("can cam routes be selected?", vismenu.cameraroutes.is_selectable())
+                if vismenu.cameraroutes.is_selectable():
+                    i = 0
+                    for route in self.level_file.cameraroutes:
+                        for obj in route.points:
                             objlist.append(
                                 ObjectSelectionEntry(obj=obj,
                                                  pos1=obj.position,
@@ -774,6 +785,43 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                                              rotation=None))
                         self.models.render_generic_position_colored_id(obj.start, id+(offset+i)*4)
                         self.models.render_generic_position_colored_id(obj.end, id+(offset+i)*4 + 1)
+                offset = len(objlist)
+
+                if vismenu.cameras.is_selectable():
+                    for i, obj in enumerate(self.level_file.cameras):
+                        if obj in self.selected and obj.camtype in [4, 5, 6, 7]:
+                            objlist.append(
+                                ObjectSelectionEntry(obj=obj,
+                                                     pos1=obj.position,
+                                                     pos2=obj.position2,
+                                                     pos3=obj.position3,
+                                                     rotation=obj.rotation))
+                            self.models.render_generic_position_rotation_colored_id(obj.position, obj.rotation,
+                                                                                    id + (offset + i) * 4)
+                            self.models.render_generic_position_colored_id(obj.position2, id + (offset + i) * 4 + 1)
+                            self.models.render_generic_position_colored_id(obj.position3, id + (offset + i) * 4 + 2)
+                        else:
+                            objlist.append(
+                                ObjectSelectionEntry(obj=obj,
+                                                     pos1=obj.position,
+                                                     pos2=None,
+                                                     pos3=None,
+                                                     rotation=obj.rotation))
+                            self.models.render_generic_position_rotation_colored_id(obj.position, obj.rotation,
+                                                                                    id + (offset + i) * 4)
+                offset = len(objlist)
+                if vismenu.lightparams.is_selectable():
+                   
+                    obj = self.level_file
+                    
+                    objlist.append( 
+                                ObjectSelectionEntry(obj=obj,
+                                                 pos1=obj.lightsource,
+                                                 pos2=None,
+                                                 pos3=None,
+                                                 rotation=None))
+                    self.models.render_generic_position_colored_id(obj.lightsource, id + (offset) * 4)
+
 
                 offset = len(objlist)
 
@@ -804,26 +852,35 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                         (vismenu.objects.is_selectable(), self.level_file.objects.objects),
                         (vismenu.kartstartpoints.is_selectable(), self.level_file.kartpoints.positions),
                         (vismenu.areas.is_selectable(), self.level_file.areas.areas),
-                        (vismenu.respawnpoints.is_selectable(), self.level_file.respawnpoints)
+                        (vismenu.respawnpoints.is_selectable(), self.level_file.respawnpoints),
+                        (vismenu.lightparams.is_selectable(), self.level_file.lightparams)
                         ):
                     offset = len(objlist)
                     if not is_selectable:
                         continue
 
                     for i, obj in enumerate(collection):
-                        objlist.append(
-                            ObjectSelectionEntry(obj=obj,
-                                                 pos1=obj.position,
-                                                 pos2=None,
-                                                 pos3=None,
-                                                 rotation=obj.rotation))
-                        self.models.render_generic_position_rotation_colored_id(obj.position, obj.rotation,
-                                                                                id + (offset + i) * 4)
+                        if hasattr(obj, "rotation"):
+                            objlist.append(
+                                ObjectSelectionEntry(obj=obj,
+                                                    pos1=obj.position,
+                                                    pos2=None,
+                                                    pos3=None,
+                                                    rotation=obj.rotation))
+                            self.models.render_generic_position_rotation_colored_id(obj.position, obj.rotation, id + (offset + i) * 4 )
+                        else:
+                            objlist.append(
+                                ObjectSelectionEntry(obj=obj,
+                                                    pos1=obj.position,
+                                                    pos2=None,
+                                                    pos3=None,
+                                                    rotation=None))
+                            self.models.render_generic_position_colored_id(obj.position, id + (offset + i) * 4 )
                 for entry in objlist:
-                    assert isinstance(entry, ObjectSelectionEntry)
-
-                assert len(objlist)*4 < id
-                print("We queued up", len(objlist))
+                    assert isinstance(entry, ObjectSelectionEntry)                                                               
+                len_objlist = len(objlist)
+                assert len_objlist*4 < id
+                print("We queued up", len_objlist)
                 pixels = glReadPixels(click_x, click_y, clickwidth, clickheight, GL_RGB, GL_UNSIGNED_BYTE)
                 #print(pixels, click_x, click_y, clickwidth, clickheight)
                 selected = {}
@@ -839,29 +896,13 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                         index = (upper << 16) | (pixels[i * 3 + 1] << 8) | pixels[i * 3 + 2]
                         indexes.add(index)
 
-                """for index in indexes:
-                    entry = objlist[index // 4]
-                    obj = entry[0]
-
-                    if index & 0b1:
-                        if obj not in selected:
-                            selected[obj] = 2
-                            selected_positions.append(entry[2])
-                        elif selected[obj] == 1:
-                            selected[obj] = 3
-                            selected_positions.append(entry[2])
-                    else:
-                        if obj not in selected:
-                            selected[obj] = 1
-                            selected_positions.append(entry[1])
-                            if index & 0b10:
-                                selected_rotations.append(entry[3])
-                        elif selected[obj] == 2:
-                            selected[obj] = 3
-                            selected_positions.append(entry[1])"""
-
+                
                 for index in indexes:
-                    entry: ObjectSelectionEntry = objlist[index // 4]
+                    try:
+                        entry: ObjectSelectionEntry = objlist[index // 4]
+                    except:
+                        print("index selection error with index", index)
+                        continue
                     obj = entry.obj
                     if obj not in selected:
                         selected[obj] = 0
@@ -884,7 +925,6 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                             elements_exist |= 4
 
                     selected[obj] = elements_exist
-
                 #print("select time taken", default_timer() - start)
                 #print("result:", selected)
                 selected = [x for x in selected.keys()]
@@ -990,27 +1030,14 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
             #for pikminobject in objects:
             #    self.models.render_object(pikminobject, pikminobject in selected)
 
-            visible_objectroutes = vismenu.objectroutes.is_visible()
-            visible_cameraroutes = vismenu.cameraroutes.is_visible()
-            visible_unassignedroutes = vismenu.unassignedroutes.is_visible()
 
-            if visible_objectroutes or visible_cameraroutes or visible_unassignedroutes:
+            if vismenu.itemroutes.is_visible():
                 routes_to_highlight = set()
-                camera_routes = set()
-                object_routes = set()
 
-                for camera in self.level_file.cameras:
-                    if camera.route >= 0 and camera in select_optimize:
-                        routes_to_highlight.add(camera.route)
-                    camera_routes.add(camera.route)
 
                 for obj in self.level_file.objects.objects:
-                    if obj.pathid >= 0 and obj in select_optimize:
-                        routes_to_highlight.add(obj.pathid)
-                    object_routes.add(obj.pathid)
-
-                assigned_routes = camera_routes.union(object_routes)
-                shared_routes = camera_routes.intersection(object_routes)
+                    if obj.route >= 0 and obj in select_optimize:
+                        routes_to_highlight.add(obj.route)
 
                 for i, route in enumerate(self.level_file.routes):
                     if (not ((i in object_routes and visible_objectroutes) or
@@ -1041,7 +1068,29 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                     glEnd()
                     if selected:
                         glLineWidth(1.0)
+            if vismenu.cameraroutes.is_visible():
+                routes_to_highlight = set()
+                for camera in self.level_file.cameras:
+                    if camera.route >= 0 and camera in select_optimize:
+                        routes_to_highlight.add(camera.route)
 
+                for i, route in enumerate(self.level_file.cameraroutes):
+                    selected = i in routes_to_highlight
+                    for point in route.points:
+                        point_selected = point in select_optimize
+                        self.models.render_generic_position_colored(point.position, point_selected, "camerapoint")
+                        selected = selected or point_selected
+
+                    if selected:
+                        glLineWidth(3.0)
+                    glBegin(GL_LINE_STRIP)
+                    glColor3f(0.0, 0.0, 0.0)
+                    for point in route.points:
+                        pos = point.position
+                        glVertex3f(pos.x, -pos.z, pos.y)
+                    glEnd()
+                    if selected:
+                        glLineWidth(1.0)
             if vismenu.enemyroute.is_visible():
                 enemypoints_to_highlight = set()
                 for respawn_point in self.level_file.respawnpoints:
@@ -1102,32 +1151,33 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                     if group_selected:
                         glLineWidth(1.0)
 
-                    # Draw the connections between each enemy point group.
-                    pointA = group.points[-1]
-                    color_gen = random.Random(group.id)
-                    color_components = [
-                        color_gen.random() * 0.5,
-                        color_gen.random() * 0.5,
-                        color_gen.random() * 0.2,
-                    ]
-                    color_gen.shuffle(color_components)
-                    color_components[2] += 0.5
-                    glColor3f(*color_components)
-                    for groupB in self.level_file.enemypointgroups.groups:
-                        if group is groupB or len(groupB.points) == 0:
-                            continue
-                        pointB = groupB.points[0]
-                        if pointA.link == pointB.link:
-                            groupB_selected = any(map(lambda p: p in select_optimize, groupB.points))
-                            if group_selected or groupB_selected:
-                                glLineWidth(3.0)
-                            glBegin(GL_LINES)
-                            glVertex3f(pointA.position.x, -pointA.position.z, pointA.position.y)
-                            glVertex3f(pointB.position.x, -pointB.position.z, pointB.position.y)
-                            glEnd()
-                            if group_selected or groupB_selected:
-                                glLineWidth(1.0)
+                    if len(group.points) > 0:
 
+                        # Draw the connections between each enemy point group.
+                        pointA = group.points[-1]
+                        color_gen = random.Random(group.id)
+                        color_components = [
+                            color_gen.random() * 0.5,
+                            color_gen.random() * 0.5,
+                            color_gen.random() * 0.2,
+                        ]
+                        color_gen.shuffle(color_components)
+                        color_components[2] += 0.5
+                        glColor3f(*color_components)
+                        for groupB in self.level_file.enemypointgroups.groups:
+                            if group is groupB or len(groupB.points) == 0:
+                                continue
+                            pointB = groupB.points[0]
+                            if pointA.link == pointB.link:
+                                groupB_selected = any(map(lambda p: p in select_optimize, groupB.points))
+                                if group_selected or groupB_selected:
+                                    glLineWidth(3.0)
+                                glBegin(GL_LINES)
+                                glVertex3f(pointA.position.x, -pointA.position.z, pointA.position.y)
+                                glVertex3f(pointB.position.x, -pointB.position.z, pointB.position.y)
+                                glEnd()
+                                if group_selected or groupB_selected:
+                                    glLineWidth(1.0)
             if vismenu.checkpoints.is_visible():
                 checkpoints_to_highlight = set()
                 count = 0
@@ -1255,26 +1305,32 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                         glColor4f(*colors_selection)
                     else:
                         glColor4f(*colors_area)
-
-                    self.models.draw_wireframe_cube(object.position, object.rotation, object.scale*100)
+                    if object.shape == 1:
+                        self.models.draw_wireframe_cylinder(object.position, object.rotation, object.scale*100 / 2)
+                    else:
+                        self.models.draw_wireframe_cube(object.position, object.rotation, object.scale*100)
             if vismenu.cameras.is_visible():
                 for object in self.level_file.cameras:
                     self.models.render_generic_position_rotation_colored("camera",
                                                                 object.position, object.rotation,
                                                                  object in select_optimize)
 
-                    if object in select_optimize:
+                    if object in select_optimize and object.camtype in [4, 5, 6]:
                         glColor3f(0.0, 1.0, 0.0)
                         self.models.draw_sphere(object.position3, 300)
                         glColor3f(1.0, 0.0, 0.0)
                         self.models.draw_sphere(object.position2, 300)
-
-
             if vismenu.respawnpoints.is_visible():
                 for object in self.level_file.respawnpoints:
                     self.models.render_generic_position_rotation_colored("respawn",
                                                                 object.position, object.rotation,
                                                                  object in select_optimize)
+            if vismenu.lightparams.is_visible():
+                for object in self.level_file.lightparams:
+                    self.models.render_generic_position_colored(object.position, object in select_optimize, "lightparam")
+                object = self.level_file
+                self.models.render_generic_position_colored(object.lightsource, object in select_optimize, "lightsource")
+            
             if self.minimap is not None and self.minimap.is_available() and vismenu.minimap.is_visible():
                 self.models.render_generic_position(self.minimap.corner1, self.minimap.corner1 in positions)
                 self.models.render_generic_position(self.minimap.corner2, self.minimap.corner2 in positions)
@@ -1492,16 +1548,21 @@ class FilterViewMenu(QMenu):
         self.hide_all.triggered.connect(self.handle_hide_all)
         self.addAction(self.hide_all)
 
+        self.kartstartpoints = ObjectViewSelectionToggle("Kart Start Points", self)
         self.enemyroute = ObjectViewSelectionToggle("Enemy Routes", self)
-        self.objectroutes = ObjectViewSelectionToggle("Object Routes", self)
-        self.cameraroutes = ObjectViewSelectionToggle("Camera Routes", self)
-        self.unassignedroutes = ObjectViewSelectionToggle("Unassigned Routes", self)
         self.checkpoints = ObjectViewSelectionToggle("Checkpoints", self)
+        self.respawnpoints = ObjectViewSelectionToggle("Respawn Points", self)
+        
         self.objects = ObjectViewSelectionToggle("Objects", self)
+        self.itemroutes = ObjectViewSelectionToggle("Object Paths", self)
+        
         self.areas = ObjectViewSelectionToggle("Areas", self)
         self.cameras = ObjectViewSelectionToggle("Cameras", self)
-        self.respawnpoints = ObjectViewSelectionToggle("Respawn Points", self)
-        self.kartstartpoints = ObjectViewSelectionToggle("Kart Start Points", self)
+        self.cameraroutes = ObjectViewSelectionToggle("Camera Paths", self)
+
+        self.lightparams = ObjectViewSelectionToggle("Light Positions", self)
+        
+        
         self.minimap = ObjectViewSelectionToggle("Minimap", self)
 
         for action in self.get_entries():
@@ -1510,16 +1571,17 @@ class FilterViewMenu(QMenu):
 
     def get_entries(self):
         return (self.enemyroute,
-                self.objectroutes,
+                self.itemroutes,
                 self.cameraroutes,
-                self.unassignedroutes,
                 self.checkpoints,
                 self.objects,
                 self.areas,
                 self.cameras,
                 self.respawnpoints,
                 self.kartstartpoints,
+                self.lightparams,
                 self.minimap)
+
 
     def handle_show_all(self):
         for action in self.get_entries():

@@ -8,5 +8,7 @@
             "Unused",
             "Unused",
             "Unused"],
-  "Assets": ["swimnossie.bmd", "swimnossie.bca", "swimnossie.btp"]
+  "Assets": ["swimnossie.bmd", "swimnossie.bca", "swimnossie.btp"],
+  "Default Values": [0, 0, null, null, null, null, null, null],
+  "Route Info": 3
 }

@@ -1,12 +1,15 @@
 {
   "Object Parameters":
           ["Number of Fireballs",
-            "Unknown 2",
-            "Unknown 3",
+            "Rotations in 6 seconds",
+            "Fireball distance",
             "Unknown 4",
             "Unused",
             "Unused",
             "Unused",
             "Unused"],
-  "Assets": ["kpfirebar1.bmd", "kpfirebar1.bck", "kpfirebar1fire.bmd", "kpfirebar1fire.brk", "kpfirebar1fire.btk"]
+  "Assets": ["kpfirebar1.bmd", "kpfirebar1.bck", "kpfirebar1fire.bmd", "kpfirebar1fire.brk", "kpfirebar1fire.btk"],
+    "Default Values" : [6, 5, 900,0, null, null, null, null],
+  "Route Info": null
+}
 }

@@ -15,7 +15,7 @@ from PyQt5.QtCore import Qt
 import PyQt5.QtGui as QtGui
 
 import lib.libbol as libbol
-from widgets.data_editor import choose_data_editor
+from widgets.data_editor import choose_data_editor, ObjectEdit
 from lib.libbol import get_full_name
 
 
@@ -122,11 +122,20 @@ class ErrorAnalyzer(QMdiSubWindow):
                             i, index
                         ))
 
+        #check for empty (and used!) routes
+        for i, group in enumerate(bol.routes):
+            
+            if len(group.used_by) > 0 :
+                if len(group.points) == 0:
+                    write_line("Route {0} is used, but does not have any points".format( i ))
+                elif len(group.points) == 1:  
+                    write_line("Route {0} is used, but only has one point".format( i ))
+
         # Validate path id in objects
         for object in bol.objects.objects:
-            if object.pathid < -1 or object.pathid + 1 > len(bol.routes):
+            if object.route < -1 or object.route + 1 > len(bol.routes):
                 write_line("Map object {0} uses path id {1} that does not exist".format(
-                    get_full_name(object.objectid), object.pathid
+                    get_full_name(object.objectid), object.route
                 ))
 
         # Validate Kart start positions
@@ -154,17 +163,29 @@ class ErrorAnalyzer(QMdiSubWindow):
         for i, area in enumerate(bol.areas.areas):
             if area.camera_index < -1 or area.camera_index + 1 > len(bol.cameras):
                 write_line("Area {0} uses invalid camera index {1}".format(i, area.camera_index))
+            elif area.area_type == 1 and area.camera_index == -1:
+                write_line("Area {0} uses invalid camera index {1}".format(i, area.camera_index))
 
+        have_start = False
+        first_start = -1
         # Check cameras
         for i, camera in enumerate(bol.cameras):
             if camera.nextcam < -1 or camera.nextcam + 1 > len(bol.cameras):
                 write_line("Camera {0} uses invalid nextcam (next camera) index {1}".format(
                     i, camera.nextcam
                 ))
-            if camera.route < -1 or camera.route + 1 > len(bol.routes):
-                write_line("Camera {0} uses invalid path id {1}".format(i,
-                                                                        camera.route))
-
+            if camera.route < -1 or camera.route + 1 > len(bol.cameraroutes):
+                write_line("Camera {0} uses invalid path id {1}".format(i, camera.route))
+            if camera.camtype == 1 and camera.route < 0:
+                write_line("Camera {0} uses invalid path id {1}".format(i, camera.route))
+            
+            if camera.startcamera != 0 and not have_start:
+                first_start = i
+                have_start = True
+            elif camera.startcamera != 0 and have_start:
+                write_line("Camera {0} is a starting cam, but Camera {1} is already a starting cam".format(i, first_start))
+        
+        
         if len(bol.checkpoints.groups) == 0:
             write_line("You need at least one checkpoint group!")
 
@@ -202,6 +223,73 @@ class ErrorAnalyzer(QMdiSubWindow):
                                     i-1, i, gindex
                                 ))
                                 break
+class SpecificAddOWindow(QMdiSubWindow):
+    triggered = pyqtSignal(object)
+    closing = pyqtSignal()
+
+    def closeEvent(self, event):
+        self.closing.emit()
+        super().closeEvent(event)
+
+    @catch_exception
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if "windowtype" in kwargs:
+            self.window_name = kwargs["windowtype"]
+        else:
+            self.window_name = "Add Object"
+
+        self.resize(900, 500)
+        self.setMinimumSize(QSize(300, 300))
+
+        self.centralwidget = QWidget(self)
+        self.setWidget(self.centralwidget)
+        self.entity = None
+
+        font = QFont()
+        font.setFamily("Consolas")
+        font.setStyleHint(QFont.Monospace)
+        font.setFixedPitch(True)
+        font.setPointSize(10)
+
+        self.dummywidget = QWidget(self)
+        self.dummywidget.setMaximumSize(0,0)
+
+
+        self.verticalLayout = QVBoxLayout(self.centralwidget)
+        self.verticalLayout.setAlignment(Qt.AlignTop)
+        self.verticalLayout.addWidget(self.dummywidget)
+
+        self.editor_widget = None
+        self.editor_layout = QScrollArea()#QVBoxLayout(self.centralwidget)
+        self.verticalLayout.addWidget(self.editor_layout)
+        #self.textbox_xml = QTextEdit(self.centralwidget)
+        self.button_savetext = QPushButton(self.centralwidget)
+        self.button_savetext.setText("Add Object")
+        self.button_savetext.setToolTip("Hotkey: Ctrl+S")
+        self.button_savetext.setMaximumWidth(400)
+        self.button_savetext.setDisabled(True)
+
+        self.verticalLayout.addWidget(self.button_savetext)
+        self.setWindowTitle(self.window_name)
+        self.created_object = None
+        #QtWidgets.QShortcut(Qt.CTRL + Qt.Key_S, self).activated.connect(self.emit_add_object)
+
+    def keyPressEvent(self, event: QtGui.QKeyEvent):
+        if event.key() == Qt.CTRL + Qt.Key_S:
+            self.emit_add_object()
+        else:
+            super().keyPressEvent(event)
+
+    def emit_add_object(self):
+        self.button_savetext.pressed.emit()
+
+    def get_content(self): 
+        return self.created_object
+
+
+
+
 
 
 class AddPikObjectWindow(QMdiSubWindow):
@@ -327,17 +415,19 @@ class AddPikObjectWindow(QMdiSubWindow):
         self.verticalLayout.addWidget(self.category_menu)
 
         self.objecttypes = {
+            "Enemy Path": libbol.EnemyPointGroup,
             "Enemy Point": libbol.EnemyPoint,
             "Checkpoint": libbol.Checkpoint,
-            "Route Point": libbol.RoutePoint,
+            "Object Path": libbol.Route,
+            "Object Point": libbol.RoutePoint,
             "Object": libbol.MapObject,
             "Area": libbol.Area,
             "Camera": libbol.Camera,
             "Respawn Point": libbol.JugemPoint,
             "Kart Start Point": libbol.KartStartPoint,
-            "Enemy Path": libbol.EnemyPointGroup,
+            
             "Checkpoint Group": libbol.CheckpointGroup,
-            "Route": libbol.Route,
+           
             "Light Param": libbol.LightParam,
             "Minigame Param": libbol.MGEntry
         }
@@ -376,7 +466,15 @@ class AddPikObjectWindow(QMdiSubWindow):
             if data_editor is not None:
                 self.editor_widget = data_editor(self, self.created_object)
                 self.editor_layout.setWidget(self.editor_widget)
-                self.editor_widget.update_data()
+                
+                
+                
+                #print("isobject", isinstance(self.editor_widget, ObjectEdit))
+                if isinstance(self.editor_widget, ObjectEdit):
+                    self.editor_widget.update_data(load_defaults = True)
+                    self.editor_widget.set_default_values()
+                else:
+                    self.editor_widget.update_data()
 
         else:
             self.editor_widget.deleteLater()

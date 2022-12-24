@@ -22,9 +22,12 @@ class ObjectGroup(QTreeWidgetItem):
     def remove_children(self):
         self.takeChildren()
 
+    def sort(self):
+        return
 
 class ObjectGroupObjects(ObjectGroup):
     def sort(self):
+        
         """items = []
         for i in range(self.childCount()):
             items.append(self.takeChild(0))
@@ -35,6 +38,20 @@ class ObjectGroupObjects(ObjectGroup):
             self.addChild(item)"""
         self.sortChildren(0, 0)
 
+class ObjectGroupCameras(ObjectGroup):
+    def set_name(self):  
+        
+        if self.bound_to is not None:
+            index = -1
+            for idx, camera in enumerate( self.bound_to ):
+                if camera.startcamera == 1:
+                    index = idx
+                    break
+            if index != -1:
+                self.setText(0, "Cameras, Start Camera: {0}".format( index) )
+            else:
+                self.setText(0, "Cameras")
+            
 
 # Groups
 class EnemyPointGroup(ObjectGroup):
@@ -77,6 +94,15 @@ class ObjectPointGroup(ObjectGroup):
         self.setText(0, "Route {0}".format(index))
 
 
+
+class CameraPointGroup(ObjectGroup):
+    def __init__(self, parent, bound_to):
+        super().__init__("Camera Path", parent=parent, bound_to=bound_to)
+        self.update_name()
+
+    def update_name(self):
+        index = self.parent().indexOfChild(self)
+        self.setText(0, "Camera Path {0}".format(index))
 # Entries in groups or entries without groups
 class NamedItem(QTreeWidgetItem):
     def __init__(self, parent, name, bound_to, index=None):
@@ -130,7 +156,7 @@ class Checkpoint(NamedItem):
             if other_group_item == group_item:
                 break
             else:
-                print("Hmmm,",other_group_item.text(0), len(other_group_item.bound_to.points), offset)
+                #print("Hmmm,",other_group_item.text(0), len(other_group_item.bound_to.points), offset)
                 group_object = other_group_item.bound_to
                 offset += len(group_object.points)
 
@@ -150,14 +176,29 @@ class ObjectRoutePoint(NamedItem):
 
         self.setText(0, "Route Point {0}".format(index))
 
+class CameraRoutePoint(NamedItem):
+    def update_name(self):
+        group_item = self.parent()
+        group = group_item.bound_to
 
+        index = group.points.index(self.bound_to)
+
+        self.setText(0, "Camera Point {0}".format(index))
 class ObjectEntry(NamedItem):
     def __init__(self, parent, name, bound_to):
         super().__init__(parent, name, bound_to)
         bound_to.widget = self
 
     def update_name(self):
-        self.setText(0, get_full_name(self.bound_to.objectid))
+        
+
+    
+       
+        if self.bound_to.route != -1:
+            text_descrip += " (Route: {0})".format(self.bound_to.route)
+           
+        self.setText(0, text_descrip)
+        #self.setText(0, get_full_name(self.bound_to.objectid))
 
     def __lt__(self, other):
         return self.bound_to.objectid < other.bound_to.objectid
@@ -174,22 +215,43 @@ class KartpointEntry(NamedItem):
 
 
 class AreaEntry(NamedItem):
+    def __init__(self, parent, name, bound_to):
+        super().__init__(parent, name, bound_to)
+        bound_to.widget = self
+
     def update_name(self):
-        self.setText(0, "Area (Type: {0})".format(self.bound_to.area_type))
+        disp_string = "Area (Type: {0})".format(self.bound_to.area_type)
+        if self.bound_to.area_type == 1 or self.bound_to.area_type == 0 and self.bound_to.unk1 == 1:
+            disp_string += ", (Cam: {0})".format(self.bound_to.camera_index)
+        elif self.bound_to.area_type == 7:
+            disp_string += ", (Light: {0})".format(self.bound_to.lightparam_index)
+        self.setText(0, disp_string)
 
 
 class CameraEntry(NamedItem):
+    def __init__(self, parent, name, bound_to, index):
+        super().__init__(parent, name, bound_to, index)
+        bound_to.widget = self
+
     def update_name(self):
-        self.setText(0, "Camera {0} (Type: {1})".format(self.index, self.bound_to.camtype))
+        
+        if self.bound_to.camtype in [1, 4, 5]:
+            text_descrip = "Camera {0}: (Type: {1} - Route {2})".format(self.index, self.bound_to.camtype, self.bound_to.route)
+        elif self.bound_to.camtype in [2] and self.bound_to.name == "mkwi":
+            text_descrip = "Camera {0}: (Type: {1} - Route {2})".format(self.index, self.bound_to.camtype, self.bound_to.route)
+        else:
+            text_descrip = "Camera {0}: (Type: {1})".format(self.index, self.bound_to.camtype)
+
+        self.setText(0, text_descrip)
 
 
 class RespawnEntry(NamedItem):
     def update_name(self):
         for i in range(self.parent().childCount()):
             if self == self.parent().child(i):
-                self.setText(0, "Respawn Point {0} (ID: {1})".format(i, self.bound_to.respawn_id))
+                #self.setText(0, "Respawn Point {0} (ID: {1})".format(i, self.bound_to.respawn_id))
+                self.setText(0, "Respawn ID: {0})".format(self.bound_to.respawn_id))
                 break
-
 
 class LightParamEntry(NamedItem):
     def update_name(self):
@@ -210,22 +272,27 @@ class LevelDataTreeView(QTreeWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args)
-
         self.resize(200, self.height())
         self.setColumnCount(1)
         self.setHeaderLabel("Track Data Entries")
 
         self.bolheader = BolHeader()
         self.addTopLevelItem(self.bolheader)
-
+        
+        self.kartpoints = self._add_group("Kart Start Points")
         self.enemyroutes = self._add_group("Enemy Paths")
         self.checkpointgroups = self._add_group("Checkpoint Groups")
-        self.routes = self._add_group("Routes")
-        self.objects = self._add_group("Objects", ObjectGroupObjects)
-        self.kartpoints = self._add_group("Kart Start Points")
-        self.areas = self._add_group("Areas")
-        self.cameras = self._add_group("Cameras")
         self.respawnpoints = self._add_group("Respawn Points")
+        
+        self.objects = self._add_group("Objects", ObjectGroupObjects)
+        self.objectroutes = self._add_group("Object Paths")
+           
+        self.areas = self._add_group("Areas")
+        self.cameras = self._add_group("Cameras", ObjectGroupCameras)
+        self.cameraroutes = self._add_group("Camera Paths")
+        self.cameras.set_name()
+        
+        
         self.lightparams = self._add_group("Light Params")
         self.mgentries = self._add_group("Minigame Params")
 
@@ -265,7 +332,7 @@ class LevelDataTreeView(QTreeWidget):
             context_menu.exec(self.mapToGlobal(pos))
             context_menu.destroy()
             del context_menu
-        elif isinstance(item, (EnemyPointGroup, ObjectPointGroup, CheckpointGroup)):
+        elif isinstance(item, (EnemyPointGroup, ObjectPointGroup, CameraPointGroup, CheckpointGroup)):
             context_menu = QMenu(self)
             select_all_action = QAction("Select All", self)
             reverse_action = QAction("Reverse", self)
@@ -310,7 +377,8 @@ class LevelDataTreeView(QTreeWidget):
     def reset(self):
         self.enemyroutes.remove_children()
         self.checkpointgroups.remove_children()
-        self.routes.remove_children()
+        self.objectroutes.remove_children()
+        self.cameraroutes.remove_children()
         self.objects.remove_children()
         self.kartpoints.remove_children()
         self.areas.remove_children()
@@ -338,7 +406,14 @@ class LevelDataTreeView(QTreeWidget):
             route_item = ObjectPointGroup(self.routes, route)
 
             for point in route.points:
-                point_item = ObjectRoutePoint(route_item, "Route Point", point)
+                point_item = ObjectRoutePoint(route_item, "Object route point", point)
+        for route in boldata.cameraroutes:
+            route_item = CameraPointGroup(self.cameraroutes, route)
+
+            for point in route.points:
+                point_item = CameraRoutePoint(route_item, "Camera route point", point)
+
+
 
         for object in boldata.objects.objects:
             object_item = ObjectEntry(self.objects, "Object", object)
@@ -356,6 +431,7 @@ class LevelDataTreeView(QTreeWidget):
 
         for i, camera in enumerate(boldata.cameras):
             item = CameraEntry(self.cameras, "Camera", camera, i)
+        self.cameras.set_name()
 
         for i, lightparam in enumerate(boldata.lightparams):
             item = LightParamEntry(self.lightparams, "LightParam", lightparam, i)
@@ -373,3 +449,19 @@ class LevelDataTreeView(QTreeWidget):
 
         for item in items:
             self.objects.addChild(item)"""
+            
+    def bound_to_group(self, levelfile):
+        self.enemyroutes.bound_to = levelfile.enemypointgroups
+        self.checkpointgroups.bound_to = levelfile.checkpoints
+        self.objectroutes.bound_to = levelfile.routes
+        self.cameraroutes.bound_to = levelfile.cameraroutes
+        self.objects.bound_to = levelfile.objects
+        self.kartpoints.bound_to = levelfile.kartpoints
+        self.areas.bound_to = levelfile.areas
+        self.cameras.bound_to = levelfile.cameras
+        self.cameras.set_name()
+        self.respawnpoints.bound_to = levelfile.respawnpoints
+        self.lightparams.bound_to = levelfile.lightparams
+        self.mgentries.bound_to = levelfile.mgentries
+        
+        #print(self.cameras.bound_to.assoc)

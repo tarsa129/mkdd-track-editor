@@ -25,12 +25,16 @@ class ObjectModels(object):
         self.cameraroute = Cube(colors["CameraRoutes"])
         self.unassignedroute = Cube(colors["UnassignedRoutes"])
         self.sharedroute = Cube(colors["SharedRoutes"])
+        self.itempoint = Cube(colors["ItemRoutes"])
+        self.camerapoint = Cube(colors["CameraRoutes"])
         self.enemypoint = Cube(colors["EnemyRoutes"])
         self.camera = GenericObject(colors["Camera"])
         self.areas = GenericObject(colors["Areas"])
         self.objects = GenericObject(colors["Objects"])
         self.respawn = GenericObject(colors["Respawn"])
         self.startpoints = GenericObject(colors["StartPoints"])
+        self.lightsource = Cube(colors["LightSource"])
+        self.lightparam = Cube(colors["LightParam"])
         #self.purplecube = Cube((0.7, 0.7, 1.0, 1.0))
 
         self.playercolors = [Cube(color) for color in ((1.0, 0.0, 0.0, 1.0),
@@ -64,6 +68,9 @@ class ObjectModels(object):
         with open("resources/unitcylinder.obj", "r") as f:
             self.cylinder = Model.from_obj(f, rotate=True)
 
+        with open("resources/unitcylinder.obj", "r") as f:
+            self.wireframe_cylinder = Model.from_obj(f, rotate=True)
+
         with open("resources/unitcube_wireframe.obj", "r") as f:
             self.wireframe_cube = Model.from_obj(f, rotate=True)
 
@@ -77,9 +84,8 @@ class ObjectModels(object):
                     filename = os.path.basename(file)
                     objectname = filename.rsplit(".", 1)[0]
                     self.models[objectname] = TexturedModel.from_obj_path(os.path.join(dirpath, file), rotate=True)
-        for cube in (self.cube, self.checkpointleft, self.checkpointright, self.objectroute, self.cameraroute,
-                     self.unassignedroute, self.sharedroute, self.enemypoint, self.objects, self.areas, self.respawn,
-                     self.startpoints, self.camera):
+        for cube in (self.cube, self.checkpointleft, self.checkpointright, self.itempoint, self.camerapoint, self.enemypoint,
+                     self.objects, self.areas, self.respawn, self.startpoints, self.camera, self.lightparam, self.lightsource):
             cube.generate_displists()
 
         for cube in self.playercolors:
@@ -129,6 +135,16 @@ class ObjectModels(object):
         glScalef(radius, height, radius)
 
         self.cylinder.render()
+        glPopMatrix()
+
+    def draw_wireframe_cylinder(self, position, rotation, scale):
+        glPushMatrix()
+        glTranslatef(position.x, -position.z, position.y)
+        mtx = rotation.mtx
+        glMultMatrixf(mtx)
+        glTranslatef(0, 0, scale.y/2)
+        glScalef(-scale.z, scale.x, scale.y)
+        self.wireframe_cylinder.render()
         glPopMatrix()
 
     def draw_wireframe_cube(self, position, rotation, scale):

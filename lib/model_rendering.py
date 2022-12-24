@@ -192,6 +192,10 @@ class Material(object):
             qimage = QtGui.QImage(texturepath, fmt)
             qimage = qimage.convertToFormat(QtGui.QImage.Format_ARGB32)
 
+            if qimage.isNull():
+                qimage = QtGui.QImage(32, 32, QtGui.QImage.Format_ARGB32)
+                qimage.fill(QtGui.QColor(0, 0, 0, 255))
+
             imgdata = bytes(qimage.bits().asarray(qimage.width() * qimage.height() * 4))
 
             glTexImage2D(GL_TEXTURE_2D, 0, 4, qimage.width(), qimage.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, imgdata)

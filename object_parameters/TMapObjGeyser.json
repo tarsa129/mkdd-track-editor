@@ -8,5 +8,7 @@
             "Unused",
             "Unused",
             "Unused"],
-  "Assets": ["geyser1.bmd", "geyser11.bca", "geyser12.bca", "geyser13.bca", "geyser14.bca"]
+  "Assets": ["geyser1.bmd", "geyser1.btk", "geyser11.bca", "geyser12.bca", "geyser13.bca", "geyser14.bca"],
+  "Default Values": [500, 0, 110, 65, null, null, null, null],
+  "Route Info": null
 }

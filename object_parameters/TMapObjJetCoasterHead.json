@@ -8,5 +8,7 @@
             "Unused",
             "Unused",
             "Unused"],
-  "Assets": ["babyjet.bck", "babyjet_body.bmd", "babyjet_head.bmd"]
+  "Assets": ["babyjet.bck", "babyjet_body.bmd", "babyjet_head.bmd"],
+  "Default Values": [8, 100, null, null, null, null, null, null],
+  "Route Info": null
 }

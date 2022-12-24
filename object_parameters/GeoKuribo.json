@@ -1,12 +1,14 @@
 {
   "Object Parameters":
-          ["Unknown 1",
+          ["Respawn Time",
             "Speed",
-            "Unknown 3",
+            "Animation Speed",
             "Unused",
             "Unused",
             "Unused",
             "Unused",
             "Unused"],
-  "Assets": ["kuribo1.bmd", "kuribo1_l.bca", "kuribo1_r.bca", "kuribo1shadow.bmd"]
+  "Assets": ["kuribo1.bmd", "kuribo1_l.bca", "kuribo1_r.bca", "kuribo1shadow.bmd"],
+  "Default Values" : [600, 40, 120,null, null, null, null, null],
+  "Route Info": 2
 }

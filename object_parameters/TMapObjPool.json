@@ -8,5 +8,7 @@
             "Unused",
             "Unused",
             "Unused"],
-  "Assets": ["pool.bmd", "pool.btk"]
+  "Assets": ["pool.bmd", "pool.btk"],
+  "Default Values": [5, null, null, null, null, null, null, null],
+  "Route Info": null
 }

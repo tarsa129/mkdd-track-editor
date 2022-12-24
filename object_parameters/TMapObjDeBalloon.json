@@ -8,5 +8,7 @@
             "Unknown 6",
             "Unknown 7",
             "Unknown 8"],
-  "Assets": ["deballoon1.bmd", "deballoon1.btp"]
+  "Assets": ["deballoon1.bmd", "deballoon1.btp"],
+  "Default Values": [0, null, null, null, null, null, null, null],
+  "Route Info": null
 }

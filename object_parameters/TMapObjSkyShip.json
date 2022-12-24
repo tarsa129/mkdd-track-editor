@@ -8,5 +8,8 @@
             "Unused",
             "Unused",
             "Unused"],
-  "Assets": ["skyship1.bmd", "skyship1shadow.bmd"]
+  "Assets": ["skyship1.bmd", "skyship1shadow.bmd"],
+    "Default Values" : [0, null, null,null, null, null, null, null],
+  "Route Info": 3
+  
 }

@@ -8,5 +8,7 @@
             "Unused",
             "Unused",
             "Unused"],
-  "Assets": ["sun.bmd", "sun.btk"]
+  "Assets": ["sun.bmd", "sun.btk"],
+  "Default Values": [null, null, null, null, null, null, null, null],
+  "Route Info": null
 }

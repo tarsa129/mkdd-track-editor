@@ -18,9 +18,9 @@ AXIS_X = 0
 AXIS_Y = 1
 AXIS_Z = 2
 
-X_COLOR = (233 / 255, 56 / 255, 79 / 255, 1.0)
-Y_COLOR = (130 / 255, 204 / 255, 26 / 255, 1.0)
-Z_COLOR = (48 / 255, 132 / 255, 235 / 255, 1.0)
+X_COLOR = (1.0, 0.1, 0.1, 1.0)
+Y_COLOR = (0.0, 1.0, 0.0, 1.0)
+Z_COLOR = (0.0, 0.0, 1.0, 1.0)
 MIDDLE_COLOR = (0.5, 0.5, 0.5, 1.0)
 HOVER_COLOR = (248 / 255, 185 / 255, 0 / 255, 1.0)
 
@@ -122,8 +122,9 @@ class Gizmo(Model):
 
     @catch_exception
     def render(self, is3d=True, hover_id=0xFF):
-        if self.hidden:
+        if self.hidden: 
             return
+        handle_hit = any(self.was_hit.values())
 
         handle_hit = any(self.was_hit.values())
 
@@ -136,7 +137,7 @@ class Gizmo(Model):
         if not handle_hit or self.was_hit["gizmo_z"]:
             glColor4f(*Z_COLOR if hover_id != 0x3 else HOVER_COLOR)
             self.named_meshes["gizmo_z"].render()
-
+            
         if is3d and (not handle_hit or self.was_hit["rotation_x"]):
             glColor4f(*X_COLOR if hover_id != 0x4 else HOVER_COLOR)
             self.named_meshes["rotation_x"].render()
@@ -146,7 +147,7 @@ class Gizmo(Model):
         if is3d and (not handle_hit or self.was_hit["rotation_z"]):
             glColor4f(*Z_COLOR if hover_id != 0x6 else HOVER_COLOR)
             self.named_meshes["rotation_z"].render()
-
+            mesh.render()
         if not is3d and (not handle_hit or self.was_hit["middle"]):
             glColor4f(*MIDDLE_COLOR if hover_id != 0x7 else HOVER_COLOR)
             self.named_meshes["middle"].render()

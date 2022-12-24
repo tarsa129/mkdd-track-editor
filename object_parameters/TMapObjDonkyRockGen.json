@@ -1,12 +1,14 @@
 {
   "Object Parameters":
-          ["Unknown 1",
-            "Unknown 2",
-            "Unknown 3",
-            "Unknown 4",
+          ["Not 0: Delay of ~1.5 seconds for the second rock",
+            "Minimal cycle time (frames)",
+            "Speed",
+            "Bouncing factor",
             "Unused",
             "Unused",
             "Unused",
             "Unused"],
-  "Assets": ["donkyrock1.bmd", "donkyrock1shadow.bmd"]
+  "Assets": ["donkyrock1.bmd", "donkyrock1shadow.bmd"],
+    "Default Values" : [1, 400, 30,50, null, null, null, null],
+  "Route Info": 2
 }

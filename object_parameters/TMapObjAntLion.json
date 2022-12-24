@@ -8,5 +8,7 @@
             "Unused",
             "Unused",
             "Unused"],
-  "Assets": ["antlion.bmd", "antlion_eat.bck"]
+  "Assets": ["antlion.bmd", "antlion_eat.bck"],
+  "Default Values": [570, 0, null, null, null, null, null, null],
+  "Route Info": null
 }
