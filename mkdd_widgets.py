@@ -708,11 +708,11 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                 offset = 0
                 if self.minimap is not None and vismenu.minimap.is_selectable() and self.minimap.is_available():
                     objlist.append(
-                        ObjectSelectionEntry(obj=self.minimap,
-                                             pos1=self.minimap.corner1,
-                                             pos2=self.minimap.corner2,
-                                             pos3=None,
-                                             rotation=None)
+                    ObjectSelectionEntry(obj=self.minimap,
+                                            pos1=self.minimap.corner1,
+                                            pos2=self.minimap.corner2,
+                                            pos3=None,
+                                            rotation=None)
                     )
                     self.models.render_generic_position_colored_id(self.minimap.corner1, id + (offset) * 4)
                     self.models.render_generic_position_colored_id(self.minimap.corner2, id + (offset) * 4 + 1)
@@ -739,16 +739,9 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
 
                 offset = len(objlist)
 
-                selectable_objectroutes = vismenu.objectroutes.is_selectable()
-                selectable_cameraroutes = vismenu.cameraroutes.is_selectable()
-                selectable_unassignedroutes = vismenu.unassignedroutes.is_selectable()
-
-                if selectable_objectroutes or selectable_cameraroutes or selectable_unassignedroutes:
-                    camera_routes = set(camera.route for camera in self.level_file.cameras)
-                    object_routes = set(obj.pathid for obj in self.level_file.objects.objects)
-                    assigned_routes = camera_routes.union(object_routes)
+                if vismenu.itemroutes.is_selectable():
                     i = 0
-                    for idx, route in enumerate(self.level_file.routes):
+                    for route in self.level_file.routes:
                         for obj in route.points:
                             objlist.append(
                                 ObjectSelectionEntry(obj=obj,
@@ -822,31 +815,6 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                                                  rotation=None))
                     self.models.render_generic_position_colored_id(obj.lightsource, id + (offset) * 4)
 
-
-                offset = len(objlist)
-
-                if vismenu.cameras.is_selectable():
-                    for i, obj in enumerate(self.level_file.cameras):
-                        if obj in self.selected:
-                            objlist.append(
-                                ObjectSelectionEntry(obj=obj,
-                                                     pos1=obj.position,
-                                                     pos2=obj.position2,
-                                                     pos3=obj.position3,
-                                                     rotation=obj.rotation))
-                            self.models.render_generic_position_rotation_colored_id(obj.position, obj.rotation,
-                                                                                    id + (offset + i) * 4)
-                            self.models.render_generic_position_colored_id(obj.position2, id + (offset + i) * 4 + 1)
-                            self.models.render_generic_position_colored_id(obj.position3, id + (offset + i) * 4 + 2)
-                        else:
-                            objlist.append(
-                                ObjectSelectionEntry(obj=obj,
-                                                     pos1=obj.position,
-                                                     pos2=None,
-                                                     pos3=None,
-                                                     rotation=obj.rotation))
-                            self.models.render_generic_position_rotation_colored_id(obj.position, obj.rotation,
-                                                                                    id + (offset + i) * 4)
 
                 for is_selectable, collection in (
                         (vismenu.objects.is_selectable(), self.level_file.objects.objects),
@@ -1040,22 +1008,10 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                         routes_to_highlight.add(obj.route)
 
                 for i, route in enumerate(self.level_file.routes):
-                    if (not ((i in object_routes and visible_objectroutes) or
-                             (i in camera_routes and visible_cameraroutes) or
-                             (i not in assigned_routes and visible_unassignedroutes))):
-                        continue
-
                     selected = i in routes_to_highlight
-                    route_color = "unassignedroute"
-                    if i in shared_routes:
-                        route_color = "sharedroute"
-                    elif i in object_routes:
-                        route_color = "objectroute"
-                    elif i in camera_routes:
-                        route_color = "cameraroute"
                     for point in route.points:
                         point_selected = point in select_optimize
-                        self.models.render_generic_position_colored(point.position, point_selected, route_color)
+                        self.models.render_generic_position_colored(point.position, point_selected, "itempoint")
                         selected = selected or point_selected
 
                     if selected:
@@ -1104,7 +1060,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                 for group in self.level_file.enemypointgroups.groups:
                     if len(group.points) == 0:
                         continue 
-                        
+
                     group_selected = False
                     for point in group.points:
                         if point in select_optimize:
