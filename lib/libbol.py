@@ -1802,7 +1802,7 @@ class BOL(object):
         self.unk1 = 0
         self.unk2 = 0
         self.unk3 = 0
-        self.unk4 = 0
+        self.starting_point_count = 0
         self.unk5 = 0
         self.unk6 = 0
 
@@ -1892,7 +1892,7 @@ class BOL(object):
         bol.unk2 = read_uint8(f)
         bol.unk3 = read_uint8(f)
         bol.shadow_color = ColorRGB.from_file(f)
-        bol.unk4 = read_uint8(f)
+        bol.starting_point_count = read_uint8(f)
         bol.unk5 = read_uint8(f)
 
         sectioncounts[LIGHTPARAM] = read_uint8(f)
@@ -1937,6 +1937,7 @@ class BOL(object):
 
         f.seek(sectionoffsets[KARTPOINT])
         bol.kartpoints = KartStartPoints.from_file(f, (sectionoffsets[AREA] - sectionoffsets[KARTPOINT])//0x28)
+        assert len(bol.kartpoints.positions) == bol.starting_point_count
 
         f.seek(sectionoffsets[AREA])
         bol.areas = Areas.from_file(f, sectioncounts[AREA])
@@ -2080,7 +2081,7 @@ class BOL(object):
                 self.fog_startz, self.fog_endz,
                 self.unk1, self.unk2, self.unk3))
         self.shadow_color.write(f)
-        f.write(pack(">BB", self.unk4, self.unk5))
+        f.write(pack(">BB", len(self.kartpoints.positions), self.unk5))
         f.write(pack(">BB", len(self.lightparams), len(self.mgentries)))
         f.write(pack(">B", self.unk6))
 

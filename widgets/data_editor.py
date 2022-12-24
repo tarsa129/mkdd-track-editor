@@ -60,6 +60,7 @@ class DataEditor(QWidget):
 
         self.bound_to = bound_to
         self.vbox = QVBoxLayout(self)
+        self.vbox.setContentsMargins(0, 0, 0, 0)
 
         self.description = self.add_label("Object")
 
@@ -97,8 +98,15 @@ class DataEditor(QWidget):
         label = self.create_label(text)
         label.setText(text)
         layout.addWidget(label)
-        for widget in widgetlist:
-            layout.addWidget(widget)
+        if len(widgetlist) > 1:
+            child_layout = QHBoxLayout()
+            child_layout.setSpacing(1)
+            child_layout.setContentsMargins(0, 0, 0, 0)
+            for widget in widgetlist:
+                child_layout.addWidget(widget)
+            layout.addLayout(child_layout)
+        elif widgetlist:
+            layout.addWidget(widgetlist[0])
         return layout
 
     def add_checkbox(self, text, attribute, off_value, on_value):
@@ -637,8 +645,6 @@ class BOLEdit(DataEditor):
                                            MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
         self.shadow_color = self.add_multiple_integer_input("Shadow Color", "shadow_color", ["r", "g", "b"],
                                                             MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        self.unk4 = self.add_integer_input("Unknown 4", "unk4",
-                                           MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
         self.unk5 = self.add_integer_input("Unknown 5", "unk5",
                                            MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
         self.unk6 = self.add_integer_input("Unknown 6", "unk6",
@@ -668,7 +674,6 @@ class BOLEdit(DataEditor):
         self.unk1.setText(str(obj.unk1))
         self.unk2.setChecked(obj.unk2 != 0)
         self.unk3.setText(str(obj.unk3))
-        self.unk4.setText(str(obj.unk4))
         self.unk5.setText(str(obj.unk5))
         self.unk6.setText(str(obj.unk6))
         self.shadow_color[0].setText(str(obj.shadow_color.r))
@@ -692,13 +697,13 @@ class ObjectEdit(DataEditor):
         self.rotation = self.add_rotation_input()
         self.objectid = self.add_dropdown_input("Object Type", "objectid", REVERSEOBJECTNAMES)
 
-        self.pathid = self.add_integer_input("Object Path ID", "pathid",
+        self.pathid = self.add_integer_input("Route ID", "pathid",
                                              MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
 
         self.unk_28 = self.add_integer_input("Unknown 0x28", "unk_28",
                                              MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
 
-        self.unk_2a = self.add_integer_input("Object Path Point ID", "unk_2a",
+        self.unk_2a = self.add_integer_input("Route Point ID", "unk_2a",
                                              MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
         self.presence_filter = self.add_integer_input("Presence Mask", "presence_filter",
                                                       MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
@@ -899,7 +904,7 @@ class CameraEdit(DataEditor):
                                            MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
         self.unk3 = self.add_integer_input("Unknown 3", "unk3",
                                            MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
-        self.route = self.add_integer_input("Object Path ID", "route",
+        self.route = self.add_integer_input("Route ID", "route",
                                             MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
         self.routespeed = self.add_integer_input("Route Speed", "routespeed",
                                                  MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)

@@ -3,14 +3,14 @@ import traceback
 import os
 from time import sleep
 from timeit import default_timer
-from io import StringIO
+from collections import namedtuple
 from math import sin, cos, atan2, radians, degrees, pi, tan
 import json
 
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
-from PyQt5.QtGui import QMouseEvent, QWheelEvent, QPainter, QColor, QFont, QFontMetrics, QPolygon, QImage, QPixmap, QKeySequence
+from PyQt5.QtGui import QCursor, QMouseEvent, QWheelEvent, QPainter, QColor, QFont, QFontMetrics, QPolygon, QImage, QPixmap, QKeySequence
 from PyQt5.QtWidgets import (QWidget, QListWidget, QListWidgetItem, QDialog, QMenu, QLineEdit,
                             QMdiSubWindow, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QTextEdit, QAction, QShortcut)
 import PyQt5.QtWidgets as QtWidgets
@@ -35,6 +35,8 @@ from editor_controls import UserControl
 from lib.libpath import Paths
 from lib.libbol import BOL
 import numpy
+
+ObjectSelectionEntry = namedtuple("ObjectSelectionEntry", ["obj", "pos1", "pos2", "pos3", "rotation"])
 
 MOUSE_MODE_NONE = 0
 MOUSE_MODE_MOVEWP = 1
@@ -108,6 +110,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
         # multisampling is enabled.
         self.pick_framebuffer = None
         self.pick_texture = None
+        self.pick_depth_texture = None
 
         self._zoom_factor = 80
         self.setFocusPolicy(Qt.ClickFocus)
@@ -164,11 +167,12 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
         self.editorconfig = None
         self.visibility_menu = None
 
-        #self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
 
         self.spawnpoint = None
         self.alternative_mesh = None
         self.highlight_colltype = None
+        self.cull_faces = False
 
         self.shift_is_pressed = False
         self.rotation_is_pressed = False
@@ -184,6 +188,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
         self._lasttime = 0
 
         self._frame_invalid = False
+        self._mouse_pos_changed = False
 
         self.MOVE_UP = 0
         self.MOVE_DOWN = 0
@@ -206,6 +211,12 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
         self.camera_height = 1000
         self.last_move = None
         self.backgroundcolor = (255, 255, 255, 255)
+
+        look_direction = Vector3(cos(self.camera_horiz), sin(self.camera_horiz),
+                                 sin(self.camera_vertical))
+        fac = 1.01 - abs(look_direction.z)
+        self.camera_direction = Vector3(look_direction.x * fac, look_direction.y * fac,
+                                        look_direction.z)
 
         #self.selection_queue = []
         self.selectionqueue = SelectionQueue()
@@ -262,6 +273,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
         if self.samples > 1:
             self.pick_framebuffer = glGenFramebuffers(1)
             self.pick_texture = glGenTextures(1)
+            self.pick_depth_texture = glGenTextures(1)
             glBindFramebuffer(GL_FRAMEBUFFER, self.pick_framebuffer)
             glBindTexture(GL_TEXTURE_2D, self.pick_texture)
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, self.canvas_width, self.canvas_height, 0,
@@ -269,6 +281,12 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
             glBindTexture(GL_TEXTURE_2D, 0)
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
                                    self.pick_texture, 0)
+            glBindTexture(GL_TEXTURE_2D, self.pick_depth_texture)
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, self.canvas_width,
+                         self.canvas_height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, None)
+            glBindTexture(GL_TEXTURE_2D, 0)
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+                                   self.pick_depth_texture, 0)
             glBindFramebuffer(GL_FRAMEBUFFER, 0)
 
     def resizeGL(self, width, height):
@@ -284,6 +302,11 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
             glBindTexture(GL_TEXTURE_2D, self.pick_texture)
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
                          None)
+            glBindTexture(GL_TEXTURE_2D, 0)
+        if self.pick_depth_texture is not None:
+            glBindTexture(GL_TEXTURE_2D, self.pick_depth_texture)
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, width, height, 0, GL_DEPTH_COMPONENT,
+                         GL_FLOAT, None)
             glBindTexture(GL_TEXTURE_2D, 0)
 
     @catch_exception
@@ -339,11 +362,21 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
         self.logic(timedelta, diff)
 
         if diff > 1 / 60.0:
-            if self._frame_invalid:
+            check_gizmo_hover_id = self._mouse_pos_changed and self.should_check_gizmo_hover_id()
+            self._mouse_pos_changed = False
+
+            if self._frame_invalid or check_gizmo_hover_id:
                 self.update()
                 self._lastrendertime = now
                 self._frame_invalid = False
         self._lasttime = now
+
+    def should_check_gizmo_hover_id(self):
+        if self.gizmo.hidden or self.gizmo.was_hit_at_all:
+            return False
+
+        return (not QtWidgets.QApplication.mouseButtons()
+                and not QtWidgets.QApplication.keyboardModifiers())
 
     def handle_arrowkey_scroll(self, timedelta):
         if self.selectionbox_projected_coords is not None:
@@ -478,12 +511,20 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
         self.rotation_is_pressed = False
 
         self._frame_invalid = False
+        self._mouse_pos_changed = False
 
         self.MOVE_UP = 0
         self.MOVE_DOWN = 0
         self.MOVE_LEFT = 0
         self.MOVE_RIGHT = 0
         self.SPEEDUP = 0
+
+    def clear_collision(self):
+        self.alternative_mesh = None
+
+        if self.main_model is not None:
+            glDeleteLists(self.main_model, 1)
+            self.main_model = None
 
     def set_collision(self, verts, faces, alternative_mesh):
         self.collision = Collision(verts, faces)
@@ -615,12 +656,21 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
 
         self.gizmo_scale = gizmo_scale
 
+        check_gizmo_hover_id = self.should_check_gizmo_hover_id()
+
         # If multisampling is enabled, the draw/read operations need to happen on the mono-sampled
         # framebuffer.
-        use_pick_framebuffer = self.selectionqueue and self.samples > 1
+        use_pick_framebuffer = (self.selectionqueue or check_gizmo_hover_id) and self.samples > 1
         if use_pick_framebuffer:
             glBindFramebuffer(GL_FRAMEBUFFER, self.pick_framebuffer)
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+
+        gizmo_hover_id = 0xFF
+        if not self.selectionqueue and check_gizmo_hover_id:
+            self.gizmo.render_collision_check(gizmo_scale, is3d=self.mode == MODE_3D)
+            mouse_pos = self.mapFromGlobal(QCursor.pos())
+            pixels = glReadPixels(mouse_pos.x(), self.canvas_height - mouse_pos.y(), 1, 1, GL_RGB, GL_UNSIGNED_BYTE)
+            gizmo_hover_id = pixels[2]
 
         #print(self.gizmo.position, campos)
         vismenu: FilterViewMenu = self.visibility_menu
@@ -656,7 +706,13 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                 objlist = []
                 offset = 0
                 if self.minimap is not None and vismenu.minimap.is_selectable() and self.minimap.is_available():
-                    objlist.append((self.minimap, self.minimap.corner1, self.minimap.corner2, None))
+                    objlist.append(
+                        ObjectSelectionEntry(obj=self.minimap,
+                                             pos1=self.minimap.corner1,
+                                             pos2=self.minimap.corner2,
+                                             pos3=None,
+                                             rotation=None)
+                    )
                     self.models.render_generic_position_colored_id(self.minimap.corner1, id + (offset) * 4)
                     self.models.render_generic_position_colored_id(self.minimap.corner2, id + (offset) * 4 + 1)
                     offset = 1
@@ -671,16 +727,38 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
 
                 if vismenu.enemyroute.is_selectable():
                     for i, obj in enumerate(self.level_file.enemypointgroups.points()):
-                        objlist.append((obj, obj.position, None, None))
+                        objlist.append(
+                            ObjectSelectionEntry(obj=obj,
+                                                 pos1=obj.position,
+                                                 pos2=None,
+                                                 pos3=None,
+                                                 rotation=None)
+                        )
                         self.models.render_generic_position_colored_id(obj.position, id + (offset+i) * 4)
 
                 offset = len(objlist)
 
-                if vismenu.itemroutes.is_selectable():
+                selectable_objectroutes = vismenu.objectroutes.is_selectable()
+                selectable_cameraroutes = vismenu.cameraroutes.is_selectable()
+                selectable_unassignedroutes = vismenu.unassignedroutes.is_selectable()
+
+                if selectable_objectroutes or selectable_cameraroutes or selectable_unassignedroutes:
+                    camera_routes = set(camera.route for camera in self.level_file.cameras)
+                    object_routes = set(obj.pathid for obj in self.level_file.objects.objects)
+                    assigned_routes = camera_routes.union(object_routes)
                     i = 0
-                    for route in self.level_file.routes:
+                    for idx, route in enumerate(self.level_file.routes):
                         for obj in route.points:
-                            objlist.append((obj, obj.position, None, None))
+                            if (not ((idx in object_routes and selectable_objectroutes) or
+                                     (idx in camera_routes and selectable_cameraroutes) or
+                                     (idx not in assigned_routes and selectable_unassignedroutes))):
+                                continue
+                            objlist.append(
+                                ObjectSelectionEntry(obj=obj,
+                                                 pos1=obj.position,
+                                                 pos2=None,
+                                                 pos3=None,
+                                                 rotation=None))
                             self.models.render_generic_position_colored_id(obj.position, id + (offset+i) * 4)
                             i += 1
 
@@ -688,15 +766,44 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
 
                 if vismenu.checkpoints.is_selectable():
                     for i, obj in enumerate(self.level_file.objects_with_2positions()):
-                        objlist.append((obj, obj.start, obj.end, None))
+                        objlist.append(
+                            ObjectSelectionEntry(obj=obj,
+                                             pos1=obj.start,
+                                             pos2=obj.end,
+                                             pos3=None,
+                                             rotation=None))
                         self.models.render_generic_position_colored_id(obj.start, id+(offset+i)*4)
                         self.models.render_generic_position_colored_id(obj.end, id+(offset+i)*4 + 1)
+
+                offset = len(objlist)
+
+                if vismenu.cameras.is_selectable():
+                    for i, obj in enumerate(self.level_file.cameras):
+                        if obj in self.selected:
+                            objlist.append(
+                                ObjectSelectionEntry(obj=obj,
+                                                     pos1=obj.position,
+                                                     pos2=obj.position2,
+                                                     pos3=obj.position3,
+                                                     rotation=obj.rotation))
+                            self.models.render_generic_position_rotation_colored_id(obj.position, obj.rotation,
+                                                                                    id + (offset + i) * 4)
+                            self.models.render_generic_position_colored_id(obj.position2, id + (offset + i) * 4 + 1)
+                            self.models.render_generic_position_colored_id(obj.position3, id + (offset + i) * 4 + 2)
+                        else:
+                            objlist.append(
+                                ObjectSelectionEntry(obj=obj,
+                                                     pos1=obj.position,
+                                                     pos2=None,
+                                                     pos3=None,
+                                                     rotation=obj.rotation))
+                            self.models.render_generic_position_rotation_colored_id(obj.position, obj.rotation,
+                                                                                    id + (offset + i) * 4)
 
                 for is_selectable, collection in (
                         (vismenu.objects.is_selectable(), self.level_file.objects.objects),
                         (vismenu.kartstartpoints.is_selectable(), self.level_file.kartpoints.positions),
                         (vismenu.areas.is_selectable(), self.level_file.areas.areas),
-                        (vismenu.cameras.is_selectable(), self.level_file.cameras),
                         (vismenu.respawnpoints.is_selectable(), self.level_file.respawnpoints)
                         ):
                     offset = len(objlist)
@@ -704,9 +811,16 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                         continue
 
                     for i, obj in enumerate(collection):
-                        objlist.append((obj, obj.position, None, obj.rotation))
+                        objlist.append(
+                            ObjectSelectionEntry(obj=obj,
+                                                 pos1=obj.position,
+                                                 pos2=None,
+                                                 pos3=None,
+                                                 rotation=obj.rotation))
                         self.models.render_generic_position_rotation_colored_id(obj.position, obj.rotation,
-                                                                                id + (offset + i) * 4 + 2)
+                                                                                id + (offset + i) * 4)
+                for entry in objlist:
+                    assert isinstance(entry, ObjectSelectionEntry)
 
                 assert len(objlist)*4 < id
                 print("We queued up", len(objlist))
@@ -718,35 +832,58 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                 #for i in range(0, clickwidth*clickheight, 4):
                 start = default_timer()
 
-                for i in range(0, clickwidth*clickheight, 13):
-                        # | (pixels[i*3+0] << 16)
-                        if pixels[i * 3] != 0xFF:
-                            upper = pixels[i * 3] & 0x0F
-                            index = (upper << 16)| (pixels[i*3 + 1] << 8) | pixels[i*3 + 2]
-                            if index & 0b1:
-                                # second position
-                                entry = objlist[index//4]
-                                if entry[0] not in selected:
-                                    selected[entry[0]] = 2
+                indexes = set()
+                for i in range(0, clickwidth * clickheight):
+                    if pixels[i * 3] != 0xFF:
+                        upper = pixels[i * 3] & 0x0F
+                        index = (upper << 16) | (pixels[i * 3 + 1] << 8) | pixels[i * 3 + 2]
+                        indexes.add(index)
 
-                                    selected_positions.append(entry[2])
-                                elif selected[entry[0]] == 1:
-                                    selected[entry[0]] = 3
-                                    selected_positions.append(entry[2])
-                            else:
-                                entry = objlist[index // 4]
-                                if entry[0] not in selected:
-                                    selected[entry[0]] = 1
+                """for index in indexes:
+                    entry = objlist[index // 4]
+                    obj = entry[0]
 
-                                    selected_positions.append(entry[1])
+                    if index & 0b1:
+                        if obj not in selected:
+                            selected[obj] = 2
+                            selected_positions.append(entry[2])
+                        elif selected[obj] == 1:
+                            selected[obj] = 3
+                            selected_positions.append(entry[2])
+                    else:
+                        if obj not in selected:
+                            selected[obj] = 1
+                            selected_positions.append(entry[1])
+                            if index & 0b10:
+                                selected_rotations.append(entry[3])
+                        elif selected[obj] == 2:
+                            selected[obj] = 3
+                            selected_positions.append(entry[1])"""
 
-                                    if index & 0b10:
-                                        print("found a rotation")
-                                        selected_rotations.append(entry[3])
+                for index in indexes:
+                    entry: ObjectSelectionEntry = objlist[index // 4]
+                    obj = entry.obj
+                    if obj not in selected:
+                        selected[obj] = 0
 
-                                elif selected[entry[0]] == 2:
-                                    selected[entry[0]] = 3
-                                    selected_positions.append(entry[1])
+                    elements_exist = selected[obj]
+
+                    if index & 0b11 == 0:  # First object position
+                        if entry.pos1 is not None and (elements_exist & 1) == 0:
+                            selected_positions.append(entry.pos1)
+                            if entry.rotation is not None:
+                                selected_rotations.append(entry.rotation)
+                            elements_exist |= 1
+                    if index & 0b11 == 1:  # Second object position
+                        if entry.pos2 is not None and (elements_exist & 2) == 0:
+                            selected_positions.append(entry.pos2)
+                            elements_exist |= 2
+                    if index & 0b11 == 2:  # Third object position
+                        if entry.pos3 is not None and (elements_exist & 4) == 0:
+                            selected_positions.append(entry.pos3)
+                            elements_exist |= 4
+
+                    selected[obj] = elements_exist
 
                 #print("select time taken", default_timer() - start)
                 #print("result:", selected)
@@ -794,10 +931,29 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
             if self.alternative_mesh is None:
                 glCallList(self.main_model)
             else:
+                if self.mode != MODE_TOPDOWN:
+                    light0_position = (campos.x, -campos.z, campos.y, 1.0)
+                    light0_diffuse = (5.0, 5.0, 5.0, 1.0)
+                    light0_specular = (0.8, 0.8, 0.8, 1.0)
+                    light0_ambient = (1.8, 1.8, 1.8, 1.0)
+                    glLightfv(GL_LIGHT0, GL_POSITION, light0_position)
+                    glLightfv(GL_LIGHT0, GL_DIFFUSE, light0_diffuse)
+                    glLightfv(GL_LIGHT0, GL_DIFFUSE, light0_specular)
+                    glLightfv(GL_LIGHT0, GL_AMBIENT, light0_ambient)
+                    glShadeModel(GL_SMOOTH)
+                    glEnable(GL_LIGHT0)
+                    glEnable(GL_RESCALE_NORMAL)
+                    glEnable(GL_NORMALIZE)
+                    glEnable(GL_LIGHTING)
+
                 glPushMatrix()
                 glScalef(1.0, -1.0, 1.0)
-                self.alternative_mesh.render(selectedPart=self.highlight_colltype)
+                self.alternative_mesh.render(selectedPart=self.highlight_colltype,
+                                             cull_faces=self.cull_faces)
                 glPopMatrix()
+
+                if self.mode != MODE_TOPDOWN:
+                    glDisable(GL_LIGHTING)
 
         glDisable(GL_TEXTURE_2D)
         glColor4f(1.0, 1.0, 1.0, 1.0)
@@ -834,31 +990,57 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
             #for pikminobject in objects:
             #    self.models.render_object(pikminobject, pikminobject in selected)
 
-            vismenu = self.visibility_menu
-            if vismenu.itemroutes.is_visible():
+            visible_objectroutes = vismenu.objectroutes.is_visible()
+            visible_cameraroutes = vismenu.cameraroutes.is_visible()
+            visible_unassignedroutes = vismenu.unassignedroutes.is_visible()
+
+            if visible_objectroutes or visible_cameraroutes or visible_unassignedroutes:
                 routes_to_highlight = set()
+                camera_routes = set()
+                object_routes = set()
+
                 for camera in self.level_file.cameras:
                     if camera.route >= 0 and camera in select_optimize:
                         routes_to_highlight.add(camera.route)
+                    camera_routes.add(camera.route)
 
                 for obj in self.level_file.objects.objects:
                     if obj.pathid >= 0 and obj in select_optimize:
                         routes_to_highlight.add(obj.pathid)
+                    object_routes.add(obj.pathid)
+
+                assigned_routes = camera_routes.union(object_routes)
+                shared_routes = camera_routes.intersection(object_routes)
 
                 for i, route in enumerate(self.level_file.routes):
+                    if (not ((i in object_routes and visible_objectroutes) or
+                             (i in camera_routes and visible_cameraroutes) or
+                             (i not in assigned_routes and visible_unassignedroutes))):
+                        continue
+
                     selected = i in routes_to_highlight
+                    route_color = "unassignedroute"
+                    if i in shared_routes:
+                        route_color = "sharedroute"
+                    elif i in object_routes:
+                        route_color = "objectroute"
+                    elif i in camera_routes:
+                        route_color = "cameraroute"
                     for point in route.points:
                         point_selected = point in select_optimize
-                        self.models.render_generic_position_colored(point.position, point_selected, "itempoint")
+                        self.models.render_generic_position_colored(point.position, point_selected, route_color)
                         selected = selected or point_selected
 
-                    glLineWidth(3.0 if selected else 1.0)
+                    if selected:
+                        glLineWidth(3.0)
                     glBegin(GL_LINE_STRIP)
                     glColor3f(0.0, 0.0, 0.0)
                     for point in route.points:
                         pos = point.position
                         glVertex3f(pos.x, -pos.z, pos.y)
                     glEnd()
+                    if selected:
+                        glLineWidth(1.0)
 
             if vismenu.enemyroute.is_visible():
                 enemypoints_to_highlight = set()
@@ -871,6 +1053,9 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
 
                 point_index = 0
                 for group in self.level_file.enemypointgroups.groups:
+                    if len(group.points) == 0:
+                        continue 
+                        
                     group_selected = False
                     for point in group.points:
                         if point in select_optimize:
@@ -914,7 +1099,8 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                         pos = point.position
                         glVertex3f(pos.x, -pos.z, pos.y)
                     glEnd()
-                    glLineWidth(1.0)
+                    if group_selected:
+                        glLineWidth(1.0)
 
                     # Draw the connections between each enemy point group.
                     pointA = group.points[-1]
@@ -928,17 +1114,19 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                     color_components[2] += 0.5
                     glColor3f(*color_components)
                     for groupB in self.level_file.enemypointgroups.groups:
-                        if group is groupB:
+                        if group is groupB or len(groupB.points) == 0:
                             continue
                         pointB = groupB.points[0]
                         if pointA.link == pointB.link:
                             groupB_selected = any(map(lambda p: p in select_optimize, groupB.points))
-                            glLineWidth(3.0 if (group_selected or groupB_selected) else 1.0)
+                            if group_selected or groupB_selected:
+                                glLineWidth(3.0)
                             glBegin(GL_LINES)
                             glVertex3f(pointA.position.x, -pointA.position.z, pointA.position.y)
                             glVertex3f(pointB.position.x, -pointB.position.z, pointB.position.y)
                             glEnd()
-                            glLineWidth(1.0)
+                            if group_selected or groupB_selected:
+                                glLineWidth(1.0)
 
             if vismenu.checkpoints.is_visible():
                 checkpoints_to_highlight = set()
@@ -1119,7 +1307,8 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
 
             glEnd()"""
 
-        self.gizmo.render_scaled(gizmo_scale, is3d=self.mode == MODE_3D)
+        self.gizmo.render_scaled(gizmo_scale, is3d=self.mode == MODE_3D, hover_id=gizmo_hover_id)
+
         glDisable(GL_DEPTH_TEST)
         if self.selectionbox_start is not None and self.selectionbox_end is not None:
             #print("drawing box")
@@ -1134,6 +1323,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
             glVertex3f(endx, startz, 0)
 
             glEnd()
+            glLineWidth(1.0)
 
         if self.selectionbox_projected_origin is not None and self.selectionbox_projected_coords is not None:
             #print("drawing box")
@@ -1151,6 +1341,8 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
             glVertex3f(point4.x, point4.y, point4.z)
             glEnd()
 
+            glLineWidth(1.0)
+
         glEnable(GL_DEPTH_TEST)
         glFinish()
         now = default_timer() - start
@@ -1163,6 +1355,8 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
     @catch_exception
     def mouseMoveEvent(self, event):
         self.usercontrol.handle_move(event)
+
+        self._mouse_pos_changed = True
 
     @catch_exception
     def mouseReleaseEvent(self, event):
@@ -1183,17 +1377,28 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
             self.zoom_in()
 
     def zoom_in(self):
-        current = self.zoom_factor
-
-        fac = calc_zoom_out_factor(current)
-
-        self.zoom(fac)
+        if self.mode == MODE_TOPDOWN:
+            current = self.zoom_factor
+            fac = calc_zoom_out_factor(current)
+            self.zoom(fac)
+        else:
+            self.zoom_inout_3d(True)
 
     def zoom_out(self):
-        current = self.zoom_factor
-        fac = calc_zoom_in_factor(current)
+        if self.mode == MODE_TOPDOWN:
+            current = self.zoom_factor
+            fac = calc_zoom_in_factor(current)
+            self.zoom(fac)
+        else:
+            self.zoom_inout_3d(False)
 
-        self.zoom(fac)
+    def zoom_inout_3d(self, zoom_in):
+        speedup = 1 if zoom_in else -1
+        if self.shift_is_pressed:
+            speedup *= self._wasdscrolling_speedupfactor
+        speed = self._wasdscrolling_speed / 2
+        self.camera_height -= speed * speedup
+        self.do_redraw()
 
     def create_ray_from_mouseclick(self, mousex, mousey, yisup=False):
         self.camera_direction.normalize()
@@ -1288,7 +1493,9 @@ class FilterViewMenu(QMenu):
         self.addAction(self.hide_all)
 
         self.enemyroute = ObjectViewSelectionToggle("Enemy Routes", self)
-        self.itemroutes = ObjectViewSelectionToggle("Object Routes", self)
+        self.objectroutes = ObjectViewSelectionToggle("Object Routes", self)
+        self.cameraroutes = ObjectViewSelectionToggle("Camera Routes", self)
+        self.unassignedroutes = ObjectViewSelectionToggle("Unassigned Routes", self)
         self.checkpoints = ObjectViewSelectionToggle("Checkpoints", self)
         self.objects = ObjectViewSelectionToggle("Objects", self)
         self.areas = ObjectViewSelectionToggle("Areas", self)
@@ -1303,7 +1510,9 @@ class FilterViewMenu(QMenu):
 
     def get_entries(self):
         return (self.enemyroute,
-                self.itemroutes,
+                self.objectroutes,
+                self.cameraroutes,
+                self.unassignedroutes,
                 self.checkpoints,
                 self.objects,
                 self.areas,
