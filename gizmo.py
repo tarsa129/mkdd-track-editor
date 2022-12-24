@@ -147,7 +147,6 @@ class Gizmo(Model):
         if is3d and (not handle_hit or self.was_hit["rotation_z"]):
             glColor4f(*Z_COLOR if hover_id != 0x6 else HOVER_COLOR)
             self.named_meshes["rotation_z"].render()
-            mesh.render()
         if not is3d and (not handle_hit or self.was_hit["middle"]):
             glColor4f(*MIDDLE_COLOR if hover_id != 0x7 else HOVER_COLOR)
             self.named_meshes["middle"].render()
