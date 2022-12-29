@@ -1976,8 +1976,11 @@ class GenEditor(QMainWindow):
                 else:
                     idx += 1
             
+
             #self.addobjectwindow_last_selected_category = 5
-            self.object_to_be_added = [libbol.RoutePoint.new(), id, -1 ]
+            new_point = libbol.RoutePoint.new()
+            new_point.partof = obj
+            self.object_to_be_added = [new_point, id, -1 ]
             #self.object_to_be_added[0].group = obj.id
             #actively adding objects
             self.pik_control.button_add_object.setChecked(True)
@@ -1998,6 +2001,7 @@ class GenEditor(QMainWindow):
                 
                 for i in range(2):
                     point = libbol.RoutePoint.new()
+                    point.partof = new_route
                     new_route.points.append(point)
                 
                 #self.addobjectwindow_last_selected_category = 8
@@ -2045,6 +2049,7 @@ class GenEditor(QMainWindow):
             
             for i in range(2):
                 point = libbol.RoutePoint.new()
+                point.partof = new_route
                 new_route.points.append(point)
                         
             self.objects_to_be_added.append( [new_route, None, None ]  )
@@ -2729,10 +2734,13 @@ class GenEditor(QMainWindow):
                         break
 
             elif isinstance(obj, libbol.RoutePoint):
-                for route in self.level_file.routes:
+                to_look_through = obj.partof.type == 0 if self.level_file.routes else  self.level_file.cameraroutes
+
+                for route in to_look_through:
                     if obj in route.points:
                         route.points.remove(obj)
                         break
+                
 
             elif isinstance(obj, libbol.Checkpoint):
                 for group in self.level_file.checkpoints.groups:
@@ -2800,10 +2808,17 @@ class GenEditor(QMainWindow):
         
         #print("old", self.level_file.routes[old].used_by, "new", self.level_file.routes[new].used_by)
         
-        if old != -1:
-            self.level_file.routes[old].used_by.remove(obj)
-        if new != -1:
-            self.level_file.routes[new].used_by.append(obj)
+        if (isinstance(obj, libbol.Camera)):
+            if old != -1 and ( obj in self.level_file.routes or obj) :
+                self.level_file.cameraroutes[old].used_by.remove(obj)
+            if new != -1:
+                self.level_file.cameraroutes[new].used_by.append(obj)
+        else:
+
+            if old != -1 and ( obj in self.level_file.routes or obj) :
+                self.level_file.routes[old].used_by.remove(obj)
+            if new != -1:
+                self.level_file.routes[new].used_by.append(obj)
         
         #print("old", self.level_file.routes[old].used_by, "new", self.level_file.routes[new].used_by)
         
@@ -3042,7 +3057,7 @@ class GenEditor(QMainWindow):
         if self.obj_to_copy is not None:
             self.object_to_be_added = None
             #if isinstance(self.obj_to_copy, libbol.MapObject) and self.obj_to_copy.route_info == 2: 
-            if isinstance(self.obj_to_copy, libbol.MapObject) and self.obj_to_copy.route_info is not None : 
+            if (isinstance(self.obj_to_copy) or isinstance(self.obj_to_copy, libbol.Camera) ) and self.obj_to_copy.route_info is not None : 
                 
                 self.objects_to_be_added = []
                 
@@ -3051,11 +3066,13 @@ class GenEditor(QMainWindow):
                 if self.obj_to_copy.route != -1 :
                     for point in self.level_file.routes[self.obj_to_copy.route].points: 
                         new_point = libbol.RoutePoint.new()
+                        new_point.partof = new_route
                         new_point.position = point.position - self.obj_to_copy.position
                         new_route.points.append(new_point)
                 else:
                     for i in range(2):
                         point = libbol.RoutePoint.new()
+                        new_point.partof = new_route
                         new_route.points.append(point)
                 
                 self.objects_to_be_added.append( [new_route, None, None ]  )

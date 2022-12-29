@@ -1017,9 +1017,6 @@ class MapObjects(object):
 
         return mapobjs
         
-   
-   
-
 # Section 6
 # Kart/Starting positions
 POLE_LEFT = 0
@@ -1179,6 +1176,7 @@ class Areas(object):
 # Cameras
 class Camera(object):
     can_copy = True
+    route_info = 2
     def __init__(self, position):
         self.position = position
         self.position2 = Vector3(0.0, 0.0, 0.0)
@@ -1200,6 +1198,8 @@ class Camera(object):
         
         self.widget = None
         self.used_by = []
+
+
 
     @classmethod
     def new(cls):
@@ -1933,7 +1933,7 @@ class BOL(object):
                 object.route = route_index
 
         for route_index in range(start_at, len(self.cameraroutes) ):
-            for object in self.routes[route_index].used_by:
+            for object in self.cameraroutes[route_index].used_by:
                 object.route = route_index
     
     def remove_unused_routes(self):
@@ -1952,7 +1952,7 @@ class BOL(object):
                 to_remove.append(i)
         to_remove.reverse()
         for rem_index in to_remove:
-            self.routes.pop(rem_index)
+            self.cameraroutes.pop(rem_index)
         self.reset_routes()
         
     
