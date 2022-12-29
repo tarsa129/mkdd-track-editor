@@ -500,8 +500,6 @@ def choose_data_editor(obj):
         return RespawnPointEdit
     elif isinstance(obj, LightParam):
         return LightParamEdit
-    elif isinstance(obj, MGEntry):
-        return MGEntryEdit
     elif isinstance(obj, Minimap):
         return MinimapEdit
     else:
@@ -1202,21 +1200,22 @@ class LightParamEdit(DataEditor):
 
 class MGEntryEdit(DataEditor):
     def setup_widgets(self):
-        self.unk1 = self.add_integer_input("Unknown 1", "unk1",
+        self.unk1 = self.add_integer_input("Shine Thief Win Sec", "rabbitWinSec",
                                            MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
-        self.unk2 = self.add_integer_input("Unknown 2", "unk2",
+        self.unk2 = self.add_integer_input("Shine Thief Min Sec", "rabbitMinSec",
                                            MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
-        self.unk3 = self.add_integer_input("Unknown 3", "unk3",
+        self.unk3 = self.add_integer_input("Unknown 3", "rabbitDecSec",
                                            MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
+        """
         self.unk4 = self.add_integer_input("Unknown 4", "unk4",
                                            MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
-
+        """
     def update_data(self):
         obj: MGEntry = self.bound_to
-        self.unk1.setText(str(obj.unk1))
-        self.unk2.setText(str(obj.unk2))
-        self.unk3.setText(str(obj.unk3))
-        self.unk4.setText(str(obj.unk4))
+        self.unk1.setText(str(obj.rabbitWinSec))
+        self.unk2.setText(str(obj.rabbitMinSec))
+        self.unk3.setText(str(obj.rabbitDecSec))
+        #self.unk4.setText(str(obj.unk4))
 
 class MinimapEdit(DataEditor):
     def setup_widgets(self):

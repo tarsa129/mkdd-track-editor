@@ -300,7 +300,7 @@ class LevelDataTreeView(QTreeWidget):
         
         
         self.lightparams = self._add_group("Light Params")
-        self.mgentries = self._add_group("Minigame Params")
+        #self.mgentries = self._add_group("Minigame Params")
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.run_context_menu)
@@ -391,7 +391,7 @@ class LevelDataTreeView(QTreeWidget):
         self.cameras.remove_children()
         self.respawnpoints.remove_children()
         self.lightparams.remove_children()
-        self.mgentries.remove_children()
+        #self.mgentries.remove_children()
 
     def set_objects(self, boldata: BOL):
 
@@ -526,6 +526,6 @@ class LevelDataTreeView(QTreeWidget):
         self.cameras.set_name()
         self.respawnpoints.bound_to = levelfile.respawnpoints
         self.lightparams.bound_to = levelfile.lightparams
-        self.mgentries.bound_to = levelfile.mgentries
+        #self.mgentries.bound_to = levelfile.mgentries
         
         #print(self.cameras.bound_to.assoc)

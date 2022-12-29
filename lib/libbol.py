@@ -1199,8 +1199,6 @@ class Camera(object):
 
         self.shimmer = Shimmer()
 
-        self.shimmerz0 = 0
-        self.shimmerz1 = 0
         self.route = -1
         self.routespeed = 0
         self.nextcam = -1
@@ -1222,10 +1220,10 @@ class Camera(object):
         camera.fov.end = 50
         
         if (type == 1 ):
-            camera.chase = 1;
-            camera.shimmerz0 = 4000;
-            camera.shimmerz1 = 4060;
-            camera.routespeed = 20;
+            camera.chase = 1
+            camera.shimmer.z0 = 4000
+            camera.shimmer.z1 = 4060
+            camera.routespeed = 20
         
         return camera
 
@@ -1245,8 +1243,8 @@ class Camera(object):
         cam.fov.start = read_uint16(f)
         cam.camduration = read_uint16(f)
         cam.startcamera = read_uint16(f)
-        cam.shimmerz0 = read_uint16(f)
-        cam.shimmerz1 = read_uint16(f)
+        cam.shimmer.z0 = read_uint16(f)
+        cam.shimmer.z1 = read_uint16(f)
         cam.route = read_int16(f)
         cam.routespeed = read_uint16(f)
         cam.fov.end = read_uint16(f)
@@ -1270,8 +1268,8 @@ class Camera(object):
         new_camera.fov.end = self.fov.end
         new_camera.camduration = self.camduration
         new_camera.startcamera = self.startcamera
-        new_camera.shimmerz0 = self.shimmerz0
-        new_camera.shimmerz1 = self.shimmerz1
+        new_camera.shimmer.z0 = self.shimmer.z0
+        new_camera.shimmer.z1 = self.shimmer.z1
         new_camera.route = self.route
         new_camera.routespeed = self.routespeed
         new_camera.nextcam = self.nextcam
@@ -1294,9 +1292,10 @@ class Camera(object):
             f.write(pack(">B", 0))
         f.write(pack(">BHHH",  self.camtype, self.fov.start, self.camduration, self.startcamera))
         f.write(pack(">HHhHHh",
-                        self.shimmerz0, self.shimmerz1, self.route,
+                        self.shimmer.z0, self.shimmer.z1, self.route,
                         self.routespeed, self.fov.end, self.nextcam))
-        
+        assert len(self.name) == 4
+        f.write(bytes(self.name, encoding="ascii"))
    
 
     @classmethod
@@ -1402,9 +1401,9 @@ class LightParam(object):
 # MG (MiniGame?)
 class MGEntry(object):
     def __init__(self):
-        self.unk1 = 0
-        self.unk2 = 0
-        self.unk3 = 0
+        self.rabbitWinSec = 0
+        self.rabbitMinSec = 0
+        self.rabbitDecSec = 0
         self.unk4 = 0
 
     @classmethod
@@ -1414,15 +1413,15 @@ class MGEntry(object):
     @classmethod
     def from_file(cls, f):
         mgentry = MGEntry()
-        mgentry.unk1 = read_int16(f)
-        mgentry.unk2 = read_int16(f)
-        mgentry.unk3 = read_int16(f)
+        mgentry.rabbitWinSec = read_int16(f)
+        mgentry.rabbitMinSec = read_int16(f)
+        mgentry.rabbitDecSec = read_int16(f)
         mgentry.unk4 = read_int16(f)
 
         return mgentry
 
     def write(self, f):
-        f.write(pack(">hhhh", self.unk1, self.unk2, self.unk3, self.unk4))
+        f.write(pack(">hhhh", self.rabbitWinSec, self.rabbitMinSec, self.rabbitDecSec, self.unk4))
 
 
 class BOL(object):
