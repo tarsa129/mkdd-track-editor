@@ -89,8 +89,7 @@ class DataEditor(QWidget):
         self.bound_to = bound_to
         self.vbox = QVBoxLayout(self)
         self.vbox.setContentsMargins(0, 0, 0, 0)
-
-        self.description = self.add_label("Object")
+        self.vbox.setSpacing(3)
 
         self.setup_widgets()
 
@@ -120,6 +119,7 @@ class DataEditor(QWidget):
 
     def create_labeled_widget(self, parent, text, widget):
         layout = QHBoxLayout()
+        layout.setSpacing(5)
         label = self.create_label(text)
         label.setText(text)
         layout.addWidget(label)
@@ -128,6 +128,7 @@ class DataEditor(QWidget):
 
     def create_labeled_widgets(self, parent, text, widgetlist):
         layout = QHBoxLayout()
+        layout.setSpacing(5)
         label = self.create_label(text)
         label.setText(text)
         layout.addWidget(label)
@@ -541,16 +542,17 @@ class EnemyPointEdit(DataEditor):
                                                      MIN_UNSIGNED_BYTE, 180)
         self.driftduration = self.add_integer_input("Drift Duration", "driftduration",
                                                     MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        self.unknown = self.add_integer_input("Unknown", "unknown",
-                                              MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
-
+        self.driftsupplement = self.add_integer_input("Drift Supplement", "driftsupplement",
+                                                      MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
+        self.nomushroomzone = self.add_checkbox("No Mushroom Zone", "nomushroomzone",
+                                                off_value=0, on_value=1)
         for widget in self.position:
             widget.editingFinished.connect(self.catch_text_update)
-        for widget in (self.itemsonly, ):
+        for widget in (self.itemsonly, self.nomushroomzone):
             widget.stateChanged.connect(lambda _state: self.catch_text_update())
         for widget in (self.swerve, self.driftdirection):
             widget.currentIndexChanged.connect(lambda _index: self.catch_text_update())
-        for widget in (self.link, self.driftacuteness, self.driftduration, self.unknown):
+        for widget in (self.link, self.driftacuteness, self.driftduration, self.driftsupplement):
             widget.editingFinished.connect(self.catch_text_update)
 
     def update_data(self):
@@ -565,7 +567,8 @@ class EnemyPointEdit(DataEditor):
         self.group.setText(str(obj.group))
         self.driftacuteness.setText(str(obj.driftacuteness))
         self.driftduration.setText(str(obj.driftduration))
-        self.unknown.setText(str(obj.unknown))
+        self.driftsupplement.setText(str(obj.driftsupplement))
+        self.nomushroomzone.setChecked(bool(obj.nomushroomzone))
 
         if obj.swerve in SWERVE_IDS:
             name = SWERVE_IDS[obj.swerve]
@@ -1030,6 +1033,17 @@ class AreaEdit(DataEditor):
         #update the name, may be needed
         self.update_name()
 
+CAMERA_TYPES = OrderedDict()
+CAMERA_TYPES["0 - Fix | StartFix"] = 0x0000
+CAMERA_TYPES["1 - FixPath | StartOnlyPath"] = 0x0001
+CAMERA_TYPES["2 - FixChase"] = 0x0002
+CAMERA_TYPES["3 - FixSpl"] = 0x0003
+CAMERA_TYPES["4 - StartFixPath"] = 0x0004
+CAMERA_TYPES["5 - DemoPath | StartPath"] = 0x0005
+CAMERA_TYPES["6 - StartLookPath"] = 0x0006
+CAMERA_TYPES["7 - FixPala"] = 0x0007
+CAMERA_TYPES["8 - Post-Race Camera"] = 0x0008
+
 class CameraEdit(DataEditor):
     emit_route_update = pyqtSignal("PyQt_PyObject", "int", "int")
 
@@ -1044,31 +1058,26 @@ class CameraEdit(DataEditor):
        
         self.chase = self.add_checkbox("Follow Player", "chase",  0, 1)
 
-        self.camtype = self.add_integer_input("Camera Type", "camtype",
-                                              MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
+        self.camtype = self.add_dropdown_input("Type", "camtype", CAMERA_TYPES)
                                               
-        self.startzoom = self.add_integer_input("Start FOV", "startzoom",
-                                                MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
-        self.endzoom = self.add_integer_input("End FOV", "endzoom",
-                                              MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
+        self.fov = self.add_multiple_integer_input("Start/End FOV", "fov", ["start", "end"],
+                                                   MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
         self.camduration = self.add_integer_input("Camera Duration", "camduration",
                                                   MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
-        self.startcamera = self.add_integer_input("Start Camera", "startcamera",
-                                                  MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
-        self.unk2 = self.add_integer_input("Unknown 2", "unk2",
-                                           MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
-        self.unk3 = self.add_integer_input("Unknown 3", "unk3",
-                                           MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
-        self.route = self.add_integer_input("Route ID", "route",
-                                            MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
+        self.startcamera = self.add_checkbox("Start Camera", "startcamera", off_value=0, on_value=1)
+        self.nextcam = self.add_integer_input("Next Cam", "nextcam",
+                                        MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
+
+        self.shimmer = self.add_multiple_integer_input("Shimmer", "shimmer", ["z0", "z1"], 0, 4095)
+        self.route = self.add_integer_input("Route ID", "route", MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
         self.routespeed = self.add_integer_input("Route Speed", "routespeed",
                                                  MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
 
-        self.nextcam = self.add_integer_input("Next Cam", "nextcam",
-                                              MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
+
         self.name = self.add_text_input("Camera Name", "name", 4)
 
-        self.camtype.editingFinished.connect(self.update_name)
+        self.camtype.currentIndexChanged.connect(lambda _index: self.catch_text_update())
+        #self.camtype.currentIndexChanged.connect(self.update_name)
         self.route.editingFinished.disconnect()
         self.route.editingFinished.connect(self.update_route_used)
 
@@ -1088,16 +1097,20 @@ class CameraEdit(DataEditor):
 
         self.update_rotation(*self.rotation)
 
+
+        self.chase.setVisible(obj.camtype in [0, 1, 2, 3])
+        
+
         self.chase.setChecked(obj.chase != 0)
-        self.camtype.setText(str(obj.camtype))
-        self.startzoom.setText(str(obj.startzoom))
+        self.camtype.setCurrentIndex(list(CAMERA_TYPES.values()).index(obj.camtype))
+        self.fov[0].setText(str(obj.fov.start))
+        self.fov[1].setText(str(obj.fov.end))
         self.camduration.setText(str(obj.camduration))
-        self.startcamera.setText(str(obj.startcamera))
-        self.unk2.setText(str(obj.unk2))
-        self.unk3.setText(str(obj.unk3))
+        self.startcamera.setChecked(obj.startcamera != 0)
+        self.shimmer[0].setText(str(obj.shimmer.z0))
+        self.shimmer[1].setText(str(obj.shimmer.z1))
         self.route.setText(str(obj.route))
         self.routespeed.setText(str(obj.routespeed))
-        self.endzoom.setText(str(obj.endzoom))
         self.nextcam.setText(str(obj.nextcam))
         self.name.setText(obj.name)
 

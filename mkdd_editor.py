@@ -96,6 +96,12 @@ class GenEditor(QMainWindow):
         super().__init__()
         self.level_file = BOL.make_useful()
 
+        self.undo_history: list[tuple[int, bytes]] = []
+        self.redo_history: list[tuple[int, bytes]] = []
+
+        document = self.level_file.to_bytes()
+        self.undo_history.append((hash(document), document))
+
         try:
             self.configuration = read_config()
             print("Config file loaded")
@@ -121,7 +127,6 @@ class GenEditor(QMainWindow):
         self.add_object_window = None
         self.object_to_be_added = None
 
-        self.history = EditorHistory(20)
         self.edit_spawn_window = None
 
         self._window_title = ""
@@ -241,7 +246,7 @@ class GenEditor(QMainWindow):
         self.last_position_clicked = []
         self.loaded_archive = None
         self.loaded_archive_file = None
-        self.history.reset()
+
         self.object_to_be_added = None
         self.level_view.reset(keep_collision=True)
 
@@ -292,6 +297,46 @@ class GenEditor(QMainWindow):
                 self.setWindowTitle("MKDD Track Editor - " + self._window_title)
             else:
                 self.setWindowTitle("MKDD Track Editor")
+
+    def load_top_bol_file_from_undo_history(self):
+        if not self.undo_history:
+            return
+
+        _document_hash, document = self.undo_history[-1]
+
+        self.level_file = BOL.from_bytes(document)
+        self.level_view.level_file = self.level_file
+        self.leveldatatreeview.set_objects(self.level_file)
+        self.level_view.do_redraw()
+        self.set_has_unsaved_changes(True)
+
+    def on_undo_action_triggered(self):
+        if len(self.undo_history) > 1:
+            self.redo_history.insert(0, self.undo_history.pop())
+            self.update_undo_redo_actions()
+            self.load_top_bol_file_from_undo_history()
+
+    def on_redo_action_triggered(self):
+        if self.redo_history:
+            self.undo_history.append(self.redo_history.pop(0))
+            self.update_undo_redo_actions()
+            self.load_top_bol_file_from_undo_history()
+
+    def on_document_potentially_changed(self, update_unsaved_changes=True):
+        document = self.level_file.to_bytes()
+        document_hash = hash(document)
+
+        if self.undo_history[-1][0] != document_hash:
+            self.undo_history.append((document_hash, document))
+            self.redo_history.clear()
+            self.update_undo_redo_actions()
+
+            if update_unsaved_changes:
+                self.set_has_unsaved_changes(True)
+
+    def update_undo_redo_actions(self):
+        self.undo_action.setEnabled(len(self.undo_history) > 1)
+        self.redo_action.setEnabled(bool(self.redo_history))
 
     @catch_exception_with_dialog
     def do_goto_action(self, item, index):
@@ -524,6 +569,19 @@ class GenEditor(QMainWindow):
 
         self.file_menu.aboutToShow.connect(self.on_file_menu_aboutToShow)
 
+        self.edit_menu = QMenu(self)
+        self.edit_menu.setTitle("Edit")
+        self.undo_action = self.edit_menu.addAction('Undo')
+        self.undo_action.setShortcut(QtGui.QKeySequence('Ctrl+Z'))
+        self.undo_action.triggered.connect(self.on_undo_action_triggered)
+        self.redo_action = self.edit_menu.addAction('Redo')
+        self.redo_action.setShortcuts([
+            QtGui.QKeySequence('Ctrl+Shift+Z'),
+            QtGui.QKeySequence('Ctrl+Y'),
+        ])
+        self.redo_action.triggered.connect(self.on_redo_action_triggered)
+        self.update_undo_redo_actions()
+
         self.visibility_menu = mkdd_widgets.FilterViewMenu(self)
         self.visibility_menu.filter_update.connect(self.on_filter_update)
         filters = self.editorconfig["filter_view"].split(",")
@@ -634,6 +692,7 @@ class GenEditor(QMainWindow):
         self.do_auto_qol.setShortcut("Ctrl+4")
 
         self.menubar.addAction(self.file_menu.menuAction())
+        self.menubar.addAction(self.edit_menu.menuAction())
         self.menubar.addAction(self.visibility_menu.menuAction())
         self.menubar.addAction(self.collision_menu.menuAction())
         self.menubar.addAction(self.minimap_menu.menuAction())
@@ -1126,17 +1185,14 @@ class GenEditor(QMainWindow):
         self.level_view.height_update.connect(self.action_change_object_heights)
         self.level_view.create_waypoint.connect(self.action_add_object)
         self.level_view.create_waypoint_3d.connect(self.action_add_object_3d)
-        self.pik_control.button_ground_object.pressed.connect(self.action_ground_objects)
-        self.pik_control.button_remove_object.pressed.connect(self.action_delete_objects)
+
+        self.pik_control.button_ground_object.clicked.connect(
+            lambda _checked: self.action_ground_objects())
+        self.pik_control.button_remove_object.clicked.connect(
+            lambda _checked: self.action_delete_objects())
 
         delete_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence(Qt.Key_Delete), self)
         delete_shortcut.activated.connect(self.action_delete_objects)
-
-        undo_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence(Qt.CTRL + Qt.Key_Z), self)
-        undo_shortcut.activated.connect(self.action_undo)
-
-        redo_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence(Qt.CTRL + Qt.Key_Y), self)
-        redo_shortcut.activated.connect(self.action_redo)
 
         copy_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence(Qt.CTRL + Qt.Key_C), self)
         copy_shortcut.activated.connect(self.set_and_start_copying)
@@ -1248,7 +1304,8 @@ class GenEditor(QMainWindow):
             ))
             self.edit_spawn_window.rotation.setText(str(self.pikmin_gen_file.startdir))
             self.edit_spawn_window.closing.connect(self.action_close_edit_startpos_window)
-            self.edit_spawn_window.button_savetext.pressed.connect(self.action_save_startpos)
+            self.edit_spawn_window.button_savetext.clicked.connect(
+                lambda _checked: self.action_save_startpos())
             self.edit_spawn_window.show()
 
     def update_recent_files_list(self, filepath):
@@ -1583,6 +1640,7 @@ class GenEditor(QMainWindow):
         self.level_view.level_file = self.level_file
         # self.pikmin_gen_view.update()
         self.level_view.do_redraw()
+        self.on_document_potentially_changed(update_unsaved_changes=False)
 
         print("File loaded")
         # self.bw_map_screen.update()
@@ -1798,7 +1856,8 @@ class GenEditor(QMainWindow):
     def button_open_add_item_window(self):
         if self.add_object_window is None:
             self.add_object_window = AddPikObjectWindow()
-            self.add_object_window.button_savetext.pressed.connect(self.button_add_item_window_save)
+            self.add_object_window.button_savetext.clicked.connect(
+                lambda _checked: self.button_add_item_window_save())
             self.add_object_window.closing.connect(self.button_add_item_window_close)
             #print("hmmm")
             if self.addobjectwindow_last_selected is not None:
@@ -1815,7 +1874,8 @@ class GenEditor(QMainWindow):
     def shortcut_open_add_item_window(self):
         if self.add_object_window is None:
             self.add_object_window = AddPikObjectWindow()
-            self.add_object_window.button_savetext.pressed.connect(self.button_add_item_window_save)
+            self.add_object_window.button_savetext.clicked.connect(
+                lambda _checked: self.button_add_item_window_save())
             self.add_object_window.closing.connect(self.button_add_item_window_close)
             #print("object")
             if self.addobjectwindow_last_selected is not None:
@@ -1852,7 +1912,7 @@ class GenEditor(QMainWindow):
                 elif isinstance(obj, libbol.LightParam):
                     self.level_file.lightparams.append(obj)
                 elif isinstance(obj, libbol.MGEntry):
-                    self.level_file.lightparams.append(obj)
+                    self.level_file.mgentries.append(obj)
 
                 self.addobjectwindow_last_selected_category = self.add_object_window.category_menu.currentIndex()
                 self.object_to_be_added = None
@@ -2331,6 +2391,9 @@ class GenEditor(QMainWindow):
                 placeobject.end.y = y
                 placeobject.end.z = z
                 self.last_position_clicked = []
+
+                if group == 0 and not self.level_file.checkpoints.groups:
+                    self.level_file.checkpoints.groups.append(libbol.CheckpointGroup.new())
                 self.level_file.checkpoints.groups[group].points.insert(position + self.points_added, placeobject)
                 self.points_added += 1
                 self.level_view.do_redraw()
@@ -2351,14 +2414,26 @@ class GenEditor(QMainWindow):
 
             if isinstance(object, libbol.EnemyPoint):
                 placeobject.group = group
+                if group == 0 and not self.level_file.enemypointgroups.groups:
+                    self.level_file.enemypointgroups.groups.append(libbol.EnemyPointGroup.new())
+
                 self.level_file.enemypointgroups.groups[group].points.insert(position + self.points_added, placeobject)
                 self.points_added += 1
             elif isinstance(object, libbol.RoutePoint):
-                
+    
                 if object.partof.type == 0:
+                    if group == 0 and not self.level_file.routes:
+                        self.level_file.routes.append(libbol.Route.new())
+
+
                     placeobject.partof = self.level_file.routes[group]
                     self.level_file.routes[group].points.insert(position+ self.points_added, placeobject)
                 elif object.partof.type == 1:
+                    if group == 0 and not self.level_file.cameraroutes:
+                        new_route = libbol.Route.new()
+                        new_route.type = 1
+                        self.level_file.cameraroutes.append(new_route)
+
                     placeobject.partof = self.level_file.cameraroutes[group]
                     self.level_file.cameraroutes[group].points.insert(position+ self.points_added, placeobject)
                 self.points_added += 1
@@ -2603,7 +2678,8 @@ class GenEditor(QMainWindow):
         if event.key() == Qt.Key_Escape:
             self.points_added = 0
             self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_NONE)
-            self.pik_control.button_add_object.setChecked(False)
+            self.pik_control.button_add_object.clicked.connect(
+                lambda _checked: self.button_open_add_item_window())
             #self.pik_control.button_move_object.setChecked(False)
             if self.add_object_window is not None:
                 self.add_object_window.close()
@@ -2833,73 +2909,7 @@ class GenEditor(QMainWindow):
             self.level_file.cameras[old].used_by.remove(obj)
         if new != -1:
             self.level_file.cameras[new].used_by.append(obj)
-        
-    @catch_exception
-    def action_undo(self):
-        res = self.history.history_undo()
-        if res is None:
-            return
-        action, val = res
-
-        if action == "AddObject":
-            obj = val
-            self.pikmin_gen_file.generators.remove(obj)
-            if obj in self.editing_windows:
-                self.editing_windows[obj].destroy()
-                del self.editing_windows[obj]
-
-            if len(self.pikmin_gen_view.selected) == 1 and self.pikmin_gen_view.selected[0] is obj:
-                self.pik_control.reset_info()
-            elif obj in self.pik_control.objectlist:
-                self.pik_control.reset_info()
-            if obj in self.pikmin_gen_view.selected:
-                self.pikmin_gen_view.selected.remove(obj)
-                self.pikmin_gen_view.gizmo.hidden = True
-
-            #self.pikmin_gen_view.update()
-            self.pikmin_gen_view.do_redraw()
-
-        if action == "RemoveObjects":
-            for obj in val:
-                self.pikmin_gen_file.generators.append(obj)
-
-            #self.pikmin_gen_view.update()
-            self.pikmin_gen_view.do_redraw()
-        self.set_has_unsaved_changes(True)
-
-    @catch_exception
-    def action_redo(self):
-        res = self.history.history_redo()
-        if res is None:
-            return
-
-        action, val = res
-
-        if action == "AddObject":
-            obj = val
-            self.pikmin_gen_file.generators.append(obj)
-
-            #self.pikmin_gen_view.update()
-            self.pikmin_gen_view.do_redraw()
-
-        if action == "RemoveObjects":
-            for obj in val:
-                self.pikmin_gen_file.generators.remove(obj)
-                if obj in self.editing_windows:
-                    self.editing_windows[obj].destroy()
-                    del self.editing_windows[obj]
-
-                if len(self.pikmin_gen_view.selected) == 1 and self.pikmin_gen_view.selected[0] is obj:
-                    self.pik_control.reset_info()
-                elif obj in self.pik_control.objectlist:
-                    self.pik_control.reset_info()
-                if obj in self.pikmin_gen_view.selected:
-                    self.pikmin_gen_view.selected.remove(obj)
-                    self.pikmin_gen_view.gizmo.hidden = True
-
-            #self.pikmin_gen_view.update()
-            self.pikmin_gen_view.do_redraw()
-        self.set_has_unsaved_changes(True)
+  
 
     def update_3d(self):
         self.level_view.gizmo.move_to_average(self.level_view.selected_positions)
@@ -3098,53 +3108,6 @@ class GenEditor(QMainWindow):
 
 
 
-class EditorHistory(object):
-    def __init__(self, historysize):
-        self.history = []
-        self.step = 0
-        self.historysize = historysize
-
-    def reset(self):
-        del self.history
-        self.history = []
-        self.step = 0
-
-    def _add_history(self, entry):
-        if self.step == len(self.history):
-            self.history.append(entry)
-            self.step += 1
-        else:
-            for i in range(len(self.history) - self.step):
-                self.history.pop()
-            self.history.append(entry)
-            self.step += 1
-            assert len(self.history) == self.step
-
-        if len(self.history) > self.historysize:
-            for i in range(len(self.history) - self.historysize):
-                self.history.pop(0)
-                self.step -= 1
-
-    def add_history_addobject(self, pikobject):
-        self._add_history(("AddObject", pikobject))
-
-    def add_history_removeobjects(self, objects):
-        self._add_history(("RemoveObjects", objects))
-
-    def history_undo(self):
-        if self.step == 0:
-            return None
-
-        self.step -= 1
-        return self.history[self.step]
-
-    def history_redo(self):
-        if self.step == len(self.history):
-            return None
-
-        item = self.history[self.step]
-        self.step += 1
-        return item
 
 def find_file(rarc_folder, ending):
     for filename in rarc_folder.files.keys():
@@ -3163,6 +3126,23 @@ def get_file_safe(rarc_folder, ending):
 import sys
 def except_hook(cls, exception, traceback):
     sys.__excepthook__(cls, exception, traceback)
+
+POTENTIALLY_EDITING_EVENTS = (
+    QtCore.QEvent.KeyRelease,
+    QtCore.QEvent.MouseButtonRelease,
+)
+
+
+class Application(QtWidgets.QApplication):
+
+    document_potentially_changed = QtCore.pyqtSignal()
+
+    def notify(self, receiver: QtCore.QObject, event: QtCore.QEvent) -> bool:
+        if event.type() in POTENTIALLY_EDITING_EVENTS:
+            if isinstance(receiver, QtGui.QWindow):
+                self.document_potentially_changed.emit()
+
+        return super().notify(receiver, event)
 
 
 
@@ -3186,7 +3166,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    app = QApplication(sys.argv)
+    app = Application(sys.argv)
 
     signal.signal(signal.SIGINT, lambda _signal, _frame: app.quit())
     """
@@ -3237,6 +3217,11 @@ if __name__ == "__main__":
         print("Python version: ", sys.version)
         editor_gui = GenEditor()
         editor_gui.setWindowIcon(QtGui.QIcon('resources/icon.ico'))
+
+        app.document_potentially_changed.connect(
+            editor_gui.on_document_potentially_changed)
+
+
 
         editor_gui.show()
 

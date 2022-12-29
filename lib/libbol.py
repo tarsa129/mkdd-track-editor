@@ -2,7 +2,6 @@ import json
 from struct import unpack, pack
 from this import d
 from numpy import ndarray, array
-from binascii import hexlify
 from math import cos, sin, atan2
 from .vectors import Vector3, Vector2
 from collections import OrderedDict
@@ -96,10 +95,6 @@ class Rotation(object):
 
         self.mtx[3][0] = self.mtx[3][1] = self.mtx[3][2] = 0.0
         self.mtx[3][3] = 1.0
-        #print(forward.x, -forward.z, forward.y)
-        #print(self.mtx)
-        #print([x for x in self.mtx])
-
 
     @classmethod
     def from_matrix(cls, matrix):
@@ -321,7 +316,8 @@ class EnemyPoint(object):
                  group,
                  driftacuteness,
                  driftduration,
-                 unknown = 0):
+                 driftsupplement,
+                 nomushroomzone):
         self.position = position
         self.driftdirection = driftdirection
         self.link = link
@@ -331,7 +327,8 @@ class EnemyPoint(object):
         self.group = group
         self.driftacuteness = driftacuteness
         self.driftduration = driftduration
-        self.unknown = unknown
+        self.driftsupplement = driftsupplement
+        self.nomushroomzone = nomushroomzone
 
         #assert self.swerve in (-3, -2, -1, 0, 1, 2, 3)
         #assert self.itemsonly in (0, 1)
@@ -343,7 +340,7 @@ class EnemyPoint(object):
     def new(cls):
         return cls(
             Vector3(0.0, 0.0, 0.0),
-            0, -1, 1000.0, 0, 0, 0, 0, 0, 0
+            0, -1, 1000.0, 0, 0, 0, 0, 0, 0, 0
         )
 
     @classmethod
@@ -351,7 +348,7 @@ class EnemyPoint(object):
         start = f.tell()
         args = [Vector3(*unpack(">fff", f.read(12)))]
         if not old_bol:
-            args.extend(unpack(">HhfbBBBBH", f.read(15)))
+            args.extend(unpack(">HhfbBBBBBB", f.read(15)))
             padding = f.read(5)  # padding
             #assert padding == b"\x00" * 5
         else:
@@ -372,7 +369,7 @@ class EnemyPoint(object):
         start = f.tell()
         f.write(pack(">fff", self.position.x, self.position.y, self.position.z))
         f.write(pack(">Hhf", self.driftdirection, self.link, self.scale))
-        f.write(pack(">bBBBBH", self.swerve, self.itemsonly, self.group, self.driftacuteness, self.driftduration, self.unknown))
+        f.write(pack(">bBBBBBB", self.swerve, self.itemsonly, self.group, self.driftacuteness, self.driftduration, self.driftsupplement, self.nomushroomzone))
         f.write(b"\x01"*5)
 
   
@@ -1185,14 +1182,27 @@ class Camera(object):
 
         self.chase = 0
         self.camtype = 0
-        self.startzoom = 0
+        
+        class FOV:
+            def __init__(self):
+                self.start = 0
+                self.end = 0
+
+        self.fov = FOV()
+
         self.camduration = 0
         self.startcamera = 0
-        self.unk2 = 0
-        self.unk3 = 0
+        class Shimmer:
+            def __init__(self):
+                self.z0 = 0
+                self.z1 = 0
+
+        self.shimmer = Shimmer()
+
+        self.shimmerz0 = 0
+        self.shimmerz1 = 0
         self.route = -1
         self.routespeed = 0
-        self.endzoom = 0
         self.nextcam = -1
         self.name = "null"
         
@@ -1208,13 +1218,13 @@ class Camera(object):
     def default(cls, type = 1):
         camera = cls(Vector3(0.0, 0.0, 0.0))
         camera.camtype = type
-        camera.startzoom = 30
-        camera.endzoom = 50
+        camera.fov.start = 30
+        camera.fov.end = 50
         
         if (type == 1 ):
             camera.chase = 1;
-            camera.unk2 = 4000;
-            camera.unk3 = 4060;
+            camera.shimmerz0 = 4000;
+            camera.shimmerz1 = 4060;
             camera.routespeed = 20;
         
         return camera
@@ -1222,10 +1232,7 @@ class Camera(object):
 
     @classmethod
     def from_file(cls, f):
-        start = f.tell()
-        hexd = f.read(4*3*4)
-        f.seek(start)
-        print(hexlify(hexd))
+
 
         position = Vector3(*unpack(">fff", f.read(12)))
 
@@ -1235,14 +1242,14 @@ class Camera(object):
         cam.position3 = Vector3(*unpack(">fff", f.read(12)))
         cam.chase = read_uint8(f) 
         cam.camtype = read_uint8(f)
-        cam.startzoom = read_uint16(f)
+        cam.fov.start = read_uint16(f)
         cam.camduration = read_uint16(f)
         cam.startcamera = read_uint16(f)
-        cam.unk2 = read_uint16(f)
-        cam.unk3 = read_uint16(f)
+        cam.shimmerz0 = read_uint16(f)
+        cam.shimmerz1 = read_uint16(f)
         cam.route = read_int16(f)
         cam.routespeed = read_uint16(f)
-        cam.endzoom = read_uint16(f)
+        cam.fov.end = read_uint16(f)
         cam.nextcam = read_int16(f)
         cam.name = str(f.read(4), encoding="ascii")
 
@@ -1259,14 +1266,14 @@ class Camera(object):
         
         new_camera.chase = self.chase
         new_camera.camtype = self.camtype
-        new_camera.startzoom = self.startzoom
+        new_camera.fov.start = self.fov.start
+        new_camera.fov.end = self.fov.end
         new_camera.camduration = self.camduration
         new_camera.startcamera = self.startcamera
-        new_camera.unk2 = self.unk2
-        new_camera.unk3 = self.unk3
+        new_camera.shimmerz0 = self.shimmerz0
+        new_camera.shimmerz1 = self.shimmerz1
         new_camera.route = self.route
         new_camera.routespeed = self.routespeed
-        new_camera.endzoom = self.endzoom
         new_camera.nextcam = self.nextcam
         new_camera.name = self.name
 
@@ -1280,46 +1287,16 @@ class Camera(object):
         self.rotation.write(f)
         f.write(pack(">fff", self.position2.x, self.position2.y, self.position2.z))
         f.write(pack(">fff", self.position3.x, self.position3.y, self.position3.z))
-    
-        if self.name == "null" or self.name == "para":
             
-    
-            
-            f.write(pack(">BBHHH", self.chase, self.camtype, int(self.startzoom), int(self.camduration), self.startcamera))
-            f.write(pack(">HHhHHh",
-                         self.unk2, self.unk3, self.route,
-                         self.routespeed, int(self.endzoom), self.nextcam))
+        if self.camtype in [0, 1, 2, 3]:
+            f.write(pack(">B", self.chase))
         else:
-            #mkwii type - perform type conversion to mkdd
-            
-            type = 1
-            
-            if self.camtype == 1:
-                type = 0
-            elif self.camtype == 2:
-                type = 1
-            elif self.camtype == 4:
-                type = 6
-            elif self.camtype == 5:
-                type = 5
-            elif self.camtype == 3:
-                type = 7
-            elif self.camtype == 6:
-                type = 1
-                
-            
-            
-            f.write(pack(">BBHHH", self.chase, type, int(self.startzoom), int(self.camduration), self.startcamera))
-            f.write(pack(">HHhHHh",
-                         self.unk2, self.unk3, self.route,
-                         int(self.routespeed / 10), int(self.endzoom), self.nextcam))
+            f.write(pack(">B", 0))
+        f.write(pack(">BHHH",  self.camtype, self.fov.start, self.camduration, self.startcamera))
+        f.write(pack(">HHhHHh",
+                        self.shimmerz0, self.shimmerz1, self.route,
+                        self.routespeed, self.fov.end, self.nextcam))
         
-        assert len(self.name) == 4    
-        if self.name == "para":
-            f.write(bytes(self.name, encoding="ascii"))
-        else:
-            f.write(bytes("null", encoding="ascii"))
-
    
 
     @classmethod
@@ -1432,7 +1409,7 @@ class MGEntry(object):
 
     @classmethod
     def new(cls):
-        return cls(0)
+        return cls()
 
     @classmethod
     def from_file(cls, f):
@@ -1598,7 +1575,6 @@ class BOL(object):
         bol.unk6 = read_uint8(f)
 
         filestart = read_uint32(f)
-        print(hex(f.tell()), filestart)
         assert filestart == 0
 
         sectionoffsets = {}
@@ -1738,6 +1714,15 @@ class BOL(object):
             for point in route.points:
                 point.partof = route
 
+    @classmethod
+    def from_bytes(cls, data: bytes) -> 'BOL':
+        return BOL.from_file(BytesIO(data))
+
+    def to_bytes(self) -> bytes:
+        f = BytesIO()
+        self.write(f)
+        return f.getvalue()
+
     def write(self, f):
         #f.write(b"0015")
         f.write(b"0014")
@@ -1831,7 +1816,6 @@ class BOL(object):
         offsets.append(f.tell())
         for mgentry in self.mgentries:
             mgentry.write(f)
-        print(len(offsets))
         assert len(offsets) == 11
         f.seek(offset_start)
         for offset in offsets:

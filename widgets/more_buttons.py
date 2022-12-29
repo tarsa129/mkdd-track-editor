@@ -84,11 +84,6 @@ class MoreButtons(QWidget):
             new_check_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(2) )
             self.vbox.addWidget(new_check_group)
 
-            set_key_automatically = QPushButton(self)
-            set_key_automatically.setText("Auto Key Checkpoints")
-            set_key_automatically.clicked.connect(lambda: self.parent.button_add_from_addi_options(21, option.bound_to) )
-            self.vbox.addWidget(set_key_automatically)
-            
         elif isinstance(option.bound_to, CheckpointGroup) :
             all_options = False
             new_check_group = QPushButton(self)
