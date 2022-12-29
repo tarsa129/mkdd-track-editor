@@ -2027,7 +2027,7 @@ class GenEditor(QMainWindow):
             id = 0
             idx = 0
 
-            to_look_through = self.level_file.routes if obj.type == 1 else self.level_file.cameraroutes
+            to_look_through = self.level_file.routes if obj.type == 0 else self.level_file.cameraroutes
 
             for route in to_look_through:
                 if route is obj:
@@ -2036,7 +2036,6 @@ class GenEditor(QMainWindow):
                 else:
                     idx += 1
             
-
             #self.addobjectwindow_last_selected_category = 5
             new_point = libbol.RoutePoint.new()
             new_point.partof = obj
@@ -2156,7 +2155,6 @@ class GenEditor(QMainWindow):
                         group_id = group_idx
                         pos_in_grp = point_idx
                         break
-
             
             self.object_to_be_added = [libbol.RoutePoint.new_partof(obj), group_id, pos_in_grp + 1 ]
             self.pik_control.button_add_object.setChecked(True)
