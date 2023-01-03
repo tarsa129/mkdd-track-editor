@@ -1583,19 +1583,22 @@ class BOL(object):
         bol.fog_endz = read_float(f)
         bol.lod_bias = read_uint8(f)
         bol.dummy_start_line = read_uint8(f)
-        assert bol.lod_bias in (0, 1)
-        assert bol.dummy_start_line in (0, 1)
+        #assert bol.lod_bias in (0, 1)
+        #assert bol.dummy_start_line in (0, 1)
+        bol.lod_bias = min(1, bol.lod_bias)
+        bol.dummy_start_line = min(1, bol.dummy_start_line)
         bol.snow_effects = read_uint8(f)
         bol.shadow_opacity = read_uint8(f)
         bol.shadow_color = ColorRGB.from_file(f)
         bol.starting_point_count = read_uint8(f)
         bol.sky_follow = read_uint8(f)
-        assert bol.sky_follow in (0, 1)
+        #assert bol.sky_follow in (0, 1)
+        bol.sky_follow = min(1, bol.sky_follow)
 
         sectioncounts[LIGHTPARAM] = read_uint8(f)
         sectioncounts[MINIGAME] = read_uint8(f)
         padding = read_uint8(f)
-        assert padding == 0
+        #assert padding == 0
 
         filestart = read_uint32(f)
         assert filestart == 0
@@ -1634,7 +1637,7 @@ class BOL(object):
 
         f.seek(sectionoffsets[KARTPOINT])
         bol.kartpoints = KartStartPoints.from_file(f, (sectionoffsets[AREA] - sectionoffsets[KARTPOINT])//0x28)
-        assert len(bol.kartpoints.positions) == bol.starting_point_count
+        #assert len(bol.kartpoints.positions) == bol.starting_point_count
 
         f.seek(sectionoffsets[AREA])
         bol.areas = Areas.from_file(f, sectioncounts[AREA])

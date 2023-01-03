@@ -7,6 +7,7 @@ design choices:
 object routes and camera routes are split at file load, and only combined at file save. unused routes are removed at load. this means that you can open a file, do nothing, and the saved file will be different from the original file.
 for areas, a separate "chase" field is specified, unique from the camera type
 rotations are done in terms of euler angles instead of vectors
+the color inputs use buttons instead of labels
 
 further qol updates:
 the use of side buttons to make the 'add object' button as obsolete as possible

@@ -806,7 +806,7 @@ class BOLEdit(DataEditor):
         self.shadow_colorbutton, self.shadow_color = self.add_color_input("Shadow Color", "shadow_color", ["r", "g", "b"],
                                                     MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
         self.shadow_colorbutton.clicked.connect(lambda: self.open_color_picker_light("shadow_color") )  
-        self.unk3 = self.add_integer_input("Shadow Alpha %", "unk3",
+        self.shadow_opacity = self.add_integer_input("Shadow Alpha %", "shadow_opacity",
                                            MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
                                                 
                                                 
@@ -822,18 +822,16 @@ class BOLEdit(DataEditor):
                                                  -inf, +inf)
         self.fog_endz = self.add_decimal_input("Fog Far Z", "fog_endz",
                                                -inf, +inf)
-        self.unk1 = self.add_checkbox("LOD bias on/off", "unk1",
+        self.lod_bias = self.add_checkbox("LOD bias on/off", "lod_bias",
                                             off_value=0, on_value=1)
-        self.geostartline = self.add_checkbox("Geostartline Flag", "geostartline", off_value=0, on_value=1)
+        self.dummy_start_line = self.add_checkbox("Geostartline Flag", "dummy_start_line", off_value=0, on_value=1)
         self.roll = self.add_dropdown_input("Tilt", "roll", ROLL_OPTIONS)
 
-        self.unk2 = self.add_checkbox("Sherbet Land Env. Effects", "unk2",
+        self.snow_effects = self.add_checkbox("Sherbet Land Env. Effects", "snow_effects",
                                            off_value=0, on_value=1)
-        self.unk5 = self.add_checkbox("Sky Follow Flag", "unk5",
+        self.sky_follow = self.add_checkbox("Sky Follow Flag", "sky_follow",
                                            off_value=0, on_value=1)                        
-        self.unk6 = self.add_integer_input("Possibly Padding", "unk6",
-                                           MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-
+       
     def update_data(self):
         obj: BOL = self.bound_to
         #self.roll.setText(str(obj.roll))
@@ -855,12 +853,11 @@ class BOLEdit(DataEditor):
         self.fog_color[2].setText(str(obj.fog_color.b))
         self.fog_startz.setText(str(obj.fog_startz))
         self.fog_endz.setText(str(obj.fog_endz))
-        self.unk1.setChecked(obj.unk1 != 0)
-        self.geostartline.setChecked(obj.geostartline != 0)
-        self.unk2.setChecked(obj.unk2 != 0)
-        self.unk3.setText(str(obj.unk3))
-        self.unk5.setChecked(obj.unk5 != 0)
-        self.unk6.setText(str(obj.unk6))
+        self.lod_bias.setChecked(obj.lod_bias != 0)
+        self.snow_effects.setChecked(obj.snow_effects != 0)
+        self.sky_follow.setChecked(obj.sky_follow != 0)
+        self.shadow_opacity.setText(str(obj.shadow_opacity))
+        self.snow_effects.setChecked(obj.snow_effects != 0)
         self.shadow_color[0].setText(str(obj.shadow_color.r))
         self.shadow_color[1].setText(str(obj.shadow_color.g))
         self.shadow_color[2].setText(str(obj.shadow_color.b))
