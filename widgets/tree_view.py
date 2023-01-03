@@ -227,7 +227,7 @@ class AreaEntry(NamedItem):
 
     def update_name(self):
         disp_string = "Area (Type: {0})".format(self.bound_to.area_type)
-        if self.bound_to.area_type == 1 or self.bound_to.area_type == 0 and self.bound_to.unk1 == 1:
+        if self.bound_to.area_type == 1:
             disp_string += ", (Cam: {0})".format(self.bound_to.camera_index)
         elif self.bound_to.area_type == 7:
             disp_string += ", (Light: {0})".format(self.bound_to.lightparam_index)
