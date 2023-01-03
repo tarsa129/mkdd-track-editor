@@ -1918,7 +1918,6 @@ class BOL(object):
 
         self.remove_unused_cameras()
         self.remove_unused_routes()
-        self.copy_enemy_to_item()
 
     def set_checkpoint_respawns():
     

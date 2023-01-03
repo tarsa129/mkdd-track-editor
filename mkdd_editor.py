@@ -762,21 +762,18 @@ class GenEditor(QMainWindow):
         self.misc_menu.addAction(self.do_auto_qol)
         self.do_auto_qol.setShortcut("Ctrl+4")
 
-        self.menubar.addAction(self.file_menu.menuAction())
-        self.menubar.addAction(self.edit_menu.menuAction())
-        self.menubar.addAction(self.visibility_menu.menuAction())
-        self.menubar.addAction(self.collision_menu.menuAction())
-        self.menubar.addAction(self.minimap_menu.menuAction())
-        self.menubar.addAction(self.misc_menu.menuAction())
         
-        self.setMenuBar(self.menubar)
 
         self.last_obj_select_pos = 0
 
+        #SEPERATE dolphin bar
+
+        self.dolphin_menu = QMenu(self.menubar)
+        self.dolphin_menu.setTitle("Dolphin")
 
         self.dolphin_action = QAction("Hook into Dolphin", self)
         self.dolphin_action.triggered.connect(self.action_hook_into_dolphion)
-        self.misc_menu.addAction(self.dolphin_action)
+        self.dolphin_menu.addAction(self.dolphin_action)
 
         self.camera_actions = [QAction("Unfollow", self)]
 
@@ -793,7 +790,17 @@ class GenEditor(QMainWindow):
             action = self.camera_actions[i+1]
             action.triggered.connect(make_func(i))
 
-            self.misc_menu.addAction(action)
+            self.dolphin_menu.addAction(action)
+
+        self.menubar.addAction(self.file_menu.menuAction())
+        self.menubar.addAction(self.edit_menu.menuAction())
+        self.menubar.addAction(self.visibility_menu.menuAction())
+        self.menubar.addAction(self.collision_menu.menuAction())
+        self.menubar.addAction(self.minimap_menu.menuAction())
+        self.menubar.addAction(self.misc_menu.menuAction())
+        self.menubar.addAction(self.dolphin_menu.menuAction())
+        
+        self.setMenuBar(self.menubar)
 
     def action_hook_into_dolphion(self):
         error = self.dolphin.initialize()
