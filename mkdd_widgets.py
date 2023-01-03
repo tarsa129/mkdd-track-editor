@@ -1307,15 +1307,15 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
             p2 = self.paths.waypoints[p2i]
 
             glBegin(GL_LINES)
-            glVertex3f(p1.position.x, -p1.position.z, p1.position.y+5)
-            glVertex3f(p2.position.x, -p2.position.z, p2.position.y+5)
+            #glVertex3f(p1.position.x, -p1.position.z, p1.position.y+5)
+            #glVertex3f(p2.position.x, -p2.position.z, p2.position.y+5)
             glEnd()
 
             if p1i not in rendered:
-                self.models.draw_sphere(p1.position, p1.radius/2)
+                #self.models.draw_sphere(p1.position, p1.radius/2)
                 rendered[p1i] = True
             if p2i not in rendered:
-                self.models.draw_sphere(p2.position, p2.radius/2)
+                #self.models.draw_sphere(p2.position, p2.radius/2)
                 rendered[p2i] = True
         glColor4f(0.0, 1.0, 1.0, 1.0)
         """for points in self.paths.wide_paths:
