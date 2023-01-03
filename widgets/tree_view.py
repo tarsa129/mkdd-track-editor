@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem
-from lib.libbol import BOL, get_full_name
+from lib.libbol import BOL, get_full_name, AREA_TYPES
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QAction, QMenu
 
@@ -117,6 +117,10 @@ class NamedItem(QTreeWidgetItem):
 
 
 class EnemyRoutePoint(NamedItem):
+    def __init__(self, parent, name, bound_to, index=None):
+        super().__init__(parent, name, bound_to, index)
+        bound_to.widget = self
+
     def update_name(self):
         group_item = self.parent()
         group = group_item.bound_to
@@ -248,6 +252,10 @@ class CameraEntry(NamedItem):
 
 
 class RespawnEntry(NamedItem):
+    def __init__(self, parent, name, bound_to, index=None):
+        super().__init__(parent, name, bound_to, index)
+        bound_to.widget = self
+
     def update_name(self):
         for i in range(self.parent().childCount()):
             if self == self.parent().child(i):
@@ -279,8 +287,6 @@ class LevelDataTreeView(QTreeWidget):
         self.setColumnCount(1)
         self.setHeaderLabel("Track Data Entries")
         self.setHeaderHidden(True)
-
-
 
         self.bolheader = BolHeader()
         self.addTopLevelItem(self.bolheader)
@@ -394,7 +400,6 @@ class LevelDataTreeView(QTreeWidget):
         #self.mgentries.remove_children()
 
     def set_objects(self, boldata: BOL):
-
         # Compute the location (based on indexes) of the currently selected item, if any.
         selected_item_indexes = []
         selected_items = self.selectedItems()
@@ -484,7 +489,6 @@ class LevelDataTreeView(QTreeWidget):
                     break
             item.setSelected(True)
 
-
     def sort_objects(self):
         self.objects.sort()
         """items = []
@@ -512,7 +516,6 @@ class LevelDataTreeView(QTreeWidget):
         for i in range(item_count):
             item = parent_item.child(i)
             item.setExpanded(expansion_states[i])
-
 
     def bound_to_group(self, levelfile):
         self.enemyroutes.bound_to = levelfile.enemypointgroups

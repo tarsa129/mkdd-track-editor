@@ -2,8 +2,8 @@ import json
 from struct import unpack, pack
 from this import d
 from numpy import ndarray, array
-from math import cos, sin, atan2
-from .vectors import Vector3, Vector2
+from math import cos, sin
+from .vectors import Vector3
 from collections import OrderedDict
 from io import BytesIO
 from copy import deepcopy
@@ -330,11 +330,11 @@ class EnemyPoint(object):
         self.driftsupplement = driftsupplement
         self.nomushroomzone = nomushroomzone
 
-        #assert self.swerve in (-3, -2, -1, 0, 1, 2, 3)
-        #assert self.itemsonly in (0, 1)
-        #assert self.driftdirection in (0, 1, 2)
-        #assert 0 <= self.driftacuteness <= 180
-
+        assert self.swerve in (-3, -2, -1, 0, 1, 2, 3)
+        assert self.itemsonly in (0, 1)
+        assert self.driftdirection in (0, 1, 2)
+        assert 0 <= self.driftacuteness <= 180
+        assert self.nomushroomzone in (0, 1)
 
     @classmethod
     def new(cls):
@@ -371,9 +371,7 @@ class EnemyPoint(object):
         f.write(pack(">Hhf", self.driftdirection, self.link, self.scale))
         f.write(pack(">bBBBBBB", self.swerve, self.itemsonly, self.group, self.driftacuteness, self.driftduration, self.driftsupplement, self.nomushroomzone))
         f.write(b"\x01"*5)
-
-  
-  
+        #assert f.tell() - start == self._size
 
 
 class EnemyPointGroup(object):
@@ -433,25 +431,25 @@ class EnemyPointGroup(object):
 class EnemyPointGroups(object):
     def __init__(self):
         self.groups = []
-        self._group_ids = {}
 
     @classmethod
     def from_file(cls, f, count, old_bol=False):
         enemypointgroups = cls()
+        group_ids = {}
         curr_group = None
 
         for i in range(count):
             enemypoint = EnemyPoint.from_file(f, old_bol)
             #print("Point", i, "in group", enemypoint.group, "links to", enemypoint.link)
-            if enemypoint.group not in enemypointgroups._group_ids:
+            if enemypoint.group not in group_ids:
                 # start of group
                 curr_group = EnemyPointGroup()
                 curr_group.id = enemypoint.group
-                enemypointgroups._group_ids[enemypoint.group] = curr_group
+                group_ids[enemypoint.group] = curr_group
                 curr_group.points.append(enemypoint)
                 enemypointgroups.groups.append(curr_group)
             else:
-                enemypointgroups._group_ids[enemypoint.group].points.append(enemypoint)
+                group_ids[enemypoint.group].points.append(enemypoint)
 
         return enemypointgroups
 
@@ -696,8 +694,7 @@ class Checkpoint(object):
         start = Vector3(*unpack(">fff", f.read(12)))
         end = Vector3(*unpack(">fff", f.read(12)))
         unk1, unk2, unk3, unk4 = unpack(">BBBB", f.read(4))
-        #print(start, end)
-        #assert unk4 == 0
+        assert unk4 == 0
         assert unk2 == 0 or unk2 == 1
         assert unk3 == 0 or unk3 == 1
         return cls(start, end, unk1, unk2, unk3, unk4)
@@ -1078,6 +1075,20 @@ class KartStartPoints(object):
    
 # Section 7
 # Areas
+
+AREA_TYPES = {
+    0: "Shadow",
+    1: "Camera",
+    2: "Ceiling",
+    3: "No Dead Zone",
+    4: "Unknown 1",
+    5: "Unknown 2",
+    6: "Sound Effect",
+    7: "Lighting",
+}
+
+REVERSE_AREA_TYPES = dict(zip(AREA_TYPES.values(), AREA_TYPES.keys()))
+
 class Area(object):
 
     can_copy = True
@@ -1088,13 +1099,20 @@ class Area(object):
         self.shape = 0
         self.area_type = 0
         self.camera_index = -1
-        self.unk1 = 0
-        self.unk2 = 0
+
+        class Feather:
+            def __init__(self):
+                self.i0 = 0
+                self.i1 = 0
+
+        self.feather = Feather()
         self.unkfixedpoint = 0
         self.unkshort = 0
         self.shadow_id = 0
         self.lightparam_index = 0
         
+        self.widget = None
+
         self.widget = None
 
     @classmethod
@@ -1118,12 +1136,15 @@ class Area(object):
         area.shape = read_uint8(f)
         area.area_type = read_uint8(f)
         area.camera_index = read_int16(f)
-        area.unk1 = read_uint32(f)
-        area.unk2 = read_uint32(f)
+        area.feather.i0 = read_uint32(f)
+        area.feather.i1 = read_uint32(f)
         area.unkfixedpoint = read_int16(f)
         area.unkshort = read_int16(f)
         area.shadow_id = read_int16(f)
         area.lightparam_index = read_int16(f)
+
+        assert area.shape in (0, 1)
+        assert area.area_type in list(AREA_TYPES.keys())
 
         return area
 
@@ -1136,7 +1157,7 @@ class Area(object):
         f.write(pack(">fff", self.scale.x, self.scale.y, self.scale.z))
         self.rotation.write(f)
         f.write(pack(">BBh", self.shape, self.area_type, self.camera_index))
-        f.write(pack(">II", self.unk1, self.unk2))
+        f.write(pack(">II", self.feather.i0, self.feather.i1))
         f.write(pack(">hhhh", self.unkfixedpoint, self.unkshort, self.shadow_id, self.lightparam_index))
    
    
@@ -1149,8 +1170,8 @@ class Area(object):
         new_area.shape = self.shape
         new_area.area_type = self.area_type
         new_area.camera_index = new_area.camera_index
-        new_area.unk1 = self.unk1
-        new_area.unk2 = self.unk2
+        new_area.feather.i0 = self.feather.i0
+        new_area.feather.i1 = self.feather.i1
         new_area.unkfixedpoint = self.unkfixedpoint
         new_area.unkshort = self.unkshort
         new_area.shadow_id = self.shadow_id
@@ -1198,7 +1219,6 @@ class Camera(object):
                 self.z1 = 0
 
         self.shimmer = Shimmer()
-
         self.route = -1
         self.routespeed = 0
         self.nextcam = -1
@@ -1208,6 +1228,8 @@ class Camera(object):
         self.used_by = []
 
 
+
+        self.widget = None
 
     @classmethod
     def new(cls):
@@ -1230,8 +1252,6 @@ class Camera(object):
 
     @classmethod
     def from_file(cls, f):
-
-
         position = Vector3(*unpack(">fff", f.read(12)))
 
         cam = cls(position)
@@ -1318,15 +1338,15 @@ class Camera(object):
         cam.position3 = Vector3(-20, -20, 450)
         cam.chase = 0
         cam.camtype = 8
-        cam.startzoom = 85
+        cam.fov.start = 85
         cam.camduration = 1800
         cam.startcamera = 0
-        cam.unk2 = 0
-        cam.unk3 = 0
+        cam.shimmer.z0 = 0
+        cam.shimmer.z1 = 0
         cam.route = -1
-        cam.route_speed = 1
-        cam.endzoom = 35
-        cam.next_cam = -1
+        cam.routespeed = 1
+        cam.fov.end = 35
+        cam.nextcam = -1
         cam.name = "para"
             
         return cam
@@ -1344,6 +1364,8 @@ class JugemPoint(object):
         self.unk1 = 0
         self.unk2 = 0
         self.unk3 = 0
+
+        self.widget = None
 
     @classmethod
     def new(cls):
@@ -1437,13 +1459,12 @@ class BOL(object):
         self.fog_color = ColorRGB(0x64, 0x64, 0x64)
         self.fog_startz = 8000.0
         self.fog_endz = 230000.0
-        self.unk1 = 0
-        self.geostartline = 0
-        self.unk2 = 0
-        self.unk3 = 0
+        self.lod_bias = 0
+        self.dummy_start_line = 0
+        self.snow_effects = 0
+        self.shadow_opacity = 0
         self.starting_point_count = 0
-        self.unk5 = 0
-        self.unk6 = 0
+        self.sky_follow = 0
 
         self.shadow_color = ColorRGB(0x00, 0x00, 0x00)
 
@@ -1538,7 +1559,6 @@ class BOL(object):
     def from_file(cls, f):
         bol = cls()
         magic = f.read(4)
-        #print(magic, type(magic))
         #assert magic == b"0015" or magic == b"0012"
         old_bol = magic == b"0012"
 
@@ -1561,17 +1581,21 @@ class BOL(object):
 
         bol.fog_startz = read_float(f)
         bol.fog_endz = read_float(f)
-        bol.unk1 = read_uint8(f)
-        bol.geostartline = read_uint8(f)
-        bol.unk2 = read_uint8(f)
-        bol.unk3 = read_uint8(f)
+        bol.lod_bias = read_uint8(f)
+        bol.dummy_start_line = read_uint8(f)
+        assert bol.lod_bias in (0, 1)
+        assert bol.dummy_start_line in (0, 1)
+        bol.snow_effects = read_uint8(f)
+        bol.shadow_opacity = read_uint8(f)
         bol.shadow_color = ColorRGB.from_file(f)
         bol.starting_point_count = read_uint8(f)
-        bol.unk5 = read_uint8(f)
+        bol.sky_follow = read_uint8(f)
+        assert bol.sky_follow in (0, 1)
 
         sectioncounts[LIGHTPARAM] = read_uint8(f)
         sectioncounts[MINIGAME] = read_uint8(f)
-        bol.unk6 = read_uint8(f)
+        padding = read_uint8(f)
+        assert padding == 0
 
         filestart = read_uint32(f)
         assert filestart == 0
@@ -1717,11 +1741,6 @@ class BOL(object):
     def from_bytes(cls, data: bytes) -> 'BOL':
         return BOL.from_file(BytesIO(data))
 
-    def to_bytes(self) -> bytes:
-        f = BytesIO()
-        self.write(f)
-        return f.getvalue()
-
     def write(self, f):
         #f.write(b"0015")
         f.write(b"0014")
@@ -1744,13 +1763,13 @@ class BOL(object):
 
         f.write(pack(">B", self.fog_type))
         self.fog_color.write(f)
-        f.write(pack(">ffHBB",
+        f.write(pack(">ffBBBB",
                 self.fog_startz, self.fog_endz,
-                self.unk1, self.unk2, self.unk3))
+                self.lod_bias, self.dummy_start_line, self.snow_effects, self.shadow_opacity))
         self.shadow_color.write(f)
-        f.write(pack(">BB", len(self.kartpoints.positions), self.unk5))
+        f.write(pack(">BB", len(self.kartpoints.positions), self.sky_follow))
         f.write(pack(">BB", len(self.lightparams), len(self.mgentries)))
-        f.write(pack(">B", self.unk6))
+        f.write(pack(">B", 0))  # padding
 
         f.write(b"\x00"*4) # Filestart 0
 
@@ -1819,6 +1838,11 @@ class BOL(object):
         f.seek(offset_start)
         for offset in offsets:
             f.write(pack(">I", offset))
+
+    def to_bytes(self) -> bytes:
+        f = BytesIO()
+        self.write(f)
+        return f.getvalue()
 
 
    

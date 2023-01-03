@@ -247,7 +247,6 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
         self.modelviewmatrix = None
         self.projectionmatrix = None
 
-        self.arrow = None
         self.minimap = Minimap(Vector3(-1000.0, 0.0, -1000.0), Vector3(1000.0, 0.0, 1000.0), 0,
                                None)
 
@@ -264,10 +263,6 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
         glEndList()
 
         self.models.init_gl()
-        self.arrow = Material(texturepath="resources/arrow.png")
-
-        self.minimap = Minimap(Vector3(-1000.0, 0.0, -1000.0), Vector3(1000.0, 0.0, 1000.0), 0,
-                               "resources/arrow.png")
 
         # If multisampling is enabled, a secondary mono-sampled framebuffer needs to be created, as
         # reading pixels from multisampled framebuffers is not a supported GL operation.
@@ -566,7 +561,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
         else:
             mult = 40.0
 
-        if 10 < (self._zoom_factor + fac*mult) <= 1500:
+        if 10 < (self._zoom_factor + fac*mult):
             self._zoom_factor += int(fac*mult)
             #self.update()
             self.do_redraw()
@@ -695,6 +690,13 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                 if do_gizmo and hit != 0xFF:
                     self.gizmo.run_callback(hit)
                     self.gizmo.was_hit_at_all = True
+
+                    # Clear the potential marquee selection, which may have been just created as a
+                    # result of a mouse move event that was processed slightly earlier than this
+                    # current paint event.
+                    self.selectionbox_start = self.selectionbox_end = None
+                    self.selectionbox_projected_origin = self.selectionbox_projected_coords = None
+
                 #if hit != 0xFF and do_:
 
             glClearColor(1.0, 1.0, 1.0, 1.0)
@@ -726,7 +728,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                     self.models.render_generic_position_colored_id(pos, id + (offset) * 4)
                     offset += 1"""
 
-                self.dolphin.render_collision(self, objlist)
+                self.dolphin.render_collision(self, objlist, ObjectSelectionEntry)
                 offset = len(objlist)
 
                 if vismenu.enemyroute.is_selectable():

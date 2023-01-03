@@ -35,7 +35,7 @@ import lib.libbol as libbol
 from lib.rarc import Archive
 from lib.BCOllider import RacetrackCollision
 from lib.model_rendering import TexturedModel, CollisionModel, Minimap
-from widgets.editor_widgets import ErrorAnalyzer
+from widgets.editor_widgets import ErrorAnalyzer, ErrorAnalyzerButton
 from lib.dolreader import DolFile, read_float, write_float, read_load_immediate_r0, write_load_immediate_r0, UnmappedAddress
 from widgets.file_select import FileSelect
 from PyQt5.QtWidgets import QTreeWidgetItem
@@ -91,6 +91,21 @@ def get_treeitem(root:QTreeWidgetItem, obj):
     return None
 
 
+class UndoEntry:
+
+    def __init__(self, bol_document: bytes, enemy_path_data: 'tuple[tuple[bool, int]]',
+                 minimap_data: tuple):
+        self.bol_document = bol_document
+        self.enemy_path_data = enemy_path_data
+        self.minimap_data = minimap_data
+
+        self.bol_hash = hash((bol_document, enemy_path_data))
+        self.hash = hash((self.bol_hash, self.minimap_data))
+
+    def __eq__(self, other) -> bool:
+        return self.hash == other.hash
+
+
 class GenEditor(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -101,6 +116,9 @@ class GenEditor(QMainWindow):
 
         document = self.level_file.to_bytes()
         self.undo_history.append((hash(document), document))
+
+        self.undo_history: list[UndoEntry] = []
+        self.redo_history: list[UndoEntry] = []
 
         try:
             self.configuration = read_config()
@@ -124,7 +142,8 @@ class GenEditor(QMainWindow):
 
         self.current_coordinates = None
         self.editing_windows = {}
-        self.add_object_window = None
+        self.add_object_window = AddPikObjectWindow(self)
+        self.add_object_window.setWindowIcon(self.windowIcon())
         self.object_to_be_added = None
 
         self.edit_spawn_window = None
@@ -133,13 +152,9 @@ class GenEditor(QMainWindow):
         self._user_made_change = False
         self._justupdatingselectedobject = False
 
-        self.addobjectwindow_last_selected = None
-
         self.loaded_archive = None
         self.loaded_archive_file = None
         self.last_position_clicked = []
-
-        self.analyzer_window = None
 
         self._dontselectfromtree = False
 
@@ -203,6 +218,8 @@ class GenEditor(QMainWindow):
 
         self.restore_geometry()
 
+        self.undo_history.append(self.generate_undo_entry())
+
     def save_geometry(self):
         if "geometry" not in self.configuration:
             self.configuration["geometry"] = {}
@@ -246,7 +263,6 @@ class GenEditor(QMainWindow):
         self.last_position_clicked = []
         self.loaded_archive = None
         self.loaded_archive_file = None
-
         self.object_to_be_added = None
         self.level_view.reset(keep_collision=True)
 
@@ -255,10 +271,6 @@ class GenEditor(QMainWindow):
             val.destroy()
 
         self.editing_windows = {}
-
-        if self.add_object_window is not None:
-            self.add_object_window.destroy()
-            self.add_object_window = None
 
         if self.edit_spawn_window is not None:
             self.edit_spawn_window.destroy()
@@ -298,41 +310,96 @@ class GenEditor(QMainWindow):
             else:
                 self.setWindowTitle("MKDD Track Editor")
 
-    def load_top_bol_file_from_undo_history(self):
+    def generate_undo_entry(self) -> UndoEntry:
+        bol_document = self.level_file.to_bytes()
+
+        # List containing a tuple with the emptiness and ID of each of the enemy paths.
+        enemy_paths = self.level_file.enemypointgroups.groups
+        enemy_path_data = tuple((not path.points, path.id) for path in enemy_paths)
+
+        minimap = self.level_view.minimap
+        minimap_data = (
+            minimap.corner1.x, minimap.corner1.y, minimap.corner1.z,
+            minimap.corner2.x, minimap.corner2.y, minimap.corner2.z,
+            minimap.orientation
+        )
+
+        return UndoEntry(bol_document, enemy_path_data, minimap_data)
+
+    def load_top_undo_entry(self):
         if not self.undo_history:
             return
 
-        _document_hash, document = self.undo_history[-1]
+        current_undo_entry = self.generate_undo_entry()
+        undo_entry = self.undo_history[-1]
 
-        self.level_file = BOL.from_bytes(document)
+        bol_changed = current_undo_entry.bol_hash != undo_entry.bol_hash
+
+        self.level_file = BOL.from_bytes(undo_entry.bol_document)
+
+        # The BOL document cannot store information on empty enemy paths; this information is
+        # sourced from a separate list.
+        bol_enemy_paths = list(self.level_file.enemypointgroups.groups)
+        self.level_file.enemypointgroups.groups.clear()
+        enemy_path_data = undo_entry.enemy_path_data
+        for empty, enemy_path_id in enemy_path_data:
+            if empty:
+                empty_enemy_path = libbol.EnemyPointGroup()
+                empty_enemy_path.id = enemy_path_id
+                self.level_file.enemypointgroups.groups.append(empty_enemy_path)
+            else:
+                enemy_path = bol_enemy_paths.pop(0)
+                assert enemy_path.id == enemy_path_id
+                self.level_file.enemypointgroups.groups.append(enemy_path)
+
         self.level_view.level_file = self.level_file
         self.leveldatatreeview.set_objects(self.level_file)
-        self.level_view.do_redraw()
-        self.set_has_unsaved_changes(True)
+
+        minimap = self.level_view.minimap
+        minimap.corner1.x = undo_entry.minimap_data[0]
+        minimap.corner1.y = undo_entry.minimap_data[1]
+        minimap.corner1.z = undo_entry.minimap_data[2]
+        minimap.corner2.x = undo_entry.minimap_data[3]
+        minimap.corner2.y = undo_entry.minimap_data[4]
+        minimap.corner2.z = undo_entry.minimap_data[5]
+        minimap.orientation = undo_entry.minimap_data[6]
+
+        self.update_3d()
+        self.pik_control.update_info()
+
+        if bol_changed:
+            self.set_has_unsaved_changes(True)
+            self.error_analyzer_button.analyze_bol(self.level_file)
 
     def on_undo_action_triggered(self):
         if len(self.undo_history) > 1:
             self.redo_history.insert(0, self.undo_history.pop())
             self.update_undo_redo_actions()
-            self.load_top_bol_file_from_undo_history()
+            self.load_top_undo_entry()
 
     def on_redo_action_triggered(self):
         if self.redo_history:
             self.undo_history.append(self.redo_history.pop(0))
             self.update_undo_redo_actions()
-            self.load_top_bol_file_from_undo_history()
+            self.load_top_undo_entry()
 
     def on_document_potentially_changed(self, update_unsaved_changes=True):
-        document = self.level_file.to_bytes()
-        document_hash = hash(document)
+        undo_entry = self.generate_undo_entry()
 
-        if self.undo_history[-1][0] != document_hash:
-            self.undo_history.append((document_hash, document))
+        if len(self.undo_history) == 0:
+            return
+        if self.undo_history[-1] != undo_entry:
+            bol_changed = self.undo_history[-1].bol_hash != undo_entry.bol_hash
+
+            self.undo_history.append(undo_entry)
             self.redo_history.clear()
             self.update_undo_redo_actions()
 
-            if update_unsaved_changes:
-                self.set_has_unsaved_changes(True)
+            if bol_changed:
+                if update_unsaved_changes:
+                    self.set_has_unsaved_changes(True)
+
+                self.error_analyzer_button.analyze_bol(self.level_file)
 
     def update_undo_redo_actions(self):
         self.undo_action.setEnabled(len(self.undo_history) > 1)
@@ -521,6 +588,10 @@ class GenEditor(QMainWindow):
         self.statusbar = QStatusBar(self)
         self.statusbar.setObjectName("statusbar")
         self.setStatusBar(self.statusbar)
+
+        self.error_analyzer_button = ErrorAnalyzerButton()
+        self.error_analyzer_button.clicked.connect(lambda _checked: self.analyze_for_mistakes())
+        self.statusbar.addPermanentWidget(self.error_analyzer_button)
 
         self.connect_actions()
 
@@ -737,6 +808,7 @@ class GenEditor(QMainWindow):
 
         if filepath:
             self.level_view.minimap.set_texture(filepath)
+            self.level_view.do_redraw()
 
             self.pathsconfig["minimap_png"] = filepath
             save_cfg(self.configuration)
@@ -783,6 +855,7 @@ class GenEditor(QMainWindow):
                 self.level_view.minimap.corner2.x = read_float(dol)
                 dol.seek(int(corner2z, 16))
                 self.level_view.minimap.corner2.z = read_float(dol)
+                self.level_view.do_redraw()
 
             self.pathsconfig["dol"] = filepath
             save_cfg(self.configuration)
@@ -837,6 +910,7 @@ class GenEditor(QMainWindow):
             write_float(dol, self.level_view.minimap.corner2.x)
             dol.seek(int(corner2z, 16))
             write_float(dol, self.level_view.minimap.corner2.z)
+            self.level_view.do_redraw()
 
             with open(filepath, "wb") as f:
                 dol.save(f)
@@ -1089,12 +1163,9 @@ class GenEditor(QMainWindow):
         self.collision_area_dialog.finished.connect(on_dialog_finished)
 
     def analyze_for_mistakes(self):
-        if self.analyzer_window is not None:
-            self.analyzer_window.destroy()
-            self.analyzer_window = None
-
-        self.analyzer_window = ErrorAnalyzer(self.level_file)
-        self.analyzer_window.show()
+        analyzer_window = ErrorAnalyzer(self.level_file, parent=self)
+        analyzer_window.exec_()
+        analyzer_window.deleteLater()
 
     def on_file_menu_aboutToShow(self):
         recent_files = self.get_recent_files_list()
@@ -1177,15 +1248,16 @@ class GenEditor(QMainWindow):
 
         self.level_view.customContextMenuRequested.connect(self.mapview_showcontextmenu)
 
-        self.pik_control.button_add_object.pressed.connect(self.button_open_add_item_window)
+        #self.pik_control.button_add_object.pressed.connect(self.button_open_add_item_window)
         self.pik_control.button_stop_object.pressed.connect(self.button_add_item_window_close)
         self.pik_control.button_stop_object.setShortcut("T")
+        self.pik_control.button_add_object.clicked.connect(
+            lambda _checked: self.button_open_add_item_window())
         #self.pik_control.button_move_object.pressed.connect(self.button_move_objects)
         self.level_view.move_points.connect(self.action_move_objects)
         self.level_view.height_update.connect(self.action_change_object_heights)
         self.level_view.create_waypoint.connect(self.action_add_object)
         self.level_view.create_waypoint_3d.connect(self.action_add_object_3d)
-
         self.pik_control.button_ground_object.clicked.connect(
             lambda _checked: self.action_ground_objects())
         self.pik_control.button_remove_object.clicked.connect(
@@ -1642,6 +1714,8 @@ class GenEditor(QMainWindow):
         self.level_view.do_redraw()
         self.on_document_potentially_changed(update_unsaved_changes=False)
 
+        self.on_document_potentially_changed(update_unsaved_changes=False)
+
         print("File loaded")
         # self.bw_map_screen.update()
         # path_parts = path.split(filepath)
@@ -1749,6 +1823,9 @@ class GenEditor(QMainWindow):
             traceback.print_exc()
             open_error_dialog(str(e), self)
 
+        finally:
+            self.update_3d()
+
     def button_load_collision_bmd(self):
         try:
             filepath, choosentype = QFileDialog.getOpenFileName(
@@ -1783,6 +1860,9 @@ class GenEditor(QMainWindow):
         except Exception as e:
             traceback.print_exc()
             open_error_dialog(str(e), self)
+
+        finally:
+            self.update_3d()
 
     def button_load_collision_bco(self):
         try:
@@ -1820,6 +1900,9 @@ class GenEditor(QMainWindow):
             traceback.print_exc()
             open_error_dialog(str(e), self)
 
+        finally:
+            self.update_3d()
+
     def clear_collision(self):
         self.level_view.clear_collision()
 
@@ -1854,36 +1937,22 @@ class GenEditor(QMainWindow):
         self.set_has_unsaved_changes(True)
 
     def button_open_add_item_window(self):
-        if self.add_object_window is None:
-            self.add_object_window = AddPikObjectWindow()
-            self.add_object_window.button_savetext.clicked.connect(
-                lambda _checked: self.button_add_item_window_save())
-            self.add_object_window.closing.connect(self.button_add_item_window_close)
-            #print("hmmm")
-            if self.addobjectwindow_last_selected is not None:
-                self.add_object_window.category_menu.setCurrentIndex(self.addobjectwindow_last_selected_category)
-                self.add_object_window.template_menu.setCurrentIndex(self.addobjectwindow_last_selected)
-
-            self.add_object_window.show()
-
-        elif self.level_view.mousemode == mkdd_widgets.MOUSE_MODE_ADDWP:    
-            self.points_added = 0
+        accepted = self.add_object_window.exec_()
+        if accepted:
+            self.add_item_window_save()
+        else:
             self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_NONE)
             self.pik_control.button_add_object.setChecked(False)
 
     def shortcut_open_add_item_window(self):
-        if self.add_object_window is None:
-            self.add_object_window = AddPikObjectWindow()
-            self.add_object_window.button_savetext.clicked.connect(
-                lambda _checked: self.button_add_item_window_save())
-            self.add_object_window.closing.connect(self.button_add_item_window_close)
-            #print("object")
-            if self.addobjectwindow_last_selected is not None:
-                self.add_object_window.category_menu.setCurrentIndex(self.addobjectwindow_last_selected_category)
-                self.add_object_window.template_menu.setCurrentIndex(self.addobjectwindow_last_selected)
+        self.button_open_add_item_window()
 
+    def add_item_window_save(self):
+        self.object_to_be_added = self.add_object_window.get_content()
+        if self.object_to_be_added is None:
+            return
 
-            self.add_object_window.show()
+        obj = self.object_to_be_added[0]
 
     #this is what happens when you close out of the window
     @catch_exception
@@ -2411,6 +2480,9 @@ class GenEditor(QMainWindow):
 
 
             if isinstance(object, libbol.EnemyPoint):
+                # For convenience, create a group if none exists yet.
+                if group == 0 and not self.level_file.enemypointgroups.groups:
+                    self.level_file.enemypointgroups.groups.append(libbol.EnemyPointGroup.new())
                 placeobject.group = group
                 if group == 0 and not self.level_file.enemypointgroups.groups:
                     self.level_file.enemypointgroups.groups.append(libbol.EnemyPointGroup.new())
@@ -2679,8 +2751,6 @@ class GenEditor(QMainWindow):
             self.pik_control.button_add_object.clicked.connect(
                 lambda _checked: self.button_open_add_item_window())
             #self.pik_control.button_move_object.setChecked(False)
-            if self.add_object_window is not None:
-                self.add_object_window.close()
 
         if event.key() == Qt.Key_Shift:
             self.level_view.shift_is_pressed = True
@@ -3144,6 +3214,24 @@ class Application(QtWidgets.QApplication):
 
 
 
+POTENTIALLY_EDITING_EVENTS = (
+    QtCore.QEvent.KeyRelease,
+    QtCore.QEvent.MouseButtonRelease,
+)
+
+
+class Application(QtWidgets.QApplication):
+
+    document_potentially_changed = QtCore.pyqtSignal()
+
+    def notify(self, receiver: QtCore.QObject, event: QtCore.QEvent) -> bool:
+        if event.type() in POTENTIALLY_EDITING_EVENTS:
+            if isinstance(receiver, QtGui.QWindow):
+                QtCore.QTimer.singleShot(0, self.document_potentially_changed)
+
+        return super().notify(receiver, event)
+
+
 if __name__ == "__main__":
     #import sys
     import platform
@@ -3218,8 +3306,6 @@ if __name__ == "__main__":
 
         app.document_potentially_changed.connect(
             editor_gui.on_document_potentially_changed)
-
-
 
         editor_gui.show()
 

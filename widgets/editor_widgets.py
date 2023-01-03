@@ -34,11 +34,9 @@ def catch_exception(func):
 def catch_exception_with_dialog(func):
     def handle(*args, **kwargs):
         try:
-            print(args, kwargs)
             return func(*args, **kwargs)
         except Exception as e:
             traceback.print_exc()
-            print("hey")
             open_error_dialog(str(e), None)
     return handle
 
@@ -46,7 +44,6 @@ def catch_exception_with_dialog(func):
 def catch_exception_with_dialog_nokw(func):
     def handle(*args, **kwargs):
         try:
-            print(args, kwargs)
             return func(*args, **kwargs)
         except Exception as e:
             traceback.print_exc()
@@ -60,7 +57,8 @@ def open_error_dialog(errormsg, self):
     errorbox.setFixedSize(500, 200)
 
 
-class ErrorAnalyzer(QMdiSubWindow):
+class ErrorAnalyzer(QDialog):
+
     @catch_exception
     def __init__(self, bol, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -72,21 +70,32 @@ class ErrorAnalyzer(QMdiSubWindow):
 
         self.setWindowTitle("Analysis Results")
         self.text_widget = QTextEdit(self)
-        self.setWidget(self.text_widget)
-        self.resize(900, 500)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.text_widget)
+
         self.setMinimumSize(QSize(300, 300))
         self.text_widget.setFont(font)
         self.text_widget.setReadOnly(True)
 
-        self.analyze_bol_and_write_results(bol)
+        width = self.text_widget.fontMetrics().averageCharWidth() * 80
+        height = self.text_widget.fontMetrics().height() * 20
+        self.resize(width, height)
 
+        lines = ErrorAnalyzer.analyze_bol(bol)
+        if not lines:
+            text = "No known common errors detected!"
+        else:
+            text ='\n\n'.join(lines)
+        self.text_widget.setText(text)
+
+    @classmethod
     @catch_exception
-    def analyze_bol_and_write_results(self, bol):
-        results = StringIO()
+    def analyze_bol(cls, bol: libbol.BOL) -> 'list[str]':
+        lines: list[str] = []
 
         def write_line(line):
-            results.write(line)
-            results.write("\n")
+            lines.append(line)
 
         # Check enemy point linkage errors
         links = {}
@@ -107,11 +116,23 @@ class ErrorAnalyzer(QMdiSubWindow):
                     i, group_index, point.link
                 ))
         for group_index, group in enumerate(bol.enemypointgroups.groups):
-            print(group.points[0].link, group.points[-1].link)
+            if not group.points:
+                write_line("Empty enemy path {0}.".format(group_index))
+                continue
+
             if group.points[0].link == -1:
                 write_line("Start point of enemy point group {0} has no valid link to form a loop".format(group_index))
             if group.points[-1].link == -1:
                 write_line("End point of enemy point group {0} has no valid link to form a loop".format(group_index))
+
+        # Check enemy paths unique ID.
+        enemy_paths_ids = {}
+        for enemy_path_index, enemy_path in enumerate(bol.enemypointgroups.groups):
+            if enemy_path.id in enemy_paths_ids:
+                write_line(f"Enemy path {group_index} using ID {enemy_path.id} that is already "
+                           f"used by enemy path {enemy_paths_ids[enemy_path.id]}.")
+            else:
+                enemy_paths_ids[enemy_path.id] = enemy_path_index
 
         # Check prev/next groups of checkpoints
         for i, group in enumerate(bol.checkpoints.groups):
@@ -192,14 +213,12 @@ class ErrorAnalyzer(QMdiSubWindow):
         if len(bol.enemypointgroups.groups) == 0:
             write_line("You need at least one enemy point group!")
 
-        self.check_checkpoints_convex(bol, write_line)
+        cls.check_checkpoints_convex(bol, write_line)
 
-        text = results.getvalue()
-        if not text:
-            text = "No known common errors detected!"
-        self.text_widget.setText(text)
+        return lines
 
-    def check_checkpoints_convex(self, bol, write_line):
+    @classmethod
+    def check_checkpoints_convex(cls, bol, write_line):
         for gindex, group in enumerate(bol.checkpoints.groups):
             if len(group.points) > 1:
                 for i in range(1, len(group.points)):
@@ -223,13 +242,33 @@ class ErrorAnalyzer(QMdiSubWindow):
                                     i-1, i, gindex
                                 ))
                                 break
-class SpecificAddOWindow(QMdiSubWindow):
-    triggered = pyqtSignal(object)
-    closing = pyqtSignal()
 
-    def closeEvent(self, event):
-        self.closing.emit()
-        super().closeEvent(event)
+
+class ErrorAnalyzerButton(QtWidgets.QPushButton):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+
+        self.success_icon = QtGui.QIcon('resources/success.svg')
+        self.warning_icon = QtGui.QIcon('resources/warning.svg')
+
+        self.setEnabled(False)
+
+        background_color = self.palette().dark().color().name()
+        self.setStyleSheet("QPushButton { border: 0px; padding: 2px; } "
+                           f"QPushButton:hover {{ background: {background_color}; }}")
+
+    def analyze_bol(self, bol: libbol.BOL):
+        lines = ErrorAnalyzer.analyze_bol(bol)
+        if lines:
+            self.setIcon(self.warning_icon)
+            self.setText(str(len(lines)))
+        else:
+            self.setIcon(self.success_icon)
+            self.setText(str())
+        self.setEnabled(True)
+
+
+class AddPikObjectWindow(QDialog):
 
     @catch_exception
     def __init__(self, *args, **kwargs):
@@ -238,81 +277,12 @@ class SpecificAddOWindow(QMdiSubWindow):
             self.window_name = kwargs["windowtype"]
         else:
             self.window_name = "Add Object"
-
-        self.resize(900, 500)
-        self.setMinimumSize(QSize(300, 300))
-
-        self.centralwidget = QWidget(self)
-        self.setWidget(self.centralwidget)
-        self.entity = None
-
-        font = QFont()
-        font.setFamily("Consolas")
-        font.setStyleHint(QFont.Monospace)
-        font.setFixedPitch(True)
-        font.setPointSize(10)
-
-        self.verticalLayout = QVBoxLayout(self.centralwidget)
-        self.verticalLayout.setAlignment(Qt.AlignTop)
-
-        self.editor_widget = None
-        self.editor_layout = QScrollArea()#QVBoxLayout(self.centralwidget)
-        self.verticalLayout.addWidget(self.editor_layout)
-        #self.textbox_xml = QTextEdit(self.centralwidget)
-        button_area_layout = QHBoxLayout()
-        self.button_savetext = QPushButton(self.centralwidget)
-        self.button_savetext.setText("Add Object")
-        self.button_savetext.setToolTip("Hotkey: Ctrl+S")
-        self.button_savetext.setDisabled(True)
-        button_area_layout.addStretch()
-        button_area_layout.addWidget(self.button_savetext)
-
-        self.verticalLayout.addLayout(button_area_layout)
-        self.setWindowTitle(self.window_name)
-        self.created_object = None
-        #QtWidgets.QShortcut(Qt.CTRL + Qt.Key_S, self).activated.connect(self.emit_add_object)
-
-    def keyPressEvent(self, event: QtGui.QKeyEvent):
-        if event.key() == Qt.CTRL + Qt.Key_S:
-            self.emit_add_object()
-        else:
-            super().keyPressEvent(event)
-
-    def emit_add_object(self):
-        self.button_savetext.pressed.emit()
-
-    def get_content(self): 
-        return self.created_object
-
-
-
-
-
-
-class AddPikObjectWindow(QMdiSubWindow):
-    triggered = pyqtSignal(object)
-    closing = pyqtSignal()
-
-    def closeEvent(self, event):
-        self.closing.emit()
-        super().closeEvent(event)
-
-    @catch_exception
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if "windowtype" in kwargs:
-            self.window_name = kwargs["windowtype"]
-        else:
-            self.window_name = "Add Object"
-
 
         width = self.fontMetrics().averageCharWidth() * 80
         height = self.fontMetrics().height() * 42
         self.resize(width, height)
         self.setMinimumSize(QSize(300, 300))
 
-        self.centralwidget = QWidget(self)
-        self.setWidget(self.centralwidget)
         self.entity = None
 
         font = QFont()
@@ -321,22 +291,26 @@ class AddPikObjectWindow(QMdiSubWindow):
         font.setFixedPitch(True)
         font.setPointSize(10)
 
-        self.verticalLayout = QVBoxLayout(self.centralwidget)
+
+        self.verticalLayout = QVBoxLayout(self)
         self.verticalLayout.setAlignment(Qt.AlignTop)
+
+
 
         self.setup_dropdown_menu()
 
         self.hbox1 = QHBoxLayout()
         self.hbox2 = QHBoxLayout()
 
-        self.label1 = QLabel(self.centralwidget)
-        self.label2 = QLabel(self.centralwidget)
-        self.label3 = QLabel(self.centralwidget)
+
+        self.label1 = QLabel(self)
+        self.label2 = QLabel(self)
+        self.label3 = QLabel(self)
         self.label1.setText("Group")
         self.label2.setText("Position in Group")
         self.label3.setText("(-1 means end of Group)")
-        self.group_edit = QLineEdit(self.centralwidget)
-        self.position_edit = QLineEdit(self.centralwidget)
+        self.group_edit = QLineEdit(self)
+        self.position_edit = QLineEdit(self)
 
         self.label1.setVisible(False)
         self.label2.setVisible(False)
@@ -359,8 +333,11 @@ class AddPikObjectWindow(QMdiSubWindow):
         self.hbox2.addWidget(self.position_edit)
         self.hbox2.addWidget(self.label3)
 
-        self.group_edit.setDisabled(True)
-        self.position_edit.setDisabled(True)
+        self.label1.setVisible(False)
+        self.label2.setVisible(False)
+        self.label3.setVisible(False)
+        self.group_edit.setVisible(False)
+        self.position_edit.setVisible(False)
 
 
         self.editor_widget = None
@@ -376,11 +353,12 @@ class AddPikObjectWindow(QMdiSubWindow):
         self.button_savetext.setText("Add Object")
         self.button_savetext.setToolTip("Hotkey: Ctrl+S")
         self.button_savetext.setDisabled(True)
-        #self.button_savetext.clicked.connect(self.accept)
+        self.button_savetext.clicked.connect(self.accept)
         button_area_layout.addStretch()
         button_area_layout.addWidget(self.button_savetext)
 
         self.verticalLayout.addLayout(button_area_layout)
+        self.setWindowTitle(self.window_name)
         self.created_object = None
         #QtWidgets.QShortcut(Qt.CTRL + Qt.Key_S, self).activated.connect(self.emit_add_object)
 

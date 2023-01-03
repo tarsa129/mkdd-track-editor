@@ -1,10 +1,10 @@
 {
   "Object Parameters":
           ["Texture-based Shimmering",
-          "Offset Z0",
-          "Offset Z1",
-          "Blend Rate Z0",
-          "Blend Rate Z1",
+            "Offset Z0",
+            "Offset Z1",
+            "Blend Rate Z0",
+            "Blend Rate Z1",
             "Unused",
             "Unused",
             "Unused"],
