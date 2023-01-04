@@ -30,7 +30,7 @@ from widgets.side_widget import PikminSideWidget
 from widgets.editor_widgets import open_error_dialog, catch_exception_with_dialog
 from widgets.data_editor import load_route_info
 from mkdd_widgets import BolMapViewer, MODE_TOPDOWN
-from lib.libbol import BOL, MGEntry, MapObject, Camera, Route, get_full_name, ObjectContainer, MapObjects, Rotation
+from lib.libbol import BOL, MGEntry, MapObject, Area, Camera, Route, get_full_name, ObjectContainer, MapObjects, Rotation
 import lib.libbol as libbol
 from lib.rarc import Archive
 from lib.BCOllider import RacetrackCollision
@@ -3128,21 +3128,18 @@ class GenEditor(QMainWindow):
             
 
     def set_and_start_copying(self):
-        #print(self.level_view.selected)
-        
-        try:
-            if len(self.level_view.selected) == 1 and self.level_view.selected[0].can_copy:
-                self.obj_to_copy = self.level_view.selected[0]
-                self.copy_current_obj()
-        except:
-            pass
+        print(self.level_view.selected)
+        print(isinstance( self.level_view.selected[0], (MapObject, Area, Camera)))
+        if len(self.level_view.selected) == 1 and isinstance( self.level_view.selected[0], (MapObject, Area, Camera)):
+            self.obj_to_copy = self.level_view.selected[0]
+            self.copy_current_obj()
 
 
     def copy_current_obj(self):
         if self.obj_to_copy is not None:
             self.object_to_be_added = None
             #if isinstance(self.obj_to_copy, libbol.MapObject) and self.obj_to_copy.route_info == 2: 
-            if (isinstance(self.obj_to_copy) or isinstance(self.obj_to_copy, libbol.Camera) ) and self.obj_to_copy.route_info is not None : 
+            if isinstance(self.obj_to_copy, (Camera, MapObject)) and self.obj_to_copy.route_info is not None : 
                 
                 self.objects_to_be_added = []
                 
