@@ -164,10 +164,17 @@ class MoreButtons(QWidget):
         elif isinstance(option.bound_to, Area) or (isinstance(option.bound_to, Areas) ):
             all_options = False
 
+            
             new_area_0 = QPushButton(self)
             new_area_0.setText("Add Shadow Area (Type 0)")
             new_area_0.clicked.connect(lambda: self.parent.button_add_from_addi_options(7, 0) )
             self.vbox.addWidget(new_area_0)
+
+            new_camera_cam_route = QPushButton(self)
+            new_camera_cam_route.setText("Add Area/Stationary Cam")
+            new_camera_cam_route.clicked.connect(lambda: self.parent.button_add_from_addi_options(12.5) )
+            self.vbox.addWidget(new_camera_cam_route)
+
 
             new_camera_cam_route = QPushButton(self)
             new_camera_cam_route.setText("Add Area/Cam/Route")

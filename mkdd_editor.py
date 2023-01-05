@@ -2196,6 +2196,20 @@ class GenEditor(QMainWindow):
             self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)
             
             self.object_to_be_added = None
+        
+        elif option == 12.5: #area camera add
+            self.objects_to_be_added = []
+            new_area = libbol.Area.default()
+            new_camera = libbol.Camera.default(0)
+            
+            self.objects_to_be_added.append( [new_camera, None, None ]  )
+            self.objects_to_be_added.append( [new_area, None, None ]  )    
+            
+            self.pik_control.button_add_object.setChecked(True)
+            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)
+            
+            self.object_to_be_added = None
+        
         elif option == 13: #add new checkpoint to end
             self.object_to_be_added = [libbol.Checkpoint.new(), obj.grouplink, -1 ]
             #self.object_to_be_added[0].group = obj.id
@@ -2659,12 +2673,13 @@ class GenEditor(QMainWindow):
                 if added_area: 
                     object.position.x += 3000
                 object.position.y += 3000
-                object.camtype = 1
-                object.route = len(self.level_file.cameraroutes) - 1
-                self.level_file.cameraroutes[object.route].used_by.append(object)              
-                
-                self.level_file.cameraroutes[object.route].points[0].position = Vector3( object.position.x, object.position.y, object.position.z + 3500)      
-                self.level_file.cameraroutes[object.route].points[1].position = Vector3( object.position.x, object.position.y, object.position.z - 3500)           
+
+                if object.camtype in [1, 4, 5]:
+                    object.route = len(self.level_file.cameraroutes) - 1
+                    self.level_file.cameraroutes[object.route].used_by.append(object)              
+                    
+                    self.level_file.cameraroutes[object.route].points[0].position = Vector3( object.position.x, object.position.y, object.position.z + 3500)      
+                    self.level_file.cameraroutes[object.route].points[1].position = Vector3( object.position.x, object.position.y, object.position.z - 3500)           
                 
             if isinstance(object, libbol.Area):
                 object.camera_index = len(self.level_file.cameras) - 1
