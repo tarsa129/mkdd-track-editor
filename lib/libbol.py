@@ -1,6 +1,5 @@
 import json
 from struct import unpack, pack
-from this import d
 from numpy import ndarray, array
 from math import cos, sin
 from .vectors import Vector3
