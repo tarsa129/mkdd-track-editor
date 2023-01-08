@@ -9,7 +9,7 @@ from PyQt5.QtGui import QIntValidator, QDoubleValidator, QValidator, QColor
 from math import inf
 from lib.libbol import (EnemyPoint, EnemyPointGroup, CheckpointGroup, Checkpoint, Route, RoutePoint,
                         MapObject, KartStartPoint, Area, Camera, BOL, JugemPoint, MapObject,
-                        LightParam, MGEntry, OBJECTNAMES, REVERSEOBJECTNAMES, MUSIC_IDS, REVERSE_MUSIC_IDS,
+                        LightParam, MGEntry, Rotation, OBJECTNAMES, REVERSEOBJECTNAMES, MUSIC_IDS, REVERSE_MUSIC_IDS,
                         SWERVE_IDS, REVERSE_SWERVE_IDS, REVERSE_AREA_TYPES)
 from lib.vectors import Vector3
 from lib.model_rendering import Minimap
