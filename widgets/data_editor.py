@@ -15,6 +15,8 @@ from lib.vectors import Vector3
 from lib.model_rendering import Minimap
 from PyQt5.QtCore import pyqtSignal
 
+#test comment
+
 def load_route_info(objectname):
     try:
         with open(os.path.join("object_parameters", objectname+".json"), "r") as f:
