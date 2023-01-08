@@ -1237,7 +1237,7 @@ class Camera(object):
     def default(cls, type = 1):
         camera = cls(Vector3(0.0, 0.0, 0.0))
         camera.camtype = type
-        camera.fov.start = 30
+        camera.fov.start = 40
         camera.fov.end = 50
         
         if (type == 1 ):
