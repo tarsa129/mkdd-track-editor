@@ -342,6 +342,7 @@ class EnemyPoint(object):
             0, -1, 1000.0, 0, 0, 0, 0, 0, 0, 0
         )
 
+
     @classmethod
     def from_file(cls, f, old_bol=False):
         start = f.tell()
@@ -360,7 +361,21 @@ class EnemyPoint(object):
             obj._size += 8
         return obj
 
- 
+    def copy(self):
+        point = self.__class__.new()
+        point.position = self.position.copy()
+        point.driftdirection = self.driftdirection
+        point.link = self.link
+        point.scale = self.scale
+        point.swerve = self.swerve
+        point.itemsonly = self.itemsonly
+        point.group = self.group
+        point.driftacuteness = self.driftacuteness
+        point.driftduration = self.driftduration
+        point.driftsupplement = self.driftsupplement
+        point.nomushroomzone = self.nomushroomzone
+
+        return point
  
 
     def write(self, f):
@@ -371,6 +386,8 @@ class EnemyPoint(object):
         f.write(pack(">bBBBBBB", self.swerve, self.itemsonly, self.group, self.driftacuteness, self.driftduration, self.driftsupplement, self.nomushroomzone))
         f.write(b"\x01"*5)
         #assert f.tell() - start == self._size
+
+
 
 
 class EnemyPointGroup(object):
@@ -400,7 +417,7 @@ class EnemyPointGroup(object):
         group = EnemyPointGroup()
         group.id = new_id
         for point in self.points:
-            new_point = deepcopy(point)
+            new_point = point.copy()
             new_point.group = new_id
             group.points.append(new_point)
 
@@ -414,7 +431,7 @@ class EnemyPointGroup(object):
         # Check if the element is the last element
         if not len(self.points)-1 == pos:
             for point in self.points[pos+1:]:
-                new_point = deepcopy(point)
+                new_point = point.copy()
                 new_point.group = new_id
                 group.points.append(new_point)
 
@@ -520,82 +537,6 @@ class EnemyPointGroups(object):
                 self.groups[group].prev = prev_arr
                 #print("group " + str(group) + " has a prev array of " + str(prev_arr) )
                 
-            
-
-    
-    
-
-
-class ItemPoint(object):
-    def __init__(self, position, bb_range, setting1, setting2) :
-        self.position = position
-        self.bb_range = bb_range
-        self.setting1 = setting1
-        self.setting2 = setting2
-
-
-    @classmethod
-    def new(cls):
-        return cls( Vector3(0.0, 0.0, 0.0), 0, 0, 0)
-        
-
-
- 
- 
-
-class ItemPointGroup(object):
-    def __init__(self):
-        self.points = []
-        self.id = 0
-        self.prev = [-1] * 6
-        self.next = [-1] * 6
-
-    @classmethod
-    def new(cls):
-        return cls()
-
-  
-  
-    def insert_point(self, enemypoint, index=-1):
-        self.points.insert(index, enemypoint)
-
-    def move_point(self, index, targetindex):
-        point = self.points.pop(index)
-        self.points.insert(targetindex, point)
-
-    def copy_group(self, new_id):
-        group = EnemyPointGroup()
-        group.id = new_id
-        for point in self.points:
-            new_point = deepcopy(point)
-            new_point.group = new_id
-            group.points.append(new_point)
-
-        return group
-
-    def copy_group_after(self, new_id, point):
-        group = ItemPointGroup()
-        group.id = new_id
-        pos = self.points.index(point)
-
-        # Check if the element is the last element
-        if not len(self.points)-1 == pos:
-            for point in self.points[pos+1:]:
-                new_point = deepcopy(point)
-                new_point.group = new_id
-                group.points.append(new_point)
-
-        return group
-
-    def remove_after(self, point):
-        pos = self.points.index(point)
-        self.points = self.points[:pos+1]
-
-
-   
-   
-
-
 
 # Enemy/Item Route Code End
 ##########
