@@ -1,7 +1,7 @@
 import sys
 import os 
 from cx_Freeze import setup, Executable
-version = "1.1.0.1"
+version = "0.9.9"
 # Dependencies are automatically detected, but it might need fine tuning.
 
 def files_from_folder(folder):
@@ -9,13 +9,7 @@ def files_from_folder(folder):
 
 #include_files = files_from_folder("resources/")
 #include_files.extend(files_from_folder("object_templates"))
-include_files = ["resources/", 
-                ("lib/mkddobjects.json", "lib/mkddobjects.json"), 
-                ("lib/music_ids.json", "lib/music_ids.json"),
-                ("lib/color_coding.json", "lib/color_coding.json"),
-                ("lib/minimap_locations.json", "lib/minimap_locations.json"),
-                ("lib/superbmd/", "lib/superbmd/")]
-
+include_files = ["resources/","kmpobjects.json", "lib/mkwiiobjects.json"]
 build_exe_options = {
 "packages": ["OpenGL", "numpy.core._methods", "numpy.lib.format"],
 "includes": ["widgets"], 
@@ -36,5 +30,3 @@ setup(  name = "MKDD Track Editor",
         description = "Track Editor for MKDD",
         options={"build_exe": build_exe_options},
         executables = [Executable("mkdd_editor.py", base=guiBase, icon="resources/icon.ico")])
-        
-os.mkdir("build/mkdd-track-editor-{}/lib/temp".format(version))

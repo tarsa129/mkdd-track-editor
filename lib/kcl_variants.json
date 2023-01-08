@@ -1,0 +1,354 @@
+{
+    "0":
+        [
+            "Normal",
+            "Dirt (GFX)",
+            "Dirt (no GFX)",
+            "Smooth",
+            "Wood",
+            "Snow (GFX)",
+            "Metal Grade",
+            "Road"
+        ],
+    "1":
+        [
+            "White Sand",
+            "Dirt",
+            "Water",
+            "Snow",
+            "Grass",
+            "Yellow Sand",
+            "Sand (No GFX)",
+            "Dirt (No GFX)"
+        ],
+    "2":
+        [
+            "Orange Sand",
+            "Dirt",
+            "Water",
+            "Grass",
+            "Sand",
+            "Carpet",
+            "Gravel",
+            "Gravel 2"
+        ],
+    "3":
+        [
+            "Sand",
+            "Dirt",
+            "Mud",
+            "Water (no GFX)",
+            "Grass",
+            "Sand",
+            "Gravel",
+            "Carpet"
+        ],
+    "4":
+        [
+            "Sand",
+            "Dirt",
+            "Mud",
+            "Flowers",
+            "Grass",
+            "Snow",
+            "Sand",
+            "Dirt (no GFX)"
+        ],
+    "5":
+        [
+            "Ice",
+            "Mud (No GFX)",
+            "Water (No GFX)",
+            "Water (No GFX)",
+            "Water (No GFX)",
+            "Water (No GFX)",
+            "Normal",
+            "Normal"
+        ],
+    "6":
+        [
+            "Default",
+            "Rotates around Casino Roulette",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+        ],
+    "7":
+        [
+            "Douple flip trick",
+            "Single flip trick",
+            "Strunk trick",
+            "Strunk trick",
+            "Strunk trick",
+            "Strunk trick",
+            "Strunk trick",
+            "Strunk trick"
+        ],
+    "8":
+        [
+            "Stage 2 (rBC3)",
+            "Stage 3 (rGV2)",
+            "Stage 1 (rSGB)",
+            "Stage 4 (MG)",
+            "Stage 5",
+            "Stage 4 (Chain Chomp Wheel)",
+            "Stage 2 (rYS, FS)",
+            "Stage 4"
+        ],
+    "9":
+        [
+            "",
+            "",
+            "Metal Grates",
+            "Wood/Grass/Mushrooms",
+            "",
+            "Grass/Bushes",
+            "",
+            ""
+        ],
+    "10":
+        [
+            "Sand",
+            "Underwater Sand",
+            "",
+            "Ice",
+            "Dirt",
+            "Grass",
+            "Wood",
+            "Dark Sand (GFX)"
+        ],
+    "11":
+        [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+        ],
+    "12":
+        [
+            "Normal",
+            "Rock",
+            "Metal",
+            "Wood",
+            "Ice",
+            "Bush (GFX)",
+            "Rope",
+            "Rubber"
+        ],
+    "13":
+        [
+            "No Spark/Voice",
+            "Spark/Voice",
+            "Spark/Voice",
+            "",
+            "",
+            "",
+            "",
+            ""
+        ],
+    "14":
+        [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+        ],
+    "15":
+        [
+            "Normal",
+            "Rock",
+            "Metal",
+            "Wood",
+            "Ice",
+            "Bush (no GFX)",
+            "Rope",
+            "Rubber"
+        ],
+    "16":
+        [
+            "Air Fall",
+            "Water",
+            "Lava",
+            "Ice Water",
+            "Lava (no GFX)",
+            "Burning air",
+            "Quicksand",
+            "Short fall"
+        ],
+    "17":
+        [
+            "Point 0",
+            "Point 1",
+            "Point 2",
+            "Point 3",
+            "Point 4",
+            "Point 5",
+            "Point 6",
+            "Point 7"
+        ],
+    "18":
+        [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+        ],
+    "19":
+        [
+            "Default",
+            "Boost",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+        ],
+    "20":
+        [
+            "Normal",
+            "Rock",
+            "Metal",
+            "Wood",
+            "Ice",
+            "Bush",
+            "Rope",
+            ""
+        ],
+    "21":
+        [
+            "West (BeltCrossing/Escalator)",
+            "East (BeltCrossing, West (Escalator)",
+            "East (BeltEasy)",
+            "West (BeltEasy)",
+            "Clockwise (BeltCurveA)",
+            "Counterclockwise (BeltCurveA)",
+            "",
+            ""
+        ],
+    "22":
+        [
+            "Wood",
+            "Gravel",
+            "Carpet",
+            "Dirt (no GFX)",
+            "Sand (no GFX)",
+            "Normal",
+            "Normal",
+            "Mud (GFX)"
+        ],
+    "23":
+        [
+            "Normal",
+            "Carpet",
+            "Grass",
+            "Normal (Green Mushrooms)",
+            "Grass",
+            "Grass (SFX)",
+            "Dirt",
+            "Normal"
+        ],
+    "24":
+        [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+        ],
+    "25":
+        [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+        ],
+    "26":
+        [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+        ],
+    "27":
+        [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+        ],
+    "28":
+        [
+            "Carpet",
+            "Normal (alt SFX)",
+            "Normal",
+            "Glass",
+            "Carpet",
+            "Star Crash (SFX)",
+            "Sand",
+            "Dirt"
+        ],
+    "29":
+        [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+        ],
+    "30":
+        [
+            "Cactus",
+            "",
+            "Bouncy Wall",
+            "",
+            "Rainbow Road Railing",
+            "Mushroom Wall",
+            "Metal (SFX)",
+            ""
+        ],
+    "31":
+        [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            "",
+            ""
+        ]
+}

@@ -1,0 +1,29 @@
+mkwii to do list:
+
+- add arrows for directions
+
+fix local bugs found (make sure that current qol works and is relevant to mkwii)
+compare scale to lorenzis for enemy points
+deal with juge / mspt ids
+render key checkpoints
+
+general optimizations:
+more options for multi select like
+-enemy routes: mass edit scale
+camera replaying???
+properly hide fields for cameras
+when selecting areas, the camera and route should also be highlighted
+
+
+mkwii optimizations
+
+checkpoints: also link groups together in render
+object: all those .json files
+routes: show splines
+area: highlight camera / route point when relevant. deal with area routes
+objects: do not show route if there is none
+
+before release: match lorenzis with colors
+error analyzer
+
+

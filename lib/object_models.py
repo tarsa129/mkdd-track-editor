@@ -1,40 +1,39 @@
 import os
 import json
 from OpenGL.GL import *
-from .model_rendering import (GenericObject, Model, TexturedModel,
-                              GenericFlyer, GenericCrystallWall, GenericLongLegs, GenericChappy, GenericSnakecrow,
-                              GenericSwimmer, Cube)
+from .model_rendering import (GenericObject, Model, TexturedModel, Cube)
 
 with open("lib/color_coding.json", "r") as f:
     colors = json.load(f)
+
+
+def do_rotation(rotation):
+    glMultMatrixf( rotation.get_render() )
+    scale = 10.0
+    glScalef(scale, scale, scale ** 2)
+
 
 
 class ObjectModels(object):
     def __init__(self):
         self.models = {}
         self.generic = GenericObject()
-        self.generic_flyer = GenericFlyer()
-        self.generic_longlegs = GenericLongLegs()
-        self.generic_chappy = GenericChappy()
-        self.generic_snakecrow = GenericSnakecrow()
-        self.generic_swimmer = GenericSwimmer()
+
         self.cube = Cube()
         self.checkpointleft = Cube(colors["CheckpointLeft"])
         self.checkpointright = Cube(colors["CheckpointRight"])
-        self.objectroute = Cube(colors["ObjectRoutes"])
-        self.cameraroute = Cube(colors["CameraRoutes"])
-        self.unassignedroute = Cube(colors["UnassignedRoutes"])
-        self.sharedroute = Cube(colors["SharedRoutes"])
-        self.itempoint = Cube(colors["ItemRoutes"])
         self.camerapoint = Cube(colors["CameraRoutes"])
         self.enemypoint = Cube(colors["EnemyRoutes"])
+        self.itempoint = Cube(colors["ItemRoutes"])
+        self.objectpoint = Cube(colors["ObjectRoutes"])
         self.camera = GenericObject(colors["Camera"])
         self.areas = GenericObject(colors["Areas"])
         self.objects = GenericObject(colors["Objects"])
         self.respawn = GenericObject(colors["Respawn"])
         self.startpoints = GenericObject(colors["StartPoints"])
-        self.lightsource = Cube(colors["LightSource"])
-        self.lightparam = Cube(colors["LightParam"])
+        self.cannons = GenericObject(colors["Cannons"])
+        self.missions = GenericObject(colors["Missions"])
+
         #self.purplecube = Cube((0.7, 0.7, 1.0, 1.0))
 
         self.playercolors = [Cube(color) for color in ((1.0, 0.0, 0.0, 1.0),
@@ -45,22 +44,6 @@ class ObjectModels(object):
                                                        (1.0, 0.5, 0.0, 1.0),
                                                        (0.0, 0.5, 1.0, 1.0),
                                                        (1.0, 0.0, 0.5, 1.0))]
-
-
-        genericmodels = {
-            "Chappy": self.generic_chappy,
-            "Flyer": self.generic_flyer,
-            "Longlegs": self.generic_longlegs,
-            "Snakecrow": self.generic_snakecrow,
-            "Swimmer": self.generic_swimmer
-        }
-
-        with open("resources/enemy_model_mapping.json", "r") as f:
-            mapping = json.load(f)
-            for enemytype, enemies in mapping.items():
-                if enemytype in genericmodels:
-                    for name in enemies:
-                        self.models[name.title()] = genericmodels[enemytype]
 
         with open("resources/unitsphere.obj", "r") as f:
             self.sphere = Model.from_obj(f, rotate=True)
@@ -84,8 +67,9 @@ class ObjectModels(object):
                     filename = os.path.basename(file)
                     objectname = filename.rsplit(".", 1)[0]
                     self.models[objectname] = TexturedModel.from_obj_path(os.path.join(dirpath, file), rotate=True)
-        for cube in (self.cube, self.checkpointleft, self.checkpointright, self.itempoint, self.camerapoint, self.enemypoint,
-                     self.objects, self.areas, self.respawn, self.startpoints, self.camera, self.lightparam, self.lightsource):
+        for cube in (self.cube, self.checkpointleft, self.checkpointright, self.camerapoint, self.objectpoint, self.enemypoint, self.itempoint,
+                     self.objects, self.areas, self.respawn, self.startpoints, self.camera,
+                     self.cannons, self.missions):
             cube.generate_displists()
 
         for cube in self.playercolors:
@@ -115,6 +99,7 @@ class ObjectModels(object):
         glPushMatrix()
 
         glTranslatef(position.x, -position.z, position.y)
+
         glScalef(scale, scale, scale)
 
         self.sphere.render()
@@ -132,6 +117,7 @@ class ObjectModels(object):
         glPushMatrix()
 
         glTranslatef(position.x, -position.z, position.y)
+        #glTranslatef(position.x, position.y, position.z)
         glScalef(radius, height, radius)
 
         self.cylinder.render()
@@ -140,20 +126,32 @@ class ObjectModels(object):
     def draw_wireframe_cylinder(self, position, rotation, scale):
         glPushMatrix()
         glTranslatef(position.x, -position.z, position.y)
-        mtx = rotation.mtx
-        glMultMatrixf(mtx)
-        glTranslatef(0, 0, scale.y/2)
-        glScalef(-scale.z, scale.x, scale.y)
+        #glTranslatef(position.x, position.y, position.z)
+        #mtx = rotation.mtx
+        #glMultMatrixf(mtx)
+        do_rotation(rotation)
+        """
+        euler = rotation.get_euler(True)
+        glRotatef( euler[0], 1.0, 0.0, 0.0)
+        glRotatef( euler[1], 0.0, 1.0, 0.0)
+        glRotatef( euler[2], 0.0, 0.0, 1.0)
+        """
+        
+        glTranslatef(0, 0, scale.y / 2)
+        glScalef(scale.x, scale.z, scale.y) 
         self.wireframe_cylinder.render()
         glPopMatrix()
 
     def draw_wireframe_cube(self, position, rotation, scale):
         glPushMatrix()
         glTranslatef(position.x, -position.z, position.y)
-        mtx = rotation.mtx
-        glMultMatrixf(mtx)
-        glTranslatef(0, 0, scale.y / 2)
-        glScalef(-scale.z, scale.x, scale.y)
+        #glTranslatef(position.x, position.y, position.z)
+        #mtx = rotation.mtx
+        #glMultMatrixf(mtx)
+
+        do_rotation(rotation)
+        glTranslatef(0, 0, scale.y/2)
+        glScalef(scale.z, scale.x, scale.y)
         self.wireframe_cube.render()
         glPopMatrix()
 
@@ -183,14 +181,11 @@ class ObjectModels(object):
     def _render_generic_position_rotation(self, name, position, rotation, selected):
         glPushMatrix()
         glTranslatef(position.x, -position.z, position.y)
-        mtx = rotation.mtx
-        #glBegin(GL_LINES)
-        #glVertex3f(0.0, 0.0, 0.0)
-        #glVertex3f(mtx[0][0] * 2000, mtx[0][1] * 2000, mtx[0][2] * 2000)
-        #glEnd()
+        #glTranslatef(position.x, position.y, position.z)
 
-        glMultMatrixf(mtx)
-
+        
+        do_rotation(rotation)
+ 
         glColor3f(0.0, 0.0, 0.0)
         glBegin(GL_LINE_STRIP)
         glVertex3f(0.0, 0.0, 750.0)
@@ -198,8 +193,7 @@ class ObjectModels(object):
         glVertex3f(1000.0, 0.0, 0.0)
         glEnd()
 
-
-        #glMultMatrixf(rotation.mtx[])
+        #glScalef(1.0, 1.0, 1.0)
         getattr(self, name).render(selected=selected)
 
         glPopMatrix()
@@ -207,6 +201,7 @@ class ObjectModels(object):
     def _render_generic_position(self, cube, position, selected):
         glPushMatrix()
         glTranslatef(position.x, -position.z, position.y)
+        #glTranslatef(position.x, position.y, position.z)
         cube.render(selected=selected)
 
         glPopMatrix()
@@ -214,6 +209,7 @@ class ObjectModels(object):
     def render_generic_position_colored_id(self, position, id):
         glPushMatrix()
         glTranslatef(position.x, -position.z, position.y)
+        #glTranslatef(position.x, position.y, position.z)
         self.cube.render_coloredid(id)
 
         glPopMatrix()
@@ -221,46 +217,19 @@ class ObjectModels(object):
     def render_generic_position_rotation_colored_id(self, position, rotation, id):
         glPushMatrix()
         glTranslatef(position.x, -position.z, position.y)
-        mtx = rotation.mtx
-        glMultMatrixf(mtx)
-        self.generic.render_coloredid(id)
+        #glTranslatef(position.x, position.y, position.z)
+
+        
+        #mtx = rotation.mtx
+        #glMultMatrixf(mtx)
+
+        do_rotation(rotation)
+
+        self.cube.render_coloredid(id)
 
         glPopMatrix()
 
     def render_line(self, pos1, pos2):
         pass
 
-    def render_object(self, pikminobject, selected):
-        glPushMatrix()
 
-        glTranslatef(pikminobject.position.x, -pikminobject.position.z, pikminobject.position.y)
-        if "mEmitRadius" in pikminobject.unknown_params and pikminobject.unknown_params["mEmitRadius"] > 0:
-            self.draw_cylinder_last_position(pikminobject.unknown_params["mEmitRadius"]/2, 50.0)
-
-        glRotate(pikminobject.rotation.x, 1, 0, 0)
-        glRotate(pikminobject.rotation.y, 0, 0, 1)
-        glRotate(pikminobject.rotation.z, 0, 1, 0)
-
-        if pikminobject.name in self.models:
-            self.models[pikminobject.name].render(selected=selected)
-        else:
-            glDisable(GL_TEXTURE_2D)
-            self.generic.render(selected=selected)
-
-        glPopMatrix()
-
-    def render_object_coloredid(self, pikminobject, id):
-        glPushMatrix()
-
-        glTranslatef(pikminobject.position.x, -pikminobject.position.z, pikminobject.position.y)
-        glRotate(pikminobject.rotation.x, 1, 0, 0)
-        glRotate(pikminobject.rotation.y, 0, 0, 1)
-        glRotate(pikminobject.rotation.z, 0, 1, 0)
-
-        if pikminobject.name in self.models:
-            self.models[pikminobject.name].render_coloredid(id)
-        else:
-            self.generic.render_coloredid(id)
-
-
-        glPopMatrix()

@@ -1,5 +1,4 @@
 import json
-import math
 import re
 import sys
 from time import time
@@ -171,41 +170,58 @@ class TexturedMesh(object):
 
 class Material(object):
     def __init__(self, diffuse=None, texturepath=None):
+
+        ID = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, ID)
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0)
+
         if texturepath is not None:
-            ID = glGenTextures(1)
-            glBindTexture(GL_TEXTURE_2D, ID)
-            glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0)
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0)
 
             if texturepath.endswith(".png"):
                 fmt = "png"
             elif texturepath.endswith(".jpg"):
                 fmt = "jpg"
             else:
-                raise RuntimeError("unknown tex format: {0}".format(texturepath))
+                fmt = None
+                #raise RuntimeError("unknown tex format: {0}".format(texturepath))
 
-            # When SuperBMD is used through Wine, it generates some odd filepaths that need to be
-            # corrected.
-            if sys.platform != "win32":
-                texturepath = re.sub("lib/temp/[A-Z]:", "", texturepath).replace("\\", "/")
+            if fmt is not None:
+                qimage = QtGui.QImage(texturepath, fmt)
+                qimage = qimage.convertToFormat(QtGui.QImage.Format_ARGB32)
 
-            qimage = QtGui.QImage(texturepath, fmt)
-            qimage = qimage.convertToFormat(QtGui.QImage.Format_ARGB32)
-
-            if qimage.isNull():
+                if qimage.isNull():
+                    qimage = QtGui.QImage(32, 32, QtGui.QImage.Format_ARGB32)
+                    #print("make a qimage because the path couldn't be found")
+                    if diffuse is not None:
+                        qimage.fill(QtGui.QColor(diffuse[0] * 255, diffuse[1] * 255, diffuse[2] * 255, 255))
+                    else:
+                        qimage.fill(QtGui.QColor(0, 0, 0, 255))
+            else:
+                #print("make a qimage because fmt was null")
                 qimage = QtGui.QImage(32, 32, QtGui.QImage.Format_ARGB32)
-                qimage.fill(QtGui.QColor(0, 0, 0, 255))
+                if diffuse is not None:
+                    qimage.fill(QtGui.QColor(diffuse[0] * 255, diffuse[1] * 255, diffuse[2]* 255, 255))
+                else:
+                    qimage.fill(QtGui.QColor(0, 0, 0, 255))
 
-            imgdata = bytes(qimage.bits().asarray(qimage.width() * qimage.height() * 4))
 
-            glTexImage2D(GL_TEXTURE_2D, 0, 4, qimage.width(), qimage.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, imgdata)
-
-            del qimage
-
-            self.tex = ID
         else:
-            self.tex = None
+            #print("make a qimage because there was no texture")
+            qimage = QtGui.QImage(32, 32, QtGui.QImage.Format_ARGB32)
+            if diffuse is not None:
+                qimage.fill(QtGui.QColor(diffuse[0] * 255, diffuse[1] * 255, diffuse[2] * 255, 255))
+            else:
+                qimage.fill(QtGui.QColor(0, 0, 0, 255))
+        
+        imgdata = bytes(qimage.bits().asarray(qimage.width() * qimage.height() * 4))
+
+        glTexImage2D(GL_TEXTURE_2D, 0, 4, qimage.width(), qimage.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, imgdata)
+
+        del qimage
+
+        self.tex = ID
 
         self.diffuse = diffuse
 
@@ -303,19 +319,6 @@ class TexturedModel(object):
         for mesh in self.mesh_list:
             mesh.render_coloredid(id, cull_faces=cull_faces)
 
-    #def render_coloredid(self, id):
-    #    glColor3ub((id >> 16) & 0xFF, (id >> 8) & 0xFF, (id >> 0) & 0xFF)
-    #    self.render()
-
-    """def add_mesh(self, mesh: Mesh):
-        if mesh.name not in self.named_meshes:
-            self.named_meshes[mesh.name] = mesh
-            self.mesh_list.append(mesh)
-        elif mesh.name != "":
-            raise RuntimeError("Duplicate mesh name: {0}".format(mesh.name))
-        else:
-            self.mesh_list.append(mesh)"""
-
     @classmethod
     def from_obj_path(cls, objfilepath, scale=1.0, rotate=False):
 
@@ -350,11 +353,13 @@ class TexturedModel(object):
                     continue
                 cmd = args[0]
 
+                #if there is a mtl file in the .obj file
                 if cmd == "mtllib":
                     mtlpath = " ".join(args[1:])
                     if not os.path.isabs(mtlpath):
                         mtlpath = os.path.join(objpath, mtlpath)
 
+                    #read the .mtl file
                     with open(mtlpath, "r") as g:
                         lastmat = None
                         lastdiffuse = None
@@ -362,6 +367,7 @@ class TexturedModel(object):
                         for mtl_line in g:
                             mtl_line = mtl_line.strip()
                             mtlargs = mtl_line.split(" ")
+                            
 
                             if len(mtlargs) == 0 or mtl_line.startswith("#"):
                                 continue
@@ -374,7 +380,7 @@ class TexturedModel(object):
                                     lasttex = None
 
                                 lastmat = " ".join(mtlargs[1:])
-                            elif mtlargs[0].lower() == "Kd":
+                            elif mtlargs[0].lower() == "kd":                         
                                 r, g, b = map(float, mtlargs[1:4])
                                 lastdiffuse = (r,g,b)
                             elif mtlargs[0].lower() == "map_kd":
@@ -388,7 +394,7 @@ class TexturedModel(object):
                             materials[lastmat] = Material(diffuse=lastdiffuse, texturepath=lasttex)
                             lastdiffuse = None
                             lasttex = None
-
+                        
                     for mtlname, material in materials.items():
                         material_json = materials_json.get(mtlname)
                         if material_json is not None:
@@ -409,8 +415,7 @@ class TexturedModel(object):
                         material_meshes[currmat].vertex_texcoords = texcoords
 
                 elif cmd == "v":
-                    if "" in args:
-                        args.remove("")
+                    args = [i for i in args if i != ""]
                     x, y, z = map(float, args[1:4])
                     if not rotate:
                         vertices.append((x*scale, y*scale, z*scale))
@@ -418,8 +423,7 @@ class TexturedModel(object):
                         vertices.append((x * scale, z * scale, y * scale, ))
 
                 elif cmd == "vt":
-                    if "" in args:
-                        args.remove("")
+                    args = [i for i in args if i != ""]
                     #x, y, z = map(float, args[1:4])
                     #if not rotate:
                     texcoords.append((float(args[1]), 1-float(args[2])  ))
@@ -683,157 +687,6 @@ class GenericComplexObject(GenericObject):
         self.mesh_list[self._rest].render()
 
 
-class GenericFlyer(GenericObject):
-    def __init__(self):
-        with open("resources/generic_object_flyer.obj", "r") as f:
-            model = Model.from_obj(f, scale=10, rotate=True)
-        self.mesh_list = model.mesh_list
-        self.named_meshes = model.mesh_list
-
-
-class GenericCrystallWall(GenericObject):
-    def __init__(self):
-        with open("resources/generic_object_crystalwall.obj", "r") as f:
-            model = Model.from_obj(f, scale=10, rotate=True)
-        self.mesh_list = model.mesh_list
-        self.named_meshes = model.mesh_list
-
-
-class GenericLongLegs(GenericComplexObject):
-    def __init__(self):
-        super().__init__("resources/generic_object_longlegs2.obj",
-                         height=5.0, tip=3, body=2, eyes=1, rest=0)
-
-class GenericChappy(GenericComplexObject):
-    def __init__(self):
-        super().__init__("resources/generic_chappy.obj",
-                         height=2.56745, tip=0, body=2, eyes=1, rest=3)
-
-
-
-class __GenericChappy(GenericObject):
-    def __init__(self):
-        self.scale = 10
-        with open("resources/generic_chappy.obj", "r") as f:
-            model = Model.from_obj(f, scale=self.scale, rotate=True)
-        self.mesh_list = model.mesh_list
-        self.named_meshes = model.mesh_list
-
-    def render(self, selected=False):
-        glEnable(GL_CULL_FACE)
-        if selected:
-            glColor4f(*selectioncolor)
-        else:
-            glColor4f(0.0, 0.0, 0.0, 1.0)
-
-        mainbodyheight = 2.56745
-        glCullFace(GL_FRONT)
-        glPushMatrix()
-        glTranslatef(0.0, 0.0, mainbodyheight * self.scale)
-        if selected:
-            glScalef(1.5, 1.5, 1.5)
-        else:
-            glScalef(1.2, 1.2, 1.2)
-
-        self.mesh_list[1].render()
-        glPopMatrix()
-        glCullFace(GL_BACK)
-        glPushMatrix()
-        glTranslatef(0.0, 0.0, 2.56745*self.scale)
-        glColor4f(1.0, 1.0, 1.0, 1.0)
-        self.mesh_list[1].render()
-
-
-        glColor4ub(0x09, 0x93, 0x00, 0xFF)
-        self.mesh_list[2].render() # tip
-        glPopMatrix()
-        glColor4ub(0x00, 0x00, 0x00, 0xFF)
-        self.mesh_list[3].render() # eyes
-
-
-        if selected:
-            glColor4f(*selectioncolor)
-        else:
-            glColor4f(0.0, 0.0, 0.0, 1.0)
-        self.mesh_list[0].render()  # leg
-        glDisable(GL_CULL_FACE)
-
-    def render_coloredid(self, id):
-        glColor3ub((id >> 16) & 0xFF, (id >> 8) & 0xFF, (id >> 0) & 0xFF)
-        glPushMatrix()
-        glScalef(1.2, 1.2, 1.2)
-        glTranslatef(0.0, 0.0, 2.56745 * self.scale)
-        self.mesh_list[1].render()
-        glPopMatrix()
-
-
-class GenericSnakecrow(GenericComplexObject):
-    def __init__(self):
-        super().__init__("resources/generic_snakecrow.obj",
-                         height=6.63505, tip=1, body=0, eyes=2, rest=3)
-
-
-class __GenericSnakecrow(GenericObject):
-    def __init__(self):
-        self.scale = 10
-        with open("resources/generic_snakecrow.obj", "r") as f:
-            model = Model.from_obj(f, scale=self.scale, rotate=True)
-        self.mesh_list = model.mesh_list
-        self.named_meshes = model.mesh_list
-
-    def render(self, selected=False):
-        glEnable(GL_CULL_FACE)
-        if selected:
-            glColor4f(255/255, 223/255, 39/255, 1.0)
-        else:
-            glColor4f(0.0, 0.0, 0.0, 1.0)
-
-        mainbodyheight = 6.63505
-        glCullFace(GL_FRONT)
-        glPushMatrix()
-        glTranslatef(0.0, 0.0, mainbodyheight * self.scale)
-        if selected:
-            glScalef(1.5, 1.5, 1.5)
-        else:
-            glScalef(1.2, 1.2, 1.2)
-
-
-        self.mesh_list[1].render()
-        glPopMatrix()
-        glCullFace(GL_BACK)
-        glPushMatrix()
-        glTranslatef(0.0, 0.0, mainbodyheight*self.scale)
-        glColor4f(1.0, 1.0, 1.0, 1.0)
-        self.mesh_list[1].render()
-        glPopMatrix()
-
-        glColor4ub(0x09, 0x93, 0x00, 0xFF)
-        self.mesh_list[2].render() # tip
-
-        glColor4ub(0x00, 0x00, 0x00, 0xFF)
-        self.mesh_list[3].render() # eyes
-
-
-        if selected:
-            glColor4f(255/255, 223/255, 39/255, 1.0)
-        else:
-            glColor4f(0.0, 0.0, 0.0, 1.0)
-        self.mesh_list[0].render()  # leg
-        glDisable(GL_CULL_FACE)
-
-    def render_coloredid(self, id):
-        glColor3ub((id >> 16) & 0xFF, (id >> 8) & 0xFF, (id >> 0) & 0xFF)
-        glPushMatrix()
-        glScalef(1.2, 1.2, 1.2)
-        glTranslatef(0.0, 0.0, 2.56745 * self.scale)
-        self.mesh_list[1].render()
-        glPopMatrix()
-
-
-class GenericSwimmer(GenericComplexObject):
-    def __init__(self):
-        super().__init__("resources/generic_swimmer.obj",
-                         height=0.0, tip=0, body=3, eyes=1, rest=2)
 
 
 class TexturedPlane(object):
@@ -905,83 +758,7 @@ ORIENTATIONS = {
     3: [(0.0, 1.0), (1.0, 1.0), (1.0, 0.0), (0.0, 0.0)]
 }
 
-ORIENTATION_ANGLE = (0.0, 90.0, 180.0, 270.0)
 
-class Minimap(object):
-    def __init__(self, corner1, corner2, orientation, texpath=None):
-        self.ID = None
-        if texpath is not None:
-            self.set_texture(texpath)
-
-        self.corner1 = corner1
-        self.corner2 = corner2
-        self.orientation = orientation
-        print("fully initialized")
-
-    def is_available(self):
-        return True
-
-    def set_texture(self, path):
-        if self.ID is not None:
-            glDeleteTextures(1, int(self.ID))
-
-        qimage = QtGui.QImage(path, "png")
-        qimage = qimage.convertToFormat(QtGui.QImage.Format_ARGB32)
-        ID = glGenTextures(1)
-        glBindTexture(GL_TEXTURE_2D, ID)
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0)
-
-        imgdata = bytes(qimage.bits().asarray(qimage.width() * qimage.height() * 4))
-        glTexImage2D(GL_TEXTURE_2D, 0, 4, qimage.width(), qimage.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, imgdata)
-        self.ID = ID
-
-    def render(self):
-        corner1, corner2 = self.corner1, self.corner2
-
-        glDisable(GL_ALPHA_TEST)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        glEnable(GL_BLEND)
-
-        if self.ID is not None:
-            glColor4f(1.0, 1.0, 1.0, 0.70)
-            glEnable(GL_TEXTURE_2D)
-            glBindTexture(GL_TEXTURE_2D, self.ID)
-            glBegin(GL_TRIANGLE_FAN)
-            glTexCoord2f(*ORIENTATIONS[self.orientation][0])
-            glVertex3f(corner1.x, -corner1.z, corner1.y)
-            glTexCoord2f(*ORIENTATIONS[self.orientation][1])
-            glVertex3f(corner1.x, -corner2.z, corner1.y)
-            glTexCoord2f(*ORIENTATIONS[self.orientation][2])
-            glVertex3f(corner2.x, -corner2.z, corner1.y)
-            glTexCoord2f(*ORIENTATIONS[self.orientation][3])
-            glVertex3f(corner2.x, -corner1.z, corner1.y)
-            glEnd()
-            glDisable(GL_TEXTURE_2D)
-        else:
-            glColor4f(0.0, 0.0, 0.0, 0.70)
-            glPushMatrix()
-            glTranslate((corner2.x + corner1.x) / 2, -(corner2.z + corner1.z) / 2, corner1.y)
-            glScale(corner2.x - corner1.x, corner2.z - corner1.z, 1.0)
-            glRotate(90.0 * self.orientation, 0.0, 0.0, 1.0)
-            glBegin(GL_TRIANGLES)
-            glVertex3f(0.0, 0.5, 0.0)
-            glVertex3f(-0.5, 0.1, 0.0)
-            glVertex3f(0.5, 0.1, 0.0)
-            glVertex3f(-0.25, -0.5, 0.0)
-            glVertex3f(0.25, 0.1, 0.0)
-            glVertex3f(-0.25, 0.1, 0.0)
-            glVertex3f(-0.25, -0.5, 0.0)
-            glVertex3f(0.25, -0.5, 0.0)
-            glVertex3f(0.25, 0.1, 0.0)
-            glEnd()
-            glPopMatrix()
-
-        glColor4f(1.0, 1.0, 1.0, 1.0)
-        glDisable(GL_BLEND)
-        glBlendFunc(GL_ZERO, GL_ONE)
-        glEnable(GL_ALPHA_TEST)
 
 
 class Grid(Mesh):
@@ -1031,44 +808,62 @@ def _compile_shader_with_error_report(shaderobj):
 
 
 colortypes = {
-    0x00: (250, 213, 160),
-    0x01: (128, 128, 128),
-    0x02: (192, 192, 192),
-    0x03: (76, 255, 0),
-    0x04: (0, 255, 255),
-    0x07: (255, 106, 0),
-    0x08: (255, 106, 0),
-    0x0C: (250, 213, 160),
-    0x0F: (0, 38, 255),
-    0x10: (250, 213, 160),
-    0x12: (64, 64, 64),
-    0x13: (250, 213, 160),
-    0x37: (255, 106, 0),
-    0x47: (255, 106, 0),
+    0x00: (255, 255, 255),
+    0x01: (255, 225, 200),
+    0x02: (0, 200, 0),
+    0x03: (0, 150, 0),
+    0x04: (0, 100, 0),
+    0x05: (200, 225, 255),
+    0x06: (255, 125, 0),
+    0x07: (255, 150, 0),
+    0x08: (255, 200, 0),
+    0x09: (225, 225, 255),
+    0x0A: (125, 25, 25),
+    0x0B: (0, 125, 255),
+    0x0C: (150, 150, 150),
+    0x0D: (0, 0, 150),
+    0x0E: (150, 150, 175),
+    0x0F: (150, 150, 150),
+    0x10: (200, 0, 0),
+    0x11: (255, 0, 125),
+    0x12: (125, 0, 255),
+    0x13: (0, 75, 255),
+    0x14: (150, 150, 150),
+    0x15: (225, 225, 255),
+    0x16: (225, 175, 255), 
+    0x17: (255, 255, 255), #road alt sfx
+    0x18: (255, 0, 255),   #sound trigger
+    0x19: (100, 150, 100), #weak wall
+    0x1A: (200, 0, 255), #effect trigger
+    0x1B: (255, 0, 255),   #item state modifier
+    0x1C: (0, 150, 0),   #half pipe invis wall
+    0x1D: (225, 225, 255), #rotating road
+    0x1E: (200, 175, 200),
+    0x1F: (150, 150, 150)
 }
 
 otherwise = (40, 40, 40)
 
 
 class CollisionModel(object):
-    def __init__(self, mkdd_collision):
+    def __init__(self, mkwii_collision):
         meshes = {}
         self.program = None
-        vertices = mkdd_collision.vertices
+       
         self._displists = []
         self.hidden_collision_types = set()
         self.hidden_collision_type_groups = set()
 
-        for v1, v2, v3, coltype, rest in mkdd_collision.triangles:
-            vertex1 = Vector3(*vertices[v1])
-            vertex1.z = -vertex1.z
-            vertex2 = Vector3(*vertices[v2])
-            vertex2.z = -vertex2.z
-            vertex3 = Vector3(*vertices[v3])
-            vertex3.z = -vertex3.z
+        for v1, v2, v3, coltype in mkwii_collision.triangles:
+            v1_new = v1.copy()
+            v2_new = v2.copy()
+            v3_new = v3.copy()
+            v1_new.z = -v1_new.z
+            v2_new.z = -v2_new.z
+            v3_new.z = -v3_new.z
 
-            v1tov2 = vertex2 - vertex1
-            v1tov3 = vertex3 - vertex1
+            v1tov2 = v2 - v1
+            v1tov3 = v3 - v1
 
             normal = v1tov2.cross(v1tov3)
             if normal.norm() != 0.0:
@@ -1077,15 +872,15 @@ class CollisionModel(object):
             if coltype not in meshes:
                 meshes[coltype] = []
 
-            shift = coltype >> 8
+            basic_coltype = coltype & 0x1F
 
-            if shift in colortypes:
-                color = colortypes[shift]
+            if basic_coltype in colortypes:
+                color = colortypes[basic_coltype]
 
             else:
                 color = otherwise
             color = (color[0]/255.0, color[1]/255.0, color[2]/255.0)
-            meshes[coltype].append((vertex1, vertex2, vertex3, normal, color))
+            meshes[coltype].append((v1, v2, v3, normal, color))
 
         self.meshes = meshes
 
@@ -1101,15 +896,13 @@ class CollisionModel(object):
             for v1, v2, v3, normal, color in mesh:
                 glVertexAttrib3f(3, normal.x, normal.y, normal.z)
                 glVertexAttrib3f(4, *color)
-                glVertex3f(v1.x, -v1.z, v1.y)
+                glVertex3f(v1.x, v1.z, v1.y)
                 glVertexAttrib3f(3, normal.x, normal.y, normal.z)
                 glVertexAttrib3f(4, *color)
-                glVertex3f(v2.x, -v2.z, v2.y)
+                glVertex3f(v2.x, v2.z, v2.y)
                 glVertexAttrib3f(3, normal.x, normal.y, normal.z)
                 glVertexAttrib3f(4, *color)
-                glVertex3f(v3.x, -v3.z, v3.y)
-
-
+                glVertex3f(v3.x, v3.z, v3.y)
 
             glEnd()
             glEndList()
@@ -1177,7 +970,7 @@ class CollisionModel(object):
 
         for colltype, displist in self._displists:
             if (colltype in self.hidden_collision_types
-                    or colltype & 0xFF00 in self.hidden_collision_type_groups):
+                    or colltype & 0x001F in self.hidden_collision_type_groups):
                 continue
 
             if colltype == selectedPart:

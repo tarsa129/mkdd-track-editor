@@ -1,0 +1,14 @@
+{
+  "Object Parameters":
+          ["Unknown",
+            "Item Type (Player)",
+            "Item Type (Enemy)",
+            "Disable Shadow",
+            "Unused",
+            "Timing Lottery",
+            "Additional Height",
+            "Unknown"],
+  "Assets": ["itembox.brres"],
+  "Default Values": [0, 0, 0, 0, null, 0, 0, 0],
+  "Route Info": null
+}

@@ -1,10 +1,11 @@
 from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem
-from lib.libbol import BOL, get_full_name, AREA_TYPES
+from lib.libkmp import KMP,  get_kmp_name
+from widgets.data_editor_options import AREA_TYPES
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QAction, QMenu
 
 
-class BolHeader(QTreeWidgetItem):
+class KMPHeader(QTreeWidgetItem):
     def __init__(self):
         super().__init__()
         self.setText(0, "Track Settings")
@@ -42,37 +43,36 @@ class ObjectGroupCameras(ObjectGroup):
     def set_name(self):  
         
         if self.bound_to is not None:
-            index = -1
-            for idx, camera in enumerate( self.bound_to ):
-                if camera.startcamera == 1:
-                    index = idx
-                    break
-            if index != -1:
-                self.setText(0, "Cameras, Start Camera: {0}".format( index) )
-            else:
-                self.setText(0, "Cameras")
-            
+            self.setText(0, "Cameras, Start Camera: {0}".format( self.bound_to.startcam) )
+
+class PointGroup( ObjectGroup):
+    def __init__(self, name, parent=None, bound_to=None):
+        super().__init__(name, parent, bound_to)
 
 # Groups
-class EnemyPointGroup(ObjectGroup):
+class EnemyPointGroup(PointGroup):
     def __init__(self, parent, bound_to):
         super().__init__("Enemy Path", parent=parent, bound_to=bound_to)
         self.update_name()
 
     def update_name(self):
         index = self.parent().indexOfChild(self)
-        if self.bound_to.points:
-            link_start = self.bound_to.points[0].link
-            link_end = self.bound_to.points[-1].link
-        else:
-            link_start = link_end = '?'
+
         self.setText(
             0,
-            "Enemy Path {0} (ID: {1}, link: {2}->{3})".format(index,
-                                                                     self.bound_to.id,
-                                                                     link_start,
-                                                                     link_end))
+            "Enemy Path {0}".format(index,          self.bound_to.id))
 
+class ItemPointGroup(PointGroup):
+    def __init__(self, parent, bound_to):
+        super().__init__("Item Path", parent=parent, bound_to=bound_to)
+        self.update_name()
+
+    def update_name(self):
+        index = self.parent().indexOfChild(self)
+
+        self.setText(
+            0,
+            "Item Path {0}".format(index,          self.bound_to.id))
 
 class CheckpointGroup(ObjectGroup):
     def __init__(self, parent, bound_to):
@@ -115,12 +115,11 @@ class NamedItem(QTreeWidgetItem):
     def update_name(self):
         pass
 
-
-class EnemyRoutePoint(NamedItem):
+class RoutePoint(NamedItem):
     def __init__(self, parent, name, bound_to, index=None):
         super().__init__(parent, name, bound_to, index)
-        bound_to.widget = self
 
+class EnemyRoutePoint(RoutePoint):
     def update_name(self):
         group_item = self.parent()
         group = group_item.bound_to
@@ -138,17 +137,33 @@ class EnemyRoutePoint(NamedItem):
 
 
         index = group.points.index(self.bound_to)
-        point = group.points[index]
+        #point = group.points[index]
 
-        if point.link == -1:
-            self.setText(0, "Enemy Point {0} (pos={1})".format(index + offset, index))
-        else:
-            self.setText(
-                0,
-                "Enemy Point {0} (pos={1}, link={2})".format(index + offset,
-                                                                   index,
-                                                                   point.link))
 
+        self.setText(0, "Enemy Point {0} (pos={1})".format(index + offset, index))
+
+class ItemRoutePoint(RoutePoint):
+    def update_name(self):
+        group_item = self.parent()
+        group = group_item.bound_to
+        offset = 0
+        groups_item = group_item.parent()
+
+        for i in range(groups_item.childCount()):
+            other_group_item = groups_item.child(i)
+            if other_group_item == group_item:
+                break
+            else:
+                #print("Hmmm,", other_group_item.text(0), len(other_group_item.bound_to.points), offset)
+                group_object = other_group_item.bound_to
+                offset += len(group_object.points)
+
+
+        index = group.points.index(self.bound_to)
+        #point = group.points[index]
+
+
+        self.setText(0, "Item Point {0} (pos={1})".format(index + offset, index))
 
 class Checkpoint(NamedItem):
     def update_name(self):
@@ -196,15 +211,14 @@ class ObjectEntry(NamedItem):
     def update_name(self):
         
 
-    
 
-        text_descrip = get_full_name(self.bound_to.objectid)
-            
+        text_descrip = get_kmp_name(self.bound_to.objectid)
+
         if self.bound_to.route != -1:
             text_descrip += " (Route: {0})".format(self.bound_to.route)
            
         self.setText(0, text_descrip)
-        #self.setText(0, get_full_name(self.bound_to.objectid))
+
 
     def __lt__(self, other):
         return self.bound_to.objectid < other.bound_to.objectid
@@ -226,11 +240,11 @@ class AreaEntry(NamedItem):
         bound_to.widget = self
 
     def update_name(self):
-        disp_string = "Area (Type: {0})".format(self.bound_to.area_type)
-        if self.bound_to.area_type == 1:
+        area_type_string = AREA_TYPES[self.bound_to.type]
+        disp_string = "Area (Type: {0} - ".format(self.bound_to.type)
+        disp_string += area_type_string + ")"
+        if self.bound_to.type == 0:
             disp_string += ", (Cam: {0})".format(self.bound_to.camera_index)
-        elif self.bound_to.area_type == 7:
-            disp_string += ", (Light: {0})".format(self.bound_to.lightparam_index)
         self.setText(0, disp_string)
 
 
@@ -241,43 +255,44 @@ class CameraEntry(NamedItem):
 
     def update_name(self):
         
-        if self.bound_to.camtype in [1, 4, 5]:
-            text_descrip = "Camera {0}: (Type: {1} - Route {2})".format(self.index, self.bound_to.camtype, self.bound_to.route)
-        elif self.bound_to.camtype in [2] and self.bound_to.name == "mkwi":
-            text_descrip = "Camera {0}: (Type: {1} - Route {2})".format(self.index, self.bound_to.camtype, self.bound_to.route)
+        if self.bound_to.type in [2, 5, 6]:
+            text_descrip = "Camera {0}: (Type: {1} - Route {2})".format(self.index, self.bound_to.type, self.bound_to.route)
         else:
-            text_descrip = "Camera {0}: (Type: {1})".format(self.index, self.bound_to.camtype)
+            text_descrip = "Camera {0}: (Type: {1})".format(self.index, self.bound_to.type)
 
         self.setText(0, text_descrip)
 
 
 class RespawnEntry(NamedItem):
-    def __init__(self, parent, name, bound_to, index=None):
-        super().__init__(parent, name, bound_to, index)
-        bound_to.widget = self
-
     def update_name(self):
         for i in range(self.parent().childCount()):
             if self == self.parent().child(i):
                 #self.setText(0, "Respawn Point {0} (ID: {1})".format(i, self.bound_to.respawn_id))
-                self.setText(0, "Respawn ID: {0})".format(self.bound_to.respawn_id))
+                self.setText(0, "Respawn ID: ({0})".format(self.bound_to.respawn_id))
                 break
 
-class LightParamEntry(NamedItem):
+class CannonEntry(NamedItem):
     def update_name(self):
-        self.setText(0, "LightParam {0}".format(self.index))
+        for i in range(self.parent().childCount()):
+            if self == self.parent().child(i):
+                #self.setText(0, "Respawn Point {0} (ID: {1})".format(i, self.bound_to.respawn_id))
+                self.setText(0, "Cannon ID: ({0})".format(self.bound_to.id))
+                break
 
 
-class MGEntry(NamedItem):
+class MissionEntry(NamedItem):
     def update_name(self):
-        self.setText(0, "MG")
-
+        for i in range(self.parent().childCount()):
+            if self == self.parent().child(i):
+                #self.setText(0, "Respawn Point {0} (ID: {1})".format(i, self.bound_to.respawn_id))
+                self.setText(0, "Mission ID: ({0})".format(self.bound_to.mission_id))
+                break
 
 class LevelDataTreeView(QTreeWidget):
     select_all = pyqtSignal(ObjectGroup)
     reverse = pyqtSignal(ObjectGroup)
     duplicate = pyqtSignal(ObjectGroup)
-    split = pyqtSignal(EnemyPointGroup, EnemyRoutePoint)
+    split = pyqtSignal(PointGroup, RoutePoint)
     split_checkpoint = pyqtSignal(CheckpointGroup, Checkpoint)
 
     def __init__(self, *args, **kwargs):
@@ -288,11 +303,13 @@ class LevelDataTreeView(QTreeWidget):
         self.setHeaderLabel("Track Data Entries")
         self.setHeaderHidden(True)
 
-        self.bolheader = BolHeader()
-        self.addTopLevelItem(self.bolheader)
+        self.kmpheader = KMPHeader()
+        self.addTopLevelItem(self.kmpheader)
         
         self.kartpoints = self._add_group("Kart Start Points")
         self.enemyroutes = self._add_group("Enemy Paths")
+        self.itemroutes = self._add_group("Item Groups")
+
         self.checkpointgroups = self._add_group("Checkpoint Groups")
         self.respawnpoints = self._add_group("Respawn Points")
         
@@ -303,10 +320,9 @@ class LevelDataTreeView(QTreeWidget):
         self.cameras = self._add_group("Cameras", ObjectGroupCameras)
         self.cameraroutes = self._add_group("Camera Paths")
         self.cameras.set_name()
-        
-        
-        self.lightparams = self._add_group("Light Params")
-        #self.mgentries = self._add_group("Minigame Params")
+
+        self.cannons = self._add_group("Cannon Points ")
+        self.missions = self._add_group("Mission Success Points ")
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.run_context_menu)
@@ -314,7 +330,7 @@ class LevelDataTreeView(QTreeWidget):
     def run_context_menu(self, pos):
         item = self.itemAt(pos)
 
-        if isinstance(item, (EnemyRoutePoint, )):
+        if isinstance(item, (EnemyRoutePoint, ItemRoutePoint, Checkpoint)):
             context_menu = QMenu(self)
             split_action = QAction("Split Group At", self)
 
@@ -329,22 +345,8 @@ class LevelDataTreeView(QTreeWidget):
             context_menu.exec(self.mapToGlobal(pos))
             context_menu.destroy()
             del context_menu
-        elif isinstance(item, (Checkpoint, )):
-            context_menu = QMenu(self)
-            split_action = QAction("Split Group At", self)
 
-            def emit_current_split():
-                item = self.itemAt(pos)
-                group_item = item.parent()
-                self.split_checkpoint.emit(group_item, item)
-
-            split_action.triggered.connect(emit_current_split)
-
-            context_menu.addAction(split_action)
-            context_menu.exec(self.mapToGlobal(pos))
-            context_menu.destroy()
-            del context_menu
-        elif isinstance(item, (EnemyPointGroup, ObjectPointGroup, CameraPointGroup, CheckpointGroup)):
+        elif isinstance(item, (EnemyPointGroup, ItemPointGroup, ObjectPointGroup, CameraPointGroup, CheckpointGroup)):
             context_menu = QMenu(self)
             select_all_action = QAction("Select All", self)
             reverse_action = QAction("Reverse", self)
@@ -357,15 +359,13 @@ class LevelDataTreeView(QTreeWidget):
                 item = self.itemAt(pos)
                 self.reverse.emit(item)
 
-
-
             select_all_action.triggered.connect(emit_current_selectall)
             reverse_action.triggered.connect(emit_current_reverse)
 
             context_menu.addAction(select_all_action)
             context_menu.addAction(reverse_action)
 
-            if isinstance(item, EnemyPointGroup):
+            if isinstance(item, (EnemyPointGroup, ItemPointGroup) ):
                 def emit_current_duplicate():
                     item = self.itemAt(pos)
                     self.duplicate.emit(item)
@@ -388,6 +388,7 @@ class LevelDataTreeView(QTreeWidget):
 
     def reset(self):
         self.enemyroutes.remove_children()
+        self.itemroutes.remove_children()
         self.checkpointgroups.remove_children()
         self.objectroutes.remove_children()
         self.cameraroutes.remove_children()
@@ -396,10 +397,13 @@ class LevelDataTreeView(QTreeWidget):
         self.areas.remove_children()
         self.cameras.remove_children()
         self.respawnpoints.remove_children()
-        self.lightparams.remove_children()
-        #self.mgentries.remove_children()
+        self.cannons.remove_children()
+        self.missions.remove_children()
+        
 
-    def set_objects(self, boldata: BOL):
+
+    def set_objects(self, kmpdata: KMP):
+
         # Compute the location (based on indexes) of the currently selected item, if any.
         selected_item_indexes = []
         selected_items = self.selectedItems()
@@ -422,24 +426,30 @@ class LevelDataTreeView(QTreeWidget):
 
         self.reset()
 
-        for group in boldata.enemypointgroups.groups:
+        for group in kmpdata.enemypointgroups.groups:
             group_item = EnemyPointGroup(self.enemyroutes, group)
 
             for point in group.points:
                 point_item = EnemyRoutePoint(group_item, "Enemy Route Point", point)
 
-        for group in boldata.checkpoints.groups:
+        for group in kmpdata.itempointgroups.groups:
+            group_item = ItemPointGroup(self.itemroutes, group)
+
+            for point in group.points:
+                point_item = ItemRoutePoint(group_item, "Item Route Point", point)
+
+        for group in kmpdata.checkpoints.groups:
             group_item = CheckpointGroup(self.checkpointgroups, group)
 
             for point in group.points:
                 point_item = Checkpoint(group_item, "Checkpoint", point)
 
-        for route in boldata.routes:
+        for route in kmpdata.routes:
             route_item = ObjectPointGroup(self.objectroutes, route)
 
             for point in route.points:
                 point_item = ObjectRoutePoint(route_item, "Object route point", point)
-        for route in boldata.cameraroutes:
+        for route in kmpdata.cameraroutes:
             route_item = CameraPointGroup(self.cameraroutes, route)
 
             for point in route.points:
@@ -447,30 +457,31 @@ class LevelDataTreeView(QTreeWidget):
 
 
 
-        for object in boldata.objects.objects:
+        for object in kmpdata.objects.objects:
             object_item = ObjectEntry(self.objects, "Object", object)
 
         self.sort_objects()
 
-        for kartpoint in boldata.kartpoints.positions:
+        for kartpoint in kmpdata.kartpoints.positions:
             item = KartpointEntry(self.kartpoints, "Kartpoint", kartpoint)
 
-        for area in boldata.areas.areas:
+        for area in kmpdata.areas.areas:
             item = AreaEntry(self.areas, "Area", area)
 
-        for respawn in boldata.respawnpoints:
+        for respawn in kmpdata.respawnpoints:
             item = RespawnEntry(self.respawnpoints, "Respawn", respawn)
 
-        for i, camera in enumerate(boldata.cameras):
+        for i, camera in enumerate(kmpdata.cameras):
             item = CameraEntry(self.cameras, "Camera", camera, i)
         self.cameras.set_name()
 
-        for i, lightparam in enumerate(boldata.lightparams):
-            item = LightParamEntry(self.lightparams, "LightParam", lightparam, i)
+        for cannon in kmpdata.cannonpoints:
+            item = CannonEntry(self.cannons, "Cannon", cannon)
 
-        for mg in boldata.mgentries:
-            item = MGEntry(self.mgentries, "MG", mg)
+        for mission in kmpdata.missionpoints:
+            item = MissionEntry(self.missions, "Mission Success Point", mission)
 
+        # Restore expansion states.
         self._set_expansion_states(self.enemyroutes, enemyroutes_expansion_states)
         self._set_expansion_states(self.checkpointgroups, checkpointgroups_expansion_states)
         self._set_expansion_states(self.objectroutes, routes_expansion_states)
@@ -499,6 +510,23 @@ class LevelDataTreeView(QTreeWidget):
 
         for item in items:
             self.objects.addChild(item)"""
+            
+    def bound_to_group(self, levelfile):
+        self.enemyroutes.bound_to = levelfile.enemypointgroups
+        self.itemroutes.bound_to = levelfile.itempointgroups
+        self.checkpointgroups.bound_to = levelfile.checkpoints
+        self.objectroutes.bound_to = levelfile.routes
+        self.cameraroutes.bound_to = levelfile.cameraroutes
+        self.objects.bound_to = levelfile.objects
+        self.kartpoints.bound_to = levelfile.kartpoints
+        self.areas.bound_to = levelfile.areas
+        self.cameras.bound_to = levelfile.cameras
+        self.cameras.set_name()
+        self.respawnpoints.bound_to = levelfile.respawnpoints
+        self.cannons.bound_to = levelfile.cannonpoints
+        self.missions.bound_to = levelfile.missionpoints
+
+        #print(self.cameras.bound_to.assoc)
     def _get_expansion_states(self, parent_item: QTreeWidgetItem) -> 'tuple[bool]':
         expansion_states = []
         for i in range(parent_item.childCount()):
@@ -516,19 +544,3 @@ class LevelDataTreeView(QTreeWidget):
         for i in range(item_count):
             item = parent_item.child(i)
             item.setExpanded(expansion_states[i])
-
-    def bound_to_group(self, levelfile):
-        self.enemyroutes.bound_to = levelfile.enemypointgroups
-        self.checkpointgroups.bound_to = levelfile.checkpoints
-        self.objectroutes.bound_to = levelfile.routes
-        self.cameraroutes.bound_to = levelfile.cameraroutes
-        self.objects.bound_to = levelfile.objects
-        self.kartpoints.bound_to = levelfile.kartpoints
-        self.areas.bound_to = levelfile.areas
-        self.cameras.bound_to = levelfile.cameras
-        self.cameras.set_name()
-        self.respawnpoints.bound_to = levelfile.respawnpoints
-        self.lightparams.bound_to = levelfile.lightparams
-        #self.mgentries.bound_to = levelfile.mgentries
-        
-        #print(self.cameras.bound_to.assoc)

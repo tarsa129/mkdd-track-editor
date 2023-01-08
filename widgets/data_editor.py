@@ -1,21 +1,20 @@
 import os
 import json
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-
-from collections import OrderedDict
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QHBoxLayout, QVBoxLayout, QLabel, QCheckBox, QLineEdit, QComboBox, QSizePolicy, QColorDialog, QPushButton
 from PyQt5.QtGui import QIntValidator, QDoubleValidator, QValidator, QColor
 from math import inf
-from lib.libbol import (EnemyPoint, EnemyPointGroup, CheckpointGroup, Checkpoint, Route, RoutePoint,
-                        MapObject, KartStartPoint, Area, Camera, BOL, JugemPoint, MapObject,
-                        LightParam, MGEntry, OBJECTNAMES, REVERSEOBJECTNAMES, MUSIC_IDS, REVERSE_MUSIC_IDS,
-                        SWERVE_IDS, REVERSE_SWERVE_IDS, REVERSE_AREA_TYPES)
+from lib.libkmp import (EnemyPoint, EnemyPointGroup, CheckpointGroup, Checkpoint, Route, RoutePoint, ItemPoint, ItemPointGroup,
+                        MapObject, KartStartPoint, Area, Camera, Cameras, KMP, JugemPoint, MapObject,
+                        CannonPoint, MissionPoint, OBJECTNAMES, REVERSEOBJECTNAMES,
+                         Rotation)
 from lib.vectors import Vector3
-from lib.model_rendering import Minimap
 from PyQt5.QtCore import pyqtSignal
+from widgets.data_editor_options import *
 
 def load_route_info(objectname):
+    return None
+    """
     try:
         with open(os.path.join("object_parameters", objectname+".json"), "r") as f:
             data = json.load(f)
@@ -27,7 +26,7 @@ def load_route_info(objectname):
     except Exception as err:
         print(err, "Make Route Info not found")
         return None
-
+    """
 def load_default_info(objectname):
     try:
         with open(os.path.join("object_parameters", objectname+".json"), "r") as f:
@@ -41,21 +40,21 @@ def load_default_info(objectname):
         return None
 
 def load_parameter_names(objectname):
-    try:
-        with open(os.path.join("object_parameters", objectname+".json"), "r") as f:
+
+    path = os.path.join("object_parameters", objectname+".json")
+    if os.path.exists(path):
+        with open(path, "r") as f:
             data = json.load(f)
             parameter_names = data["Object Parameters"]
             assets = data["Assets"]
             if len(parameter_names) != 8:
                 raise RuntimeError("Not enough or too many parameters: {0} (should be 8)".format(len(parameter_names)))
             
+            route_info = data["Route Info"]
             
-            
-            return parameter_names, assets
-    except Exception as err:
-        print(err)
-        return None, None
-
+            return parameter_names, assets, route_info
+    else:
+        return None, None, None
 
 class PythonIntValidator(QValidator):
     def __init__(self, min, max, parent):
@@ -79,64 +78,6 @@ class PythonIntValidator(QValidator):
 
     def fixup(self, s):
         pass
-
-
-class ClickableLabel(QtWidgets.QLabel):
-
-    clicked = pyqtSignal()
-
-    def mouseReleaseEvent(self, event):
-
-        if self.rect().contains(event.pos()):
-            event.accept()
-            self.clicked.emit()
-
-
-class ColorPicker(ClickableLabel):
-
-    color_changed = QtCore.pyqtSignal(QtGui.QColor)
-    color_picked = QtCore.pyqtSignal(QtGui.QColor)
-
-    def __init__(self, with_alpha=False):
-        super().__init__()
-
-        height = int(self.fontMetrics().height() / 1.5)
-        pixmap = QtGui.QPixmap(height, height)
-        pixmap.fill(QtCore.Qt.black)
-        self.setPixmap(pixmap)
-        self.setFixedWidth(height)
-
-        self.color = QtGui.QColor(0, 0, 0, 0)
-        self.with_alpha = with_alpha
-
-        self.clicked.connect(self.show_color_dialog)
-
-    def show_color_dialog(self):
-        dialog = QtWidgets.QColorDialog(self)
-        dialog.setOption(QtWidgets.QColorDialog.DontUseNativeDialog, True)
-        if self.with_alpha:
-            dialog.setOption(QtWidgets.QColorDialog.ShowAlphaChannel, True)
-        dialog.setCurrentColor(self.color)
-        dialog.currentColorChanged.connect(self.color_changed)
-        dialog.currentColorChanged.connect(self.update_color)
-
-        color = self.color
-
-        accepted = dialog.exec_()
-        if accepted:
-            self.color = dialog.currentColor()
-            self.color_picked.emit(self.color)
-        else:
-            self.color = color
-            self.update_color(self.color)
-            self.color_changed.emit(self.color)
-
-    def update_color(self, color):
-        color = QtGui.QColor(color)
-        color.setAlpha(255)
-        pixmap = self.pixmap()
-        pixmap.fill(color)
-        self.setPixmap(pixmap)
 
 
 class DataEditor(QWidget):
@@ -185,6 +126,15 @@ class DataEditor(QWidget):
         layout.addWidget(label)
         layout.addWidget(widget)
         return layout
+
+    def create_labeled_widget_ret_both(self, parent, text, widget):
+        layout = QHBoxLayout()
+        layout.setSpacing(5)
+        label = self.create_label(text)
+        label.setText(text)
+        layout.addWidget(label)
+        layout.addWidget(widget)
+        return layout, label
 
     def create_labeled_widgets(self, parent, text, widgetlist):
         layout = QHBoxLayout()
@@ -247,6 +197,25 @@ class DataEditor(QWidget):
         #print("created for", text, attribute)
         return line_edit
 
+    def add_integer_input_hideable(self, text, attribute, min_val, max_val):
+        line_edit = QLineEdit(self)
+        layout, label = self.create_labeled_widget_ret_both(self, text, line_edit)
+
+        line_edit.setValidator(PythonIntValidator(min_val, max_val, line_edit))
+
+        def input_edited():
+            #print("Hmmmm")
+            text = line_edit.text()
+            #print("input:", text)
+
+            setattr(self.bound_to, attribute, int(text))
+
+        line_edit.editingFinished.connect(input_edited)
+
+        self.vbox.addLayout(layout)
+        #print("created for", text, attribute)
+        return line_edit, label
+
     def add_integer_input_index(self, text, attribute, index, min_val, max_val):
         line_edit = QLineEdit(self)
         layout = self.create_labeled_widget(self, text, line_edit)
@@ -299,15 +268,26 @@ class DataEditor(QWidget):
 
         return line_edit
 
+    def add_text_input_return_both(self, text, attribute, maxlength):
+        line_edit = QLineEdit(self)
+        layout = self.create_labeled_widget(self, text, line_edit)
+
+        line_edit.setMaxLength(maxlength)
+
+        def input_edited():
+            text = line_edit.text()
+            text = text.rjust(maxlength)
+            setattr(self.bound_to, attribute, text)
+
+        line_edit.editingFinished.connect(input_edited)
+        self.vbox.addLayout(layout)
+
+        return line_edit, layout.itemAt(0)
+
     def add_dropdown_input(self, text, attribute, keyval_dict):
         combobox = QComboBox(self)
         for val in keyval_dict:
             combobox.addItem(val)
-
-        policy = combobox.sizePolicy()
-        policy.setHorizontalPolicy(QSizePolicy.Expanding)
-        combobox.setSizePolicy(policy)
-        combobox.setSizeAdjustPolicy(QComboBox.AdjustToMinimumContentsLengthWithIcon)
 
         layout = self.create_labeled_widget(self, text, combobox)
 
@@ -320,52 +300,6 @@ class DataEditor(QWidget):
         self.vbox.addLayout(layout)
 
         return combobox
-
-    def add_color_input(self, text, attribute, with_alpha=False):
-        line_edits = []
-        input_edited_callbacks = []
-
-        for subattr in ["r", "g", "b", "a"] if with_alpha else ["r", "g", "b"]:
-            line_edit = QLineEdit(self)
-            line_edit.setMaximumWidth(30)
-            line_edit.setValidator(QIntValidator(0, 255, self))
-            input_edited = create_setter(line_edit, self.bound_to, attribute, subattr, self.catch_text_update, isFloat=False)
-            input_edited_callbacks.append(input_edited)
-            line_edit.editingFinished.connect(input_edited)
-            line_edits.append(line_edit)
-
-        color_picker = ColorPicker(with_alpha=with_alpha)
-
-        def on_text_changed(text: str):
-            _ = text
-            r = int(line_edits[0].text() or '0')
-            g = int(line_edits[1].text() or '0')
-            b = int(line_edits[2].text() or '0')
-            a = int(line_edits[3].text() or '0') if len(line_edits) == 4 else 255
-            color_picker.color = QtGui.QColor(r, g, b, a)
-            color_picker.update_color(color_picker.color)
-
-        for line_edit in line_edits:
-            line_edit.textChanged.connect(on_text_changed)
-
-        def on_color_changed(color):
-            line_edits[0].setText(str(color.red()))
-            line_edits[1].setText(str(color.green()))
-            line_edits[2].setText(str(color.blue()))
-            if len(line_edits) == 4:
-                line_edits[3].setText(str(color.alpha()))
-
-        def on_color_picked(color):
-            for callback in input_edited_callbacks:
-                callback()
-
-        color_picker.color_changed.connect(on_color_changed)
-        color_picker.color_picked.connect(on_color_picked)
-
-        layout = self.create_labeled_widgets(self, text, line_edits + [color_picker])
-        self.vbox.addLayout(layout)
-
-        return line_edits
 
     def add_multiple_integer_input(self, text, attribute, subattributes, min_val, max_val):
         line_edits = []
@@ -442,11 +376,9 @@ class DataEditor(QWidget):
 
         return layout.itemAt(0).widget(), line_edits
 
-
     def update_rotation(self, xang, yang, zang):
         rotation = self.bound_to.rotation
         euler_angs = rotation.get_euler()
-        #forward, up, left = rotation.get_vectors()
 
         """
 
@@ -531,6 +463,7 @@ class DataEditor(QWidget):
 
         #return forward_edits, up_edits, left_edits
         return angle_edits
+    
     def set_value(self, field, val):
         field.setText(str(val))
 
@@ -589,6 +522,10 @@ def choose_data_editor(obj):
         return EnemyPointEdit
     elif isinstance(obj, EnemyPointGroup):
         return EnemyPointGroupEdit
+    elif isinstance(obj, ItemPoint):
+        return ItemPointEdit
+    elif isinstance(obj, ItemPointGroup):
+        return ItemPointGroupEdit
     elif isinstance(obj, CheckpointGroup):
         return CheckpointGroupEdit
     elif isinstance(obj, MapObject):
@@ -599,104 +536,135 @@ def choose_data_editor(obj):
         return ObjectRouteEdit
     elif isinstance(obj, RoutePoint):
         return ObjectRoutePointEdit
-    elif isinstance(obj, BOL):
-        return BOLEdit
+    elif isinstance(obj, KMP):
+        return KMPEdit
     elif isinstance(obj, KartStartPoint):
         return KartStartPointEdit
     elif isinstance(obj, Area):
         return AreaEdit
+    
     elif isinstance(obj, Camera):
         return CameraEdit
     elif isinstance(obj, JugemPoint):
         return RespawnPointEdit
-    elif isinstance(obj, LightParam):
-        return LightParamEdit
-    elif isinstance(obj, Minimap):
-        return MinimapEdit
+    elif isinstance(obj, CannonPoint):
+        return CannonPointEdit
+    elif isinstance(obj, MissionPoint):
+        return MissionPointEdit
+
+    elif isinstance(obj, Cameras):
+        return CamerasEdit
+
     else:
         return None
 
-
 class EnemyPointGroupEdit(DataEditor):
     def setup_widgets(self):
-        self.groupid = self.add_integer_input("Group ID", "id", MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
+        #self.groupid = self.add_integer_input("Group ID", "id", MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
+
+        self.prevgroup = self.add_multiple_integer_input_list("Previous Groups", "prevgroup",
+                                                              MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
+        self.nextgroup = self.add_multiple_integer_input_list("Next Groups", "nextgroup",
+                                                              MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
 
     def update_data(self):
-        self.groupid.setText(str(self.bound_to.id))
+        obj : EnemyPointGroup = self.bound_to
+        #self.groupid.setText(str(self.bound_to.id))
 
-
-DRIFT_DIRECTION_OPTIONS = OrderedDict()
-DRIFT_DIRECTION_OPTIONS[""] = 0
-DRIFT_DIRECTION_OPTIONS["To the left"] = 1
-DRIFT_DIRECTION_OPTIONS["To the right"] = 2
+        for i, widget in enumerate(self.prevgroup):
+            widget.setText(str(obj.prevgroup[i]))
+        for i, widget in enumerate(self.nextgroup):
+            widget.setText(str(obj.nextgroup[i]))
 
 
 class EnemyPointEdit(DataEditor):
     def setup_widgets(self, group_editable=False):
         self.position = self.add_multiple_decimal_input("Position", "position", ["x", "y", "z"],
                                                         -inf, +inf)
-        self.link = self.add_integer_input("Link", "link",
-                                           MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
         self.scale = self.add_decimal_input("Scale", "scale", -inf, inf)
-        self.itemsonly = self.add_checkbox("Items Only", "itemsonly", off_value=0, on_value=1)
-        self.swerve = self.add_dropdown_input("Swerve", "swerve", REVERSE_SWERVE_IDS)
-        self.group = self.add_integer_input("Group", "group",
-                                            MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        if not group_editable:
-            self.group.setDisabled(True)
 
-        self.driftdirection = self.add_dropdown_input("Drift Direction", "driftdirection",
-                                                      DRIFT_DIRECTION_OPTIONS)
-        self.driftacuteness = self.add_integer_input("Drift Acuteness", "driftacuteness",
-                                                     MIN_UNSIGNED_BYTE, 180)
-        self.driftduration = self.add_integer_input("Drift Duration", "driftduration",
-                                                    MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        self.driftsupplement = self.add_integer_input("Drift Supplement", "driftsupplement",
-                                                      MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        self.nomushroomzone = self.add_checkbox("No Mushroom Zone", "nomushroomzone",
-                                                off_value=0, on_value=1)
+        self.enemyaction = self.add_dropdown_input("Enemy Action 1", "enemyaction", ENPT_Setting1)
+        self.enemyaction2 = self.add_dropdown_input("Enemy Action 2", "enemyaction2", ENPT_Setting2)
+
+        self.unknown = self.add_integer_input("Unknown", "unknown",
+                                            MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
+        
+
         for widget in self.position:
             widget.editingFinished.connect(self.catch_text_update)
-        for widget in (self.itemsonly, self.nomushroomzone):
-            widget.stateChanged.connect(lambda _state: self.catch_text_update())
-        for widget in (self.swerve, self.driftdirection):
+        for widget in (self.enemyaction, self.enemyaction2):
             widget.currentIndexChanged.connect(lambda _index: self.catch_text_update())
-        for widget in (self.link, self.driftacuteness, self.driftduration, self.driftsupplement):
-            widget.editingFinished.connect(self.catch_text_update)
 
-        self.link.editingFinished.connect(self.update_name)
+        self.unknown.editingFinished.connect(self.catch_text_update)
 
     def update_data(self):
         obj: EnemyPoint = self.bound_to
         self.position[0].setText(str(round(obj.position.x, 3)))
         self.position[1].setText(str(round(obj.position.y, 3)))
         self.position[2].setText(str(round(obj.position.z, 3)))
-        self.driftdirection.setCurrentIndex(obj.driftdirection)
-        self.link.setText(str(obj.link))
+
         self.scale.setText(str(obj.scale))
-        self.itemsonly.setChecked(bool(obj.itemsonly))
-        self.group.setText(str(obj.group))
-        self.driftacuteness.setText(str(obj.driftacuteness))
-        self.driftduration.setText(str(obj.driftduration))
-        self.driftsupplement.setText(str(obj.driftsupplement))
-        self.nomushroomzone.setChecked(bool(obj.nomushroomzone))
-
-        if obj.swerve in SWERVE_IDS:
-            name = SWERVE_IDS[obj.swerve]
+       
+        if obj.enemyaction < len(ENPT_Setting1):
+            self.enemyaction.setCurrentIndex(obj.enemyaction)
         else:
-            name = SWERVE_IDS[0]
-        index = self.swerve.findText(name)
-        self.swerve.setCurrentIndex(index)
+            self.enemyaction.setCurrentIndex(-1)
+        if obj.enemyaction2 < len(ENPT_Setting2):
+            self.enemyaction2.setCurrentIndex(obj.enemyaction2)
+        else:
+            self.enemyaction2.setCurrentIndex(-1)
+        self.unknown.setText(str(obj.unknown))
 
-    def update_name(self):
-        if self.bound_to.widget is None:
-            return
-        self.bound_to.widget.update_name()
+class ItemPointGroupEdit(DataEditor):
+    def setup_widgets(self):
+        self.groupid = self.add_integer_input("Group ID", "id", MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
 
+        self.prevgroup = self.add_multiple_integer_input_list("Previous Groups", "prevgroup",
+                                                              MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
+        self.nextgroup = self.add_multiple_integer_input_list("Next Groups", "nextgroup",
+                                                              MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
+
+    def update_data(self):
+        obj = self.bound_to
+        self.groupid.setText(str(self.bound_to.id))
+
+        for i, widget in enumerate(self.prevgroup):
+            widget.setText(str(obj.prevgroup[i]))
+        for i, widget in enumerate(self.nextgroup):
+            widget.setText(str(obj.nextgroup[i]))
+
+class ItemPointEdit(DataEditor):
+    def setup_widgets(self, group_editable=False):
+        self.position = self.add_multiple_decimal_input("Position", "position", ["x", "y", "z"],
+                                                        -inf, +inf)
+        self.scale = self.add_decimal_input("Bullet Bill Range", "scale", -inf, inf)
+
+        self.setting1 = self.add_dropdown_input("Enemy Action 1", "setting1", ITPT_Setting1)
+        self.unknown = self.add_checkbox("Unknown", "unknown", off_value=0, on_value=1)
+        self.lowpriority = self.add_checkbox("Low Priority", "lowpriority", off_value=0, on_value=1)
+        self.dontdrop = self.add_checkbox("Don't Drop Bill", "dontdrop", off_value=0, on_value=1)
+
+
+    def update_data(self):
+        obj: ItemPoint = self.bound_to
+        self.position[0].setText(str(round(obj.position.x, 3)))
+        self.position[1].setText(str(round(obj.position.y, 3)))
+        self.position[2].setText(str(round(obj.position.z, 3)))
+       
+        if obj.setting1 < len(ITPT_Setting1):
+            self.setting1.setCurrentIndex(obj.setting1)
+        else:
+            self.setting1.setCurrentIndex(-1)
+
+        self.scale.setText(str(obj.scale))
+
+        self.unknown.setChecked( obj.unknown !=0 )
+        self.lowpriority.setChecked( obj.lowpriority !=0 )
+        self.dontdrop.setChecked( obj.dontdrop !=0 )
 
 class CheckpointGroupEdit(DataEditor):
     def setup_widgets(self):
-        self.grouplink = self.add_integer_input("Group Setting", "grouplink",
+        self.grouplink = self.add_integer_input("Group ID", "id",
                                                 MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
         self.prevgroup = self.add_multiple_integer_input_list("Previous Groups", "prevgroup",
                                                               MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
@@ -705,7 +673,7 @@ class CheckpointGroupEdit(DataEditor):
 
     def update_data(self):
         obj = self.bound_to
-        self.grouplink.setText(str(obj.grouplink))
+        self.grouplink.setText(str(obj.id))
         for i, widget in enumerate(self.prevgroup):
             widget.setText(str(obj.prevgroup[i]))
         for i, widget in enumerate(self.nextgroup):
@@ -713,161 +681,91 @@ class CheckpointGroupEdit(DataEditor):
 
 class CheckpointEdit(DataEditor):
     def setup_widgets(self):
-        self.start = self.add_multiple_decimal_input("Start", "start", ["x", "y", "z"],
+        self.start = self.add_multiple_decimal_input("Start", "start", ["x", "z"],
                                                         -inf, +inf)
-        self.end = self.add_multiple_decimal_input("End", "end", ["x", "y", "z"],
+        self.end = self.add_multiple_decimal_input("End", "end", ["x", "z"],
                                                      -inf, +inf)
 
-        self.unk1 = self.add_integer_input("Skippable Group / Respawn", "unk1",
+        self.respawn = self.add_integer_input("Respawn", "respawn",
                                            MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        self.unk2 = self.add_checkbox("Unknown Flag / Key CP", "unk2",
-                                      0, 1)
-        self.unk3 = self.add_checkbox("Prevent Box Skipping/ MKWii", "unk3",
-                                           0, 1)
-
-                              
+        self.type = self.add_checkbox("Key CP", "type",
+                                      0, 1)                
 
     def update_data(self):
         obj: Checkpoint = self.bound_to
         
         self.start[0].setText(str(round(obj.start.x, 3)))
-        self.start[1].setText(str(round(obj.start.y, 3)))
-        self.start[2].setText(str(round(obj.start.z, 3)))
+        self.start[1].setText(str(round(obj.start.z, 3)))
 
         self.end[0].setText(str(round(obj.end.x, 3)))
-        self.end[1].setText(str(round(obj.end.y, 3)))
-        self.end[2].setText(str(round(obj.end.z, 3)))
+        self.end[1].setText(str(round(obj.end.z, 3)))
 
-        self.unk1.setText(str(obj.unk1))
-        self.unk2.setChecked(obj.unk2 != 0)
-        self.unk3.setChecked(obj.unk3 != 0)
+        self.respawn.setText(str(obj.respawn))
+        self.type.setChecked(obj.type != 0)
 
 class ObjectRouteEdit(DataEditor):
     def setup_widgets(self):
-        self.unk1 = self.add_integer_input("Unknown 1", "unk1",
-                                           MIN_UNSIGNED_INT, MAX_UNSIGNED_INT)
-        self.unk2 = self.add_integer_input("Unknown 2", "unk2",
-                                           MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
+        self.smooth = self.add_dropdown_input("Sharp/Smooth motion", "smooth", POTI_Setting1) 
+        self.cyclic = self.add_dropdown_input("Cyclic/Back and forth motion", "cycle", POTI_Setting2) 
 
     def update_data(self):
         obj: Route = self.bound_to
-        self.unk1.setText(str(obj.unk1))
-        self.unk2.setText(str(obj.unk2))
+        self.smooth.setCurrentIndex( min(obj.smooth, 1)) 
+        self.cyclic.setCurrentIndex( min(obj.cyclic, 1)) 
 
 class ObjectRoutePointEdit(DataEditor):
     def setup_widgets(self):
         self.position = self.add_multiple_decimal_input("Position", "position", ["x", "y", "z"],
                                                         -inf, +inf)
-        self.unknown = self.add_integer_input("Object Action", "unk",
-                                              MIN_UNSIGNED_INT, MAX_UNSIGNED_INT)
+        self.unk1 = self.add_integer_input("Setting 1", "unk1",
+                                              MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
+        self.unk2 = self.add_integer_input("Setting 2", "unk2",
+                                              MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
 
     def update_data(self):
         obj: RoutePoint = self.bound_to
         self.position[0].setText(str(round(obj.position.x, 3)))
         self.position[1].setText(str(round(obj.position.y, 3)))
         self.position[2].setText(str(round(obj.position.z, 3)))
-        self.unknown.setText(str(obj.unk))
+        self.unk1.setText(str(obj.unk1)) 
+        self.unk2.setText(str(obj.unk2)) 
 
-
-ROLL_OPTIONS = OrderedDict()
-ROLL_OPTIONS["Disabled"] = 0
-ROLL_OPTIONS["Only Sky+Items"] = 1
-ROLL_OPTIONS["Entire Track"] = 2
-
-FOG_TYPE_OPTIONS = OrderedDict()
-FOG_TYPE_OPTIONS["Linear"] = 0
-FOG_TYPE_OPTIONS["Exponential"] = 1
-FOG_TYPE_OPTIONS["Exponential Squared"] = 2
-FOG_TYPE_OPTIONS["Reverse Exponential"] = 3
-FOG_TYPE_OPTIONS["Reverse Exponential Squared"] = 4
-FOG_TYPE_OPTIONS["Disabled"] = 5
-
-class BOLEdit(DataEditor):
+class KMPEdit(DataEditor):
     def setup_widgets(self):
 
         self.lap_count = self.add_integer_input("Lap Count", "lap_count",
                                         MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        self.music_id = self.add_dropdown_input("Music ID", "music_id",
-                                                REVERSE_MUSIC_IDS)
-        
 
-        self.rgb_ambientbutton, self.rgb_ambient = self.add_color_input("RGB Ambient", "rgb_ambient", ["r", "g", "b"],
-                                                           MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        
-        self.rgb_ambientbutton.clicked.connect(lambda: self.open_color_picker_light("rgb_ambient") )      
-        
-        self.rgba_lightbutton, self.rgba_light = self.add_color_input("RGBA Light", "rgba_light", ["r", "g", "b", "a"],
-                                                          MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        self.rgba_lightbutton.clicked.connect(lambda: self.open_color_picker_light("rgba_light") )                                      
-                                                          
-        self.lightsource = self.add_multiple_decimal_input("Light Position", "lightsource", ["x", "y", "z"],
-                                                           -inf, +inf)
+        self.speed_modifier = self.add_decimal_input("Speed Modifier", "speed_modifier", -inf, +inf)
+                                        
+        self.pole_position = self.add_dropdown_input("Pole Position", "pole_position", POLE_POSITIONS )
+        self.start_squeeze = self.add_dropdown_input("Start Distance", "start_squeeze", START_SQUEEZE )
 
-        self.shadow_colorbutton, self.shadow_color = self.add_color_input("Shadow Color", "shadow_color", ["r", "g", "b"],
-                                                    MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        self.shadow_colorbutton.clicked.connect(lambda: self.open_color_picker_light("shadow_color") )  
-        self.shadow_opacity = self.add_integer_input("Shadow Alpha %", "shadow_opacity",
-                                           MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-                                                
-                                                
-                                                
-        self.fog_type = self.add_dropdown_input("Fog Type", "fog_type",FOG_TYPE_OPTIONS )
-        
-        
-        self.fog_colorbutton, self.fog_color = self.add_color_input("Fog Color", "fog_color", ["r", "g", "b"],
-                                                         MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        self.fog_colorbutton.clicked.connect(lambda: self.open_color_picker_light("fog_color") )                                    
-                                                        
-        self.fog_startz = self.add_decimal_input("Fog Near Z", "fog_startz",
-                                                 -inf, +inf)
-        self.fog_endz = self.add_decimal_input("Fog Far Z", "fog_endz",
-                                               -inf, +inf)
-        self.lod_bias = self.add_checkbox("LOD bias on/off", "lod_bias",
+        self.lens_flare = self.add_checkbox("Enable Lens Flare", "lens_flare",
                                             off_value=0, on_value=1)
-        self.dummy_start_line = self.add_checkbox("Geostartline Flag", "dummy_start_line", off_value=0, on_value=1)
-        self.roll = self.add_dropdown_input("Tilt", "roll", ROLL_OPTIONS)
 
-        self.snow_effects = self.add_checkbox("Sherbet Land Env. Effects", "snow_effects",
-                                           off_value=0, on_value=1)
-        self.sky_follow = self.add_checkbox("Sky Follow Flag", "sky_follow",
-                                           off_value=0, on_value=1)                        
+        self.flare_colorbutton, self.flare_color = self.add_color_input("Flare Color", "flare_color", ["r", "g", "b"],
+                                                           MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
+        self.flare_colorbutton.clicked.connect(lambda: self.open_color_picker_light("flare_color") )  
+        self.flare_alpha = self.add_integer_input("Flare Alpha %", "flare_alpha",
+                                           MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
+
+            
+
        
-    def update_data(self):
-        obj: BOL = self.bound_to
-        #self.roll.setText(str(obj.roll))
-        self.roll.setCurrentIndex(obj.roll)
-        self.rgb_ambient[0].setText(str(obj.rgb_ambient.r))
-        self.rgb_ambient[1].setText(str(obj.rgb_ambient.g))
-        self.rgb_ambient[2].setText(str(obj.rgb_ambient.b))
-        self.rgba_light[0].setText(str(obj.rgba_light.r))
-        self.rgba_light[1].setText(str(obj.rgba_light.g))
-        self.rgba_light[2].setText(str(obj.rgba_light.b))
-        self.rgba_light[3].setText(str(obj.rgba_light.a))
-        self.lightsource[0].setText(str(round(obj.lightsource.x, 3)))
-        self.lightsource[1].setText(str(round(obj.lightsource.y, 3)))
-        self.lightsource[2].setText(str(round(obj.lightsource.z, 3)))
-        self.lap_count.setText(str(obj.lap_count))
-        self.fog_type.setCurrentIndex(obj.fog_type)
-        self.fog_color[0].setText(str(obj.fog_color.r))
-        self.fog_color[1].setText(str(obj.fog_color.g))
-        self.fog_color[2].setText(str(obj.fog_color.b))
-        self.fog_startz.setText(str(obj.fog_startz))
-        self.fog_endz.setText(str(obj.fog_endz))
-        self.lod_bias.setChecked(obj.lod_bias != 0)
-        self.snow_effects.setChecked(obj.snow_effects != 0)
-        self.sky_follow.setChecked(obj.sky_follow != 0)
-        self.shadow_opacity.setText(str(obj.shadow_opacity))
-        self.snow_effects.setChecked(obj.snow_effects != 0)
-        self.shadow_color[0].setText(str(obj.shadow_color.r))
-        self.shadow_color[1].setText(str(obj.shadow_color.g))
-        self.shadow_color[2].setText(str(obj.shadow_color.b))
 
-        if obj.music_id not in MUSIC_IDS:
-            name = "INVALID"
-        else:
-            name = MUSIC_IDS[obj.music_id]
-        index = self.music_id.findText(name)
-        self.music_id.setCurrentIndex(index)
+    def update_data(self):
+        obj: KMP = self.bound_to
+        #self.roll.setText(str(obj.roll))
+        self.lap_count.setText(str(obj.lap_count))
+        self.pole_position.setCurrentIndex(obj.pole_position)
+        self.start_squeeze.setCurrentIndex(obj.start_squeeze)
+        self.lens_flare.setChecked(obj.lens_flare != 0)
+        self.flare_color[0].setText(str(obj.flare_color.r))
+        self.flare_color[1].setText(str(obj.flare_color.g))
+        self.flare_color[2].setText(str(obj.flare_color.b))
+        self.flare_alpha.setText(str(obj.flare_alpha))
+        self.speed_modifier.setText(str(obj.speed_modifier))
 
     def open_color_picker_light(self, attrib): 
         obj = self.bound_to
@@ -901,23 +799,12 @@ class ObjectEdit(DataEditor):
         self.rotation = self.add_rotation_input()
         self.objectid = self.add_dropdown_input("Object Type", "objectid", REVERSEOBJECTNAMES)
 
-        self.route = self.add_integer_input("Object Path ID", "route",
+        self.route, self.route_label = self.add_integer_input_hideable("Object Path ID", "route",
                                              MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
 
-        self.unk_2a = self.add_integer_input("Object Path Point ID", "unk_2a",
-                                        MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
-
-        self.unk_28 = self.add_integer_input("Unknown 0x28", "unk_28",
-                                             MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
-
-        self.presence_filter = self.add_integer_input("Presence Mask", "presence_filter",
-                                                      MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        self.presence = self.add_integer_input("Presence", "presence",
-                                               MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        self.flag = self.add_checkbox("Collision", "unk_flag",
-                                      off_value=0, on_value=1)
-        self.unk_2f = self.add_integer_input("Unknown 0x2F", "unk_2f",
-                                             MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
+        self.single = self.add_checkbox("Enable in single player mode", "single", 0, 1)
+        self.double = self.add_checkbox("Enable in two player mode", "double", 0, 1)
+        self.triple = self.add_checkbox("Enable in three/four player mode", "triple", 0, 1)
 
         self.userdata = []
         for i in range(8):
@@ -948,7 +835,11 @@ class ObjectEdit(DataEditor):
         self.assets.setSizePolicy(hint)
 
     def rename_object_parameters(self, current):
-        parameter_names, assets = load_parameter_names(current)
+        
+        parameter_names, assets, route_info = load_parameter_names(current)
+
+        #parameter_names = None
+        #assets = []
         
         if parameter_names is None:
             for i in range(8):
@@ -956,6 +847,10 @@ class ObjectEdit(DataEditor):
                 self.userdata[i][0].setVisible(True)
                 self.userdata[i][1].setVisible(True)
             self.assets.setText("Required Assets: Unknown")
+
+            self.route.setVisible(True)
+            self.route_label.setVisible(True)
+
         else:
             for i in range(8):
                 if parameter_names[i] == "Unused":
@@ -973,6 +868,11 @@ class ObjectEdit(DataEditor):
                 self.assets.setText("Required Assets: None")
             else:
                 self.assets.setText("Required Assets: {0}".format(", ".join(assets)))
+
+            self.route.setVisible(route_info is not None)
+            self.route_label.setVisible(route_info is not None)
+
+            
                 
         if hasattr(self, "in_production") and self.in_production:
             self.set_default_values()
@@ -1024,14 +924,11 @@ class ObjectEdit(DataEditor):
         self.objectid.setCurrentIndex(index)
 
         self.route.setText(str(obj.route))
-        self.unk_28.setText(str(obj.unk_28))
-        self.unk_2a.setText(str(obj.unk_2a))
-        self.unk_2f.setText(str(obj.unk_2f))
-        self.presence_filter.setText(str(obj.presence_filter))
-        self.presence.setText(str(obj.presence))
-        self.flag.setChecked(obj.unk_flag != 0)
-        
-        
+       
+        self.single.setChecked( obj.single != 0)
+        self.double.setChecked( obj.double != 0)
+        self.triple.setChecked( obj.triple != 0)
+  
         if load_defaults:
             self.in_production = load_defaults
             self.set_default_values()
@@ -1054,18 +951,10 @@ class KartStartPointEdit(DataEditor):
         self.position = self.add_multiple_decimal_input("Position", "position", ["x", "y", "z"],
                                                         -inf, +inf)
         self.rotation = self.add_rotation_input()
-        self.scale = self.add_multiple_decimal_input("Scale", "scale", ["x", "y", "z"],
-                                                     -inf, +inf)
-
-        options = OrderedDict()
-        options["Left"] = 0
-        options["Right"] = 1
-        self.poleposition = self.add_dropdown_input("Pole Position", "poleposition",
-                                                    options)
+        
         self.playerid = self.add_integer_input("Player ID", "playerid",
                                                MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        self.unknown = self.add_integer_input("Unknown", "unknown",
-                                              MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
+
 
     def update_data(self):
         obj: KartStartPoint = self.bound_to
@@ -1074,19 +963,7 @@ class KartStartPointEdit(DataEditor):
         self.position[2].setText(str(round(obj.position.z, 3)))
 
         self.update_rotation(*self.rotation)
-
-        self.scale[0].setText(str(obj.scale.x))
-        self.scale[1].setText(str(obj.scale.y))
-        self.scale[2].setText(str(obj.scale.z))
-
-        self.poleposition.setCurrentIndex(obj.poleposition)
         self.playerid.setText(str(obj.playerid))
-        self.unknown.setText(str(obj.unknown))
-
-AREA_SHAPE = {
-    "Box": 0,
-    "Cylinder": 1,
-}
 
 
 class AreaEdit(DataEditor):
@@ -1098,25 +975,27 @@ class AreaEdit(DataEditor):
         self.scale = self.add_multiple_decimal_input("Scale", "scale", ["x", "y", "z"],
                                                      -inf, +inf)
         self.rotation = self.add_rotation_input()
-        self.shape = self.add_dropdown_input("Shape", "shape", AREA_SHAPE)
-        self.area_type = self.add_dropdown_input("Area Type", "area_type", REVERSE_AREA_TYPES)
-        self.camera_index = self.add_integer_input("Camera Index", "camera_index",
-                                                   MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
-        self.feather = self.add_multiple_integer_input("Feather", "feather", ["i0", "i1"],
-                                                       MIN_UNSIGNED_INT, MAX_SIGNED_INT)
-        self.unkfixedpoint = self.add_integer_input("Unknown 3 Fixed Point", "unkfixedpoint",
-                                                    MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
-        self.unkshort = self.add_integer_input("Unknown 4", "unkshort",
-                                               MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
-        self.shadow_id = self.add_integer_input("Shadow ID", "shadow_id",
-                                                MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
-        self.lightparam_index = self.add_integer_input("LightParam Index", "lightparam_index",
-                                                       MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
+
+        self.area_type = self.add_dropdown_input("Area Type", "type", AREA_Type)
+                                                
+
+        self.shape = self.add_dropdown_input("Shape", "shape", AREA_Shape)
+
+        self.priority = self.add_integer_input("Priority", "priority",
+                                           MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)                                           
+
+        self.camera_index, self.camera_index_label = self.add_integer_input_hideable("Camera Index", "camera_index",
+                                                   MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
+
+        self.setting1, self.setting1_label = self.add_integer_input_hideable("Setting 1", "setting1", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
+        self.setting2, self.setting2_label = self.add_integer_input_hideable("Setting 2", "setting2", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
+        
+        self.routeid, self.routeid_label = self.add_integer_input_hideable("Route ID", "route", MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
+        self.enemypointid, self.enemypointid_label = self.add_integer_input_hideable("Enemy Point ID", "enemypointid", MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
+
         self.area_type.currentIndexChanged.connect(self.update_name)
         self.camera_index.editingFinished.disconnect()
         self.camera_index.editingFinished.connect(self.update_camera_used)
-
-        self.area_type.currentTextChanged.connect(self.update_name)
 
     def update_data(self):
         obj: Area = self.bound_to
@@ -1130,15 +1009,46 @@ class AreaEdit(DataEditor):
 
         self.update_rotation(*self.rotation)
 
-        self.shape.setCurrentIndex(obj.shape)
-        self.area_type.setCurrentIndex(obj.area_type)
+        self.shape.setCurrentIndex( obj.shape )
+        self.area_type.setCurrentIndex( obj.type )
         self.camera_index.setText(str(obj.camera_index))
-        self.feather[0].setText(str(obj.feather.i0))
-        self.feather[1].setText(str(obj.feather.i1))
-        self.unkfixedpoint.setText(str(obj.unkfixedpoint))
-        self.unkshort.setText(str(obj.unkshort))
-        self.shadow_id.setText(str(obj.shadow_id))
-        self.lightparam_index.setText(str(obj.lightparam_index))
+        self.priority.setText(str(obj.priority))
+    
+        self.setting1.setText(str(obj.setting1))
+        self.setting2.setText(str(obj.setting2))
+        self.routeid.setText(str(obj.route))
+        self.enemypointid.setText(str(obj.enemypointid))
+        self.set_settings_visible()
+
+    def set_settings_visible(self):
+        obj: Area = self.bound_to
+        obj.type = self.area_type.currentIndex()
+        self.camera_index.setVisible( obj.type == 0 )
+        self.camera_index_label.setVisible( obj.type == 0 )
+
+
+        setting1_labels = { 2: "BFG Entry", 3: "Acceleration Modifier", 6: "BBLM Entry", 8: "Group ID", 9: "Group ID"  }
+        self.setting1.setVisible(obj.type in [2, 3, 6, 8, 9])
+        if obj.type in [2, 3, 6, 8, 9]:
+            self.setting1_label.setText(setting1_labels[ obj.type ])
+        self.setting1_label.setVisible(obj.type in [2, 3, 6, 8, 9])
+        
+
+        setting2_labels = { 3: "Moving Water Speed", 6: "Transition Time (frames)"}
+        self.setting2.setVisible(obj.type in [3, 6])
+        if obj.type in [3, 6]:
+            self.setting2_label.setText( setting2_labels[obj.type]   )
+        self.setting2_label.setVisible(obj.type in [3, 6])
+        
+
+        self.routeid.setVisible(obj.type == 3)
+        self.routeid_label.setVisible(obj.type == 3)
+        self.enemypointid.setVisible(obj.type == 4)
+        self.enemypointid_label.setVisible(obj.type == 4)
+
+    def update_name(self):
+        self.set_settings_visible()
+        super().update_name()
 
     def update_camera_used(self):
         #print('update route used', self.bound_to.route)
@@ -1151,16 +1061,14 @@ class AreaEdit(DataEditor):
         #update the name, may be needed
         self.update_name()
 
-CAMERA_TYPES = OrderedDict()
-CAMERA_TYPES["0 - Fix | StartFix"] = 0x0000
-CAMERA_TYPES["1 - FixPath | StartOnlyPath"] = 0x0001
-CAMERA_TYPES["2 - FixChase"] = 0x0002
-CAMERA_TYPES["3 - FixSpl"] = 0x0003
-CAMERA_TYPES["4 - StartFixPath"] = 0x0004
-CAMERA_TYPES["5 - DemoPath | StartPath"] = 0x0005
-CAMERA_TYPES["6 - StartLookPath"] = 0x0006
-CAMERA_TYPES["7 - FixPala"] = 0x0007
-CAMERA_TYPES["8 - Post-Race Camera"] = 0x0008
+class CamerasEdit(DataEditor):
+    #emit_route_update = pyqtSignal("PyQt_PyObject", "int", "int")
+    def setup_widgets(self):
+        self.startcam = self.add_integer_input("Starting Camera", "startcam", 0, 255)
+    def update_data(self):
+        obj: Cameras = self.bound_to
+        print("udpate camers data")
+        self.startcam.setText( str(obj.startcam) )
 
 class CameraEdit(DataEditor):
     emit_route_update = pyqtSignal("PyQt_PyObject", "int", "int")
@@ -1168,34 +1076,36 @@ class CameraEdit(DataEditor):
     def setup_widgets(self):
         self.position = self.add_multiple_decimal_input("Position", "position", ["x", "y", "z"],
                                                         -inf, +inf)
-        self.position3 = self.add_multiple_decimal_input("Start Point", "position3", ["x", "y", "z"],
-                                                        -inf, +inf)
-        self.position2 = self.add_multiple_decimal_input("End Point", "position2", ["x", "y", "z"],
-                                                        -inf, +inf)
         self.rotation = self.add_rotation_input()
-       
-        self.chase = self.add_checkbox("Follow Player", "chase",  0, 1)
+        
+        self.position2 = self.add_multiple_decimal_input("Start Point", "position2", ["x", "y", "z"],
+                                                        -inf, +inf)
+        self.position3 = self.add_multiple_decimal_input("End Point", "position3", ["x", "y", "z"],
+                                                        -inf, +inf)
+        
+        self.type = self.add_dropdown_input("Camera Type", "type", CAME_Type)
 
-        self.camtype = self.add_dropdown_input("Type", "camtype", CAMERA_TYPES)
-                                              
+        self.nextcam = self.add_integer_input("Next Cam", "nextcam",
+                                              MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
+
+        self.shake = self.add_integer_input("Shake", "shake", MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
+
+        self.route = self.add_integer_input("Object Path ID", "route",
+                                            MIN_SIGNED_BYTE, MAX_SIGNED_BYTE)
+
+        self.routespeed = self.add_integer_input("Route Speed", "routespeed", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
+        self.zoomspeed = self.add_integer_input("Zoom Speed", "zoomspeed", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
+        self.viewspeed = self.add_integer_input("View Speed", "viewspeed", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
+
         self.fov = self.add_multiple_integer_input("Start/End FOV", "fov", ["start", "end"],
                                                    MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
         self.camduration = self.add_integer_input("Camera Duration", "camduration",
                                                   MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
-        self.startcamera = self.add_checkbox("Start Camera", "startcamera", off_value=0, on_value=1)
-        self.nextcam = self.add_integer_input("Next Cam", "nextcam",
-                                        MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
 
-        self.shimmer = self.add_multiple_integer_input("Shimmer", "shimmer", ["z0", "z1"], 0, 4095)
-        self.route = self.add_integer_input("Route ID", "route", MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
-        self.routespeed = self.add_integer_input("Route Speed", "routespeed",
-                                                 MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
+        self.startflag = self.add_integer_input("Start Flag", "startflag", MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
+        self.movieflag = self.add_integer_input("Movie Flag", "movieflag", MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
 
-
-        self.name = self.add_text_input("Camera Name", "name", 4)
-
-        self.camtype.currentIndexChanged.connect(lambda _index: self.catch_text_update())
-        #self.camtype.currentIndexChanged.connect(self.update_name)
+        self.type.currentIndexChanged.connect(self.update_name)
         self.route.editingFinished.disconnect()
         self.route.editingFinished.connect(self.update_route_used)
 
@@ -1215,22 +1125,28 @@ class CameraEdit(DataEditor):
 
         self.update_rotation(*self.rotation)
 
+   
+        self.type.setCurrentIndex( obj.type )
+        self.nextcam.setText(str(obj.nextcam))
+        self.shake.setText(str(obj.shake))
+        self.route.setText(str(obj.route))
+        self.routespeed.setText(str(obj.routespeed))
+        self.zoomspeed.setText(str(obj.zoomspeed))
+        self.viewspeed.setText(str(obj.viewspeed))
+        self.startflag.setText(str(obj.startflag))
+        self.movieflag.setText(str(obj.movieflag))
 
-        self.chase.setVisible(obj.camtype in [0, 1, 2, 3])
-        
-
-        self.chase.setChecked(obj.chase != 0)
-        self.camtype.setCurrentIndex(list(CAMERA_TYPES.values()).index(obj.camtype))
         self.fov[0].setText(str(obj.fov.start))
         self.fov[1].setText(str(obj.fov.end))
         self.camduration.setText(str(obj.camduration))
-        self.startcamera.setChecked(obj.startcamera != 0)
-        self.shimmer[0].setText(str(obj.shimmer.z0))
-        self.shimmer[1].setText(str(obj.shimmer.z1))
-        self.route.setText(str(obj.route))
-        self.routespeed.setText(str(obj.routespeed))
+    
+
         self.nextcam.setText(str(obj.nextcam))
-        self.name.setText(obj.name)
+
+        
+
+
+
 
     def update_route_used(self):
         #print('update route used', self.bound_to.route)
@@ -1242,27 +1158,16 @@ class CameraEdit(DataEditor):
         
         #update the name, may be needed
         self.update_name()
-    def update_name(self):
-        if self.bound_to.widget is None:
-            return
-        self.bound_to.widget.update_name()
-
 
 class RespawnPointEdit(DataEditor):
     def setup_widgets(self):
         self.position = self.add_multiple_decimal_input("Position", "position", ["x", "y", "z"],
                                                         -inf, +inf)
         self.rotation = self.add_rotation_input()
-        self.respawn_id = self.add_integer_input("Respawn ID", "respawn_id",
-                                                 MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
-        self.unk1 = self.add_integer_input("Next Enemy Point", "unk1",
-                                           MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
-        self.unk2 = self.add_integer_input("Unknown 2", "unk2",
+        
+        #self.respawn_id = self.add_integer_input("Respawn ID", "respawn_id", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
+        self.range = self.add_integer_input("Range", "range",
                                            MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
-        self.unk3 = self.add_integer_input("Previous Checkpoint", "unk3",
-                                           MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
-
-        self.respawn_id.editingFinished.connect(self.update_name)
 
     def update_data(self):
         obj: JugemPoint = self.bound_to
@@ -1270,105 +1175,43 @@ class RespawnPointEdit(DataEditor):
         self.position[1].setText(str(round(obj.position.y, 3)))
         self.position[2].setText(str(round(obj.position.z, 3)))
         self.update_rotation(*self.rotation)
-        self.respawn_id.setText(str(obj.respawn_id))
-        self.unk1.setText(str(obj.unk1))
-        self.unk2.setText(str(obj.unk2))
-        self.unk3.setText(str(obj.unk3))
+        self.range.setText(str(obj.range))
 
-class LightParamEdit(DataEditor):
+
+
+class CannonPointEdit(DataEditor):
     def setup_widgets(self):
-        #self.color1 = self.add_color_input("RGBA 1", "color1")
-        self.color1button, self.color1 = self.add_color_input("Light Color", "color1", ["r", "g", "b", "a"], MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        #self.color1 = self.add_multiple_integer_input("Light Color", "color1", ["r", "g", "b", "a"], MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        
-        self.color1button.clicked.connect(lambda: self.open_color_picker_light(1) )
-        
-        self.unkvec = self.add_multiple_decimal_input("Source Vector", "position", ["x", "y", "z"],
-                                                      -inf, +inf)
-        self.color2button, self.color2 = self.add_color_input("Ambient Light Color", "color2", ["r", "g", "b", "a"],
-                                                      MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-    def update_name(self):
-        if self.bound_to.widget is None:
-            return
-        self.bound_to.widget.update_name()
+        self.position = self.add_multiple_decimal_input("Position", "position", ["x", "y", "z"],
+                                                        -inf, +inf)
+        self.rotation = self.add_rotation_input()
+        self.cannon_id = self.add_integer_input("Cannon ID", "id",  MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
+        self.shooteffect = self.add_dropdown_input("Shoot Effect", "shoot_effect", CNPT_ShootEffect)
+
 
     def update_data(self):
-        obj: LightParam = self.bound_to
-        
-        self.color1[0].setText(str(obj.color1.r))
-        self.color1[1].setText(str(obj.color1.g))
-        self.color1[2].setText(str(obj.color1.b))
-        self.color1[3].setText(str(obj.color1.a))
-        
-        
-        self.color2[0].setText(str(obj.color2.r))
-        self.color2[1].setText(str(obj.color2.g))
-        self.color2[2].setText(str(obj.color2.b))
-        self.color2[3].setText(str(obj.color2.a))
-
-        self.unkvec[0].setText(str(obj.position.x))
-        self.unkvec[1].setText(str(obj.position.y))
-        self.unkvec[2].setText(str(obj.position.z))
+        obj: CannonPoint = self.bound_to
+        self.position[0].setText(str(round(obj.position.x, 3)))
+        self.position[1].setText(str(round(obj.position.y, 3)))
+        self.position[2].setText(str(round(obj.position.z, 3)))
+        self.update_rotation(*self.rotation)
+        self.cannon_id.setText(str(obj.id))
+        self.shooteffect.setCurrentIndex( obj.shoot_effect )
 
 
-    def open_color_picker_light(self, idx):
-        obj: LightParam = self.bound_to
-        color_dia = QColorDialog(self)
-        #color_dia.setCurrentColor( QColor(curr_color.r, curr_color.g, curr_color.b, curr_color.a) )
-
-        color = color_dia.getColor()
-        if color.isValid():
-            color_comps = color.getRgbF()
-            color_vec = getattr(obj, "color" + str(idx) )
-            
-            color_vec.r = int(color_comps[0] * 255)
-            color_vec.g = int(color_comps[1] * 255)
-            color_vec.b = int(color_comps[2] * 255)
-            
-            self.update_data()
-
-class MGEntryEdit(DataEditor):
+class MissionPointEdit(DataEditor):
     def setup_widgets(self):
-        self.unk1 = self.add_integer_input("Shine Thief Win Sec", "rabbitWinSec",
-                                           MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
-        self.unk2 = self.add_integer_input("Shine Thief Min Sec", "rabbitMinSec",
-                                           MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
-        self.unk3 = self.add_integer_input("Unknown 3", "rabbitDecSec",
-                                           MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
-        """
-        self.unk4 = self.add_integer_input("Unknown 4", "unk4",
-                                           MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
-        """
-    def update_data(self):
-        obj: MGEntry = self.bound_to
-        self.unk1.setText(str(obj.rabbitWinSec))
-        self.unk2.setText(str(obj.rabbitMinSec))
-        self.unk3.setText(str(obj.rabbitDecSec))
-        #self.unk4.setText(str(obj.unk4))
-
-ORIENTATION_OPTIONS = OrderedDict()
-ORIENTATION_OPTIONS["Upwards"] = 0
-ORIENTATION_OPTIONS["Leftwards"] = 1
-ORIENTATION_OPTIONS["Downwards"] = 2
-ORIENTATION_OPTIONS["Rightwards"] = 3
-
-
-class MinimapEdit(DataEditor):
-    def setup_widgets(self):
-        self.topleft = self.add_multiple_decimal_input("TopLeft", "corner1", ["x", "y", "z"],
-                                                       -inf, +inf)
-        self.bottomright = self.add_multiple_decimal_input("BottomRight", "corner2", ["x", "y", "z"],
-                                                           -inf, +inf)
-        self.orientation = self.add_dropdown_input("Orientation", "orientation", ORIENTATION_OPTIONS)
-        self.orientation.currentIndexChanged.connect(lambda _index: self.catch_text_update())
+        self.position = self.add_multiple_decimal_input("Position", "position", ["x", "y", "z"],
+                                                        -inf, +inf)
+        self.rotation = self.add_rotation_input()
+        #self.mission_id = self.add_integer_input("Mission Success ID", "mission_id", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
+        self.unk = self.add_integer_input("Next Enemy Point", "unk",
+                                           MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
 
     def update_data(self):
-        obj: Minimap = self.bound_to
-        self.topleft[0].setText(str(round(obj.corner1.x, 3)))
-        self.topleft[1].setText(str(round(obj.corner1.y, 3)))
-        self.topleft[2].setText(str(round(obj.corner1.z, 3)))
-        self.bottomright[0].setText(str(round(obj.corner2.x, 3)))
-        self.bottomright[1].setText(str(round(obj.corner2.y, 3)))
-        self.bottomright[2].setText(str(round(obj.corner2.z, 3)))
-
-        self.orientation.setCurrentIndex(obj.orientation)
+        obj: MissionPoint = self.bound_to
+        self.position[0].setText(str(round(obj.position.x, 3)))
+        self.position[1].setText(str(round(obj.position.y, 3)))
+        self.position[2].setText(str(round(obj.position.z, 3)))
+        self.update_rotation(*self.rotation)
+        #self.mission_id.setText(str(obj.mission_id))
+        self.unk.setText(str(obj.unk))

@@ -52,15 +52,16 @@ for coltrans in [
 
 DO_GRAYSCALE = False
 
-def draw_collision(verts, faces):
+def draw_collision(faces):
     biggest, smallest = None, None
-    for x, y, z in verts:
-        if biggest is None:
-            biggest = smallest = y
-        if y > biggest:
-            biggest = y
-        if y < smallest:
-            smallest = y
+    for f in faces:
+        for v in  f[0:3]:
+            if biggest is None:
+                biggest = smallest = v.y
+            if v.y > biggest:
+                biggest = v.y
+            if v.y < smallest:
+                smallest = v.y
     scaleheight = biggest - smallest
     if scaleheight == 0:
         scaleheight = 1
@@ -77,9 +78,9 @@ def draw_collision(verts, faces):
     
         v1, v2, v3 = face[0:3]
         i += 1
-        v1x, v1y, v1z = verts[v1[0]-1]
-        v2x, v2y, v2z = verts[v2[0]-1]
-        v3x, v3y, v3z = verts[v3[0]-1]
+        v1x, v1y, v1z = v1.x, v1.y, v1.z
+        v2x, v2y, v2z = v2.x, v2.y, v2.z
+        v3x, v3y, v3z = v3.x, v3.y, v3.z
 
         # grayscale = ((v1y+v2y+v3y)/3.0)/scaleheight
         """average_y = max(v1y, v2y,v3y) - smallest#(v1y+v2y+v3y)/3.0 - smallest

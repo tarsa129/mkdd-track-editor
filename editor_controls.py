@@ -6,6 +6,7 @@ from PyQt5.QtCore import Qt
 from lib.vectors import Vector3, Plane, Vector2
 from gizmo import AXIS_X, AXIS_Y, AXIS_Z
 import numpy
+from lib.libkmp import KMPPoint
 MOUSE_MODE_NONE = 0
 MOUSE_MODE_MOVEWP = 1
 MOUSE_MODE_ADDWP = 2
@@ -553,6 +554,7 @@ class UserControl(object):
     def handle_press(self, event):
         editor = self._editor_widget
 
+
         if editor.mode == MODE_TOPDOWN:
             self.handle_press_topdown(event)
         else:
@@ -560,6 +562,23 @@ class UserControl(object):
 
     def handle_release(self, event):
         editor = self._editor_widget
+
+        if editor.connecting_mode and editor.mode == MODE_TOPDOWN:
+            #mapx, mapz = editor.mouse_coord_to_world_coord(event.x(), event.y())
+            x = event.x()
+            y = event.y()
+            selectstartx, selectstartz = editor.mouse_coord_to_world_coord(x, y)
+
+            editor.selectionbox_start = (selectstartx, selectstartz)
+            editor.selectionbox_end = None
+
+            if editor.level_file is not None:
+                editor.selectionqueue.queue_selection(x, y, 1, 1,
+                                            editor.shift_is_pressed)
+                editor.do_redraw(force=True)
+                
+            editor.connected_to_point.emit()
+
         if editor.mode == MODE_TOPDOWN:
             self.handle_release_topdown(event)
         else:
@@ -570,9 +589,32 @@ class UserControl(object):
         #print("Gizmo hit status was reset!!!!", editor.gizmo.was_hit_at_all)
         editor.do_redraw()
 
+
     def handle_move(self, event):
         editor = self._editor_widget
-        if editor.mode == MODE_TOPDOWN:
+        
+        if editor.connecting_mode and editor.mode == MODE_TOPDOWN:
+            #self.handle_move_topdown(event)
+            #print("do not actually move the thing")
+
+            #update the view in the position thing
+            if default_timer() - self.last_position_update > 0.1:  # True:  # self.highlighttriangle is not None:
+                mapx, mapz = editor.mouse_coord_to_world_coord(event.x(), event.y())
+                self.last_position_update = default_timer()
+
+                if editor.collision is not None:
+                    height = editor.collision.collide_ray_downwards(mapx, -mapz)
+
+                    if height is not None:
+                        # self.highlighttriangle = res[1:]
+                        # self.update()
+                        editor.position_update.emit(event, (round(mapx, 2), round(height, 2), round(-mapz, 2)))
+                    else:
+                        editor.position_update.emit(event, (round(mapx, 2), None, round(-mapz, 2)))
+                else:
+                    editor.position_update.emit(event, (round(mapx, 2), None, round(-mapz, 2)))
+
+        elif editor.mode == MODE_TOPDOWN:
             self.handle_move_topdown(event)
 
             if default_timer() - self.last_position_update > 0.1:  # True:  # self.highlighttriangle is not None:
@@ -647,5 +689,4 @@ class UserControl(object):
                 for action in self.clickdragactions3d[key]:
                     if action.condition(editor, self.buttons, event):
                         action.move(editor, self.buttons, event)
-
 

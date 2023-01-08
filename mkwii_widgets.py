@@ -1,6 +1,5 @@
 import random
 import traceback
-import os
 from time import sleep
 from timeit import default_timer
 from io import StringIO
@@ -21,20 +20,16 @@ from PyQt5.QtCore import Qt
 
 
 from helper_functions import calc_zoom_in_factor, calc_zoom_out_factor
-from lib.libgen import GeneratorObject
 from lib.collision import Collision
 from widgets.editor_widgets import catch_exception, catch_exception_with_dialog
-#from pikmingen import PikminObject
-from libpiktxt import PikminTxt
 from opengltext import draw_collision
 from lib.vectors import Matrix4x4, Vector3, Line, Plane, Triangle
-import pikmingen
-from lib.model_rendering import TexturedPlane, Model, Grid, GenericObject, Material, Minimap
+from lib.model_rendering import TexturedPlane, Model, Grid, GenericObject, Material
 from gizmo import Gizmo
 from lib.object_models import ObjectModels
 from editor_controls import UserControl
-from lib.libpath import Paths
-from lib.libbol import BOL
+#from lib.libpath import Paths
+from lib.libkmp import KMP, KMPPoint
 import numpy
 
 ObjectSelectionEntry = namedtuple("ObjectSelectionEntry", ["obj", "pos1", "pos2", "pos3", "rotation"])
@@ -81,7 +76,7 @@ class SelectionQueue(list):
             return None
 
 
-class BolMapViewer(QtWidgets.QOpenGLWidget):
+class KMPMapViewer(QtWidgets.QOpenGLWidget):
     mouse_clicked = pyqtSignal(QMouseEvent)
     entity_clicked = pyqtSignal(QMouseEvent, str)
     mouse_dragged = pyqtSignal(QMouseEvent)
@@ -96,6 +91,9 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
     create_waypoint_3d = pyqtSignal(float, float, float)
 
     rotate_current = pyqtSignal(Vector3)
+
+    connected_to_point = pyqtSignal()
+
 
     def __init__(self, samples, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -159,7 +157,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
 
         self.setMouseTracking(True)
 
-        self.level_file:BOL = None
+        self.level_file:KMP = None
         self.waterboxes = []
 
         self.mousemode = MOUSE_MODE_NONE
@@ -180,6 +178,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
         self.last_drag_update = 0
         self.change_height_is_pressed = False
         self.last_mouse_move = None
+        self.connecting_mode = False
 
         self.timer = QtCore.QTimer()
         self.timer.setInterval(2)
@@ -231,9 +230,9 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
         self.selectionbox_projected_right = None
         self.selectionbox_projected_coords = None
         self.last_position_update = 0
-        self.move_collision_plane = Plane(Vector3(0.0, 0.0, 0.0), Vector3(1.0, 0.0, 0.0), Vector3(0.0, 1.0, 0.0))
+        self.move_collision_plane = Plane(Vector3(0.0, 0.0, 0.0), Vector3(1.0, 0.0, 0.0), Vector3(0.0, 0.0, 1.0))
 
-        self.paths = Paths()
+        #self.paths = Paths()
         self.usercontrol = UserControl(self)
 
         # Initialize some models
@@ -247,8 +246,8 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
         self.modelviewmatrix = None
         self.projectionmatrix = None
 
-        self.minimap = Minimap(Vector3(-1000.0, 0.0, -1000.0), Vector3(1000.0, 0.0, 1000.0), 0,
-                               None)
+        self.arrow = None
+
 
     @catch_exception_with_dialog
     def initializeGL(self):
@@ -258,11 +257,13 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
 
         glBegin(GL_LINES)
         glVertex3f(0.0, 0.0, 0.0)
-        glVertex3f(0.0, 40.0, 0.0)
+        glVertex3f(0.0, 0.0, 40.0)
         glEnd()
         glEndList()
 
         self.models.init_gl()
+        self.arrow = Material(texturepath="resources/arrow.png")
+
 
         # If multisampling is enabled, a secondary mono-sampled framebuffer needs to be created, as
         # reading pixels from multisampled framebuffers is not a supported GL operation.
@@ -340,9 +341,10 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
             self.offset_x *= -1
             self.do_redraw()
 
-    def logic(self, delta, diff):
-        self.dolphin.logic(self, delta, diff)
-
+    
+    #def logic(self, delta, diff):
+    #    self.dolphin.logic(self, delta, diff)
+    
     @catch_exception
     def render_loop(self):
         now = default_timer()
@@ -355,7 +357,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
         else:
             self.handle_arrowkey_scroll_3d(timedelta)
 
-        self.logic(timedelta, diff)
+        #self.logic(timedelta, diff)
 
         if diff > 1 / 60.0:
             check_gizmo_hover_id = self._mouse_pos_changed and self.should_check_gizmo_hover_id()
@@ -505,6 +507,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
         self.mousemode = MOUSE_MODE_NONE
         self.spawnpoint = None
         self.rotation_is_pressed = False
+        self.connecting_mode = False
 
         self._frame_invalid = False
         self._mouse_pos_changed = False
@@ -522,8 +525,8 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
             glDeleteLists(self.main_model, 1)
             self.main_model = None
 
-    def set_collision(self, verts, faces, alternative_mesh):
-        self.collision = Collision(verts, faces)
+    def set_collision(self, faces, alternative_mesh):
+        self.collision = Collision(faces)
 
         if self.main_model is None:
             self.main_model = glGenLists(1)
@@ -532,7 +535,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
 
         glNewList(self.main_model, GL_COMPILE)
         #glBegin(GL_TRIANGLES)
-        draw_collision(verts, faces)
+        draw_collision(faces)
         #glEnd()
         glEndList()
 
@@ -584,14 +587,14 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
     def mouse_coord_to_world_coord_transform(self, mouse_x, mouse_y):
         mat4x4 = Matrix4x4.from_opengl_matrix(*glGetFloatv(GL_PROJECTION_MATRIX))
         width, height = self.canvas_width, self.canvas_height
-        result = mat4x4.multiply_vec4(mouse_x-width/2, mouse_y-height/2, 0, 1)
+        result = mat4x4.multiply_vec4(mouse_x-width/2, 0, mouse_y-height/2, 1)
 
         return result
 
     #@catch_exception_with_dialog
     #@catch_exception
     def paintGL(self):
-        start = default_timer()
+        #start = default_timer()
         offset_x = self.offset_x
         offset_z = self.offset_z
 
@@ -609,8 +612,8 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
             camera_width = width*zf
             camera_height = height*zf
 
-            glOrtho(-camera_width / 2 - offset_x, camera_width / 2 - offset_x,
-                    -camera_height / 2 + offset_z, camera_height / 2 + offset_z, -120000.0, 80000.0)
+            glOrtho(-camera_width / 2 - offset_x, camera_width / 2 - offset_x, -camera_height / 2 + offset_z, camera_height / 2 + offset_z, -120000.0, 80000.0 )
+            #glOrtho(-camera_width / 2 - offset_x, camera_width / 2 - offset_x, -120000.0, 80000.0, -camera_height / 2 + offset_z, camera_height / 2 + offset_z,  )
 
             glMatrixMode(GL_MODELVIEW)
             glLoadIdentity()
@@ -644,7 +647,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
         self.mvp_mat = numpy.dot(self.projectionmatrix, self.modelviewmatrix)
         self.modelviewmatrix_inv = numpy.linalg.inv(self.modelviewmatrix)
 
-        campos = Vector3(self.offset_x, self.camera_height, -self.offset_z)
+        campos = Vector3(self.offset_x, self.camera_height, -self.offset_z) #originally -z
         self.campos = campos
 
         if self.mode == MODE_TOPDOWN:
@@ -691,6 +694,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                     self.gizmo.run_callback(hit)
                     self.gizmo.was_hit_at_all = True
 
+                    
                     # Clear the potential marquee selection, which may have been just created as a
                     # result of a mouse move event that was processed slightly earlier than this
                     # current paint event.
@@ -704,31 +708,14 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
             if self.level_file is not None and hit == 0xFF and not do_gizmo:
                 #objects = self.pikmin_generators.generators
                 glDisable(GL_TEXTURE_2D)
-                #for i, pikminobject in enumerate(objects):
-                #    self.models.render_object_coloredid(pikminobject, i)
+
 
                 id = 0x100000
 
                 objlist = []
                 offset = 0
-                if self.minimap is not None and vismenu.minimap.is_selectable() and self.minimap.is_available():
-                    objlist.append(
-                    ObjectSelectionEntry(obj=self.minimap,
-                                            pos1=self.minimap.corner1,
-                                            pos2=self.minimap.corner2,
-                                            pos3=None,
-                                            rotation=None)
-                    )
-                    self.models.render_generic_position_colored_id(self.minimap.corner1, id + (offset) * 4)
-                    self.models.render_generic_position_colored_id(self.minimap.corner2, id + (offset) * 4 + 1)
-                    offset = 1
-                """
-                for ptr, pos in self.karts:
-                    objlist.append((ptr, pos, None, None))
-                    self.models.render_generic_position_colored_id(pos, id + (offset) * 4)
-                    offset += 1"""
 
-                self.dolphin.render_collision(self, objlist, ObjectSelectionEntry)
+                #self.dolphin.render_collision(self, objlist)
                 offset = len(objlist)
 
                 if vismenu.enemyroute.is_selectable():
@@ -744,7 +731,20 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
 
                 offset = len(objlist)
 
-                if vismenu.itemroutes.is_selectable():
+                if vismenu.itemroute.is_selectable():
+                    for i, obj in enumerate(self.level_file.itempointgroups.points()):
+                        objlist.append(
+                            ObjectSelectionEntry(obj=obj,
+                                                 pos1=obj.position,
+                                                 pos2=None,
+                                                 pos3=None,
+                                                 rotation=None)
+                        )
+                        self.models.render_generic_position_colored_id(obj.position, id + (offset+i) * 4)
+
+                offset = len(objlist)
+
+                if vismenu.objectroutes.is_selectable():
                     i = 0
                     for route in self.level_file.routes:
                         for obj in route.points:
@@ -783,11 +783,12 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                                              rotation=None))
                         self.models.render_generic_position_colored_id(obj.start, id+(offset+i)*4)
                         self.models.render_generic_position_colored_id(obj.end, id+(offset+i)*4 + 1)
+
                 offset = len(objlist)
 
                 if vismenu.cameras.is_selectable():
                     for i, obj in enumerate(self.level_file.cameras):
-                        if obj in self.selected and obj.camtype in [4, 5, 6, 7]:
+                        if obj in self.selected:
                             objlist.append(
                                 ObjectSelectionEntry(obj=obj,
                                                      pos1=obj.position,
@@ -796,8 +797,10 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                                                      rotation=obj.rotation))
                             self.models.render_generic_position_rotation_colored_id(obj.position, obj.rotation,
                                                                                     id + (offset + i) * 4)
-                            self.models.render_generic_position_colored_id(obj.position2, id + (offset + i) * 4 + 1)
-                            self.models.render_generic_position_colored_id(obj.position3, id + (offset + i) * 4 + 2)
+                            if obj.type in [0, 1, 4, 5]:
+
+                                self.models.render_generic_position_colored_id(obj.position2, id + (offset + i) * 4 + 1)
+                                self.models.render_generic_position_colored_id(obj.position3, id + (offset + i) * 4 + 2)
                         else:
                             objlist.append(
                                 ObjectSelectionEntry(obj=obj,
@@ -807,60 +810,45 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                                                      rotation=obj.rotation))
                             self.models.render_generic_position_rotation_colored_id(obj.position, obj.rotation,
                                                                                     id + (offset + i) * 4)
-                offset = len(objlist)
-                if vismenu.lightparams.is_selectable():
-                   
-                    obj = self.level_file
-                    
-                    objlist.append( 
-                                ObjectSelectionEntry(obj=obj,
-                                                 pos1=obj.lightsource,
-                                                 pos2=None,
-                                                 pos3=None,
-                                                 rotation=None))
-                    self.models.render_generic_position_colored_id(obj.lightsource, id + (offset) * 4)
-
 
                 for is_selectable, collection in (
                         (vismenu.objects.is_selectable(), self.level_file.objects.objects),
                         (vismenu.kartstartpoints.is_selectable(), self.level_file.kartpoints.positions),
                         (vismenu.areas.is_selectable(), self.level_file.areas.areas),
                         (vismenu.respawnpoints.is_selectable(), self.level_file.respawnpoints),
-                        (vismenu.lightparams.is_selectable(), self.level_file.lightparams)
+                        (vismenu.cannonpoints.is_selectable(), self.level_file.cannonpoints),
+                        (vismenu.missionpoints.is_selectable(), self.level_file.missionpoints)
+                        
                         ):
                     offset = len(objlist)
                     if not is_selectable:
                         continue
 
                     for i, obj in enumerate(collection):
-                        if hasattr(obj, "rotation"):
-                            objlist.append(
-                                ObjectSelectionEntry(obj=obj,
-                                                    pos1=obj.position,
-                                                    pos2=None,
-                                                    pos3=None,
-                                                    rotation=obj.rotation))
-                            self.models.render_generic_position_rotation_colored_id(obj.position, obj.rotation, id + (offset + i) * 4 )
-                        else:
-                            objlist.append(
-                                ObjectSelectionEntry(obj=obj,
-                                                    pos1=obj.position,
-                                                    pos2=None,
-                                                    pos3=None,
-                                                    rotation=None))
-                            self.models.render_generic_position_colored_id(obj.position, id + (offset + i) * 4 )
+                        objlist.append(
+                            ObjectSelectionEntry(obj=obj,
+                                                 pos1=obj.position,
+                                                 pos2=None,
+                                                 pos3=None,
+                                                 rotation=obj.rotation))
+                        self.models.render_generic_position_rotation_colored_id(obj.position, obj.rotation,
+                                                                                id + (offset + i) * 4)
                 for entry in objlist:
-                    assert isinstance(entry, ObjectSelectionEntry)                                                               
-                len_objlist = len(objlist)
-                assert len_objlist*4 < id
-                print("We queued up", len_objlist)
+                    assert isinstance(entry, ObjectSelectionEntry)
+
+
+                #actually find what is selected
+                self.objlist = objlist
+                assert len(objlist)*4 < id
+                #print("We queued up", len(objlist))
                 pixels = glReadPixels(click_x, click_y, clickwidth, clickheight, GL_RGB, GL_UNSIGNED_BYTE)
+
                 #print(pixels, click_x, click_y, clickwidth, clickheight)
                 selected = {}
                 selected_positions = []
                 selected_rotations = []
                 #for i in range(0, clickwidth*clickheight, 4):
-                start = default_timer()
+                #start = default_timer()
 
                 indexes = set()
                 for i in range(0, clickwidth * clickheight):
@@ -869,13 +857,8 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                         index = (upper << 16) | (pixels[i * 3 + 1] << 8) | pixels[i * 3 + 2]
                         indexes.add(index)
 
-                
                 for index in indexes:
-                    try:
-                        entry: ObjectSelectionEntry = objlist[index // 4]
-                    except:
-                        print("index selection error with index", index)
-                        continue
+                    entry: ObjectSelectionEntry = objlist[index // 4]
                     obj = entry.obj
                     if obj not in selected:
                         selected[obj] = 0
@@ -898,6 +881,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                             elements_exist |= 4
 
                     selected[obj] = elements_exist
+
                 #print("select time taken", default_timer() - start)
                 #print("result:", selected)
                 selected = [x for x in selected.keys()]
@@ -971,40 +955,29 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
         glDisable(GL_TEXTURE_2D)
         glColor4f(1.0, 1.0, 1.0, 1.0)
         self.grid.render()
+
         if self.mode == MODE_TOPDOWN:
             glClear(GL_DEPTH_BUFFER_BIT)
-
-            if self.minimap is not None and vismenu.minimap.is_visible() and self.minimap.is_available():
-                self.minimap.render()
-                glClear(GL_DEPTH_BUFFER_BIT)
-        #else:
-        #    if self.minimap is not None and vismenu.minimap.is_visible():
-        #        self.minimap.render()
-        #    glDisable(GL_DEPTH_TEST)
 
         glEnable(GL_ALPHA_TEST)
         glAlphaFunc(GL_GEQUAL, 0.5)
         p = 0
 
-        self.dolphin.render_visual(self, self.selected)
+        #self.dolphin.render_visual(self, self.selected)
 
         """for valid, kartpos in self.karts:
             if valid:
                 self.models.render_player_position_colored(kartpos, valid in self.selected, p)
             p += 1"""
 
+        #do rendering of the points
         if self.level_file is not None:
             selected = self.selected
             positions = self.selected_positions
 
             select_optimize = {x:True for x in selected}
-            #objects = self.pikmin_generators.generators
 
-            #for pikminobject in objects:
-            #    self.models.render_object(pikminobject, pikminobject in selected)
-
-
-            if vismenu.itemroutes.is_visible():
+            if vismenu.objectroutes.is_visible():
                 routes_to_highlight = set()
 
 
@@ -1052,54 +1025,56 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                     glEnd()
                     if selected:
                         glLineWidth(1.0)
+          
             if vismenu.enemyroute.is_visible():
                 enemypoints_to_highlight = set()
-                for respawn_point in self.level_file.respawnpoints:
-                    if respawn_point not in select_optimize:
-                        continue
-                    next_enemy_point = respawn_point.unk1
-                    if next_enemy_point != -1:
-                        enemypoints_to_highlight.add(next_enemy_point)
+                all_groups = self.level_file.enemypointgroups.groups
+                used_colors = [None] * len(all_groups) #stores the ingoing colors
+                selected_groups = [False] * len(all_groups)
+
+                #figure out based on area type 4:
+                indices_to_circle = [ area.enemypointid for area in self.level_file.areas.areas if area.type == 4 and (area in select_optimize)  ]
 
                 point_index = 0
-                for group in self.level_file.enemypointgroups.groups:
+
+                for i, group in enumerate(all_groups):
                     if len(group.points) == 0:
                         continue 
-
+                        
                     group_selected = False
+
+                    #print(self.selected, group in self.selected)
+                    if group in self.selected:
+                        group_selected = True
+
+                    
                     for point in group.points:
                         if point in select_optimize:
                             group_selected = True
+                            selected_groups[i] = True
                             glColor3f(0.3, 0.3, 0.3)
-                            self.models.draw_sphere(point.position, point.scale)
+                            self.models.draw_sphere(point.position, point.scale * 10)
 
                         if point_index in enemypoints_to_highlight:
                             glColor3f(1.0, 1.0, 0.0)
                             self.models.draw_sphere(point.position, 300)
 
+                        if point_index in indices_to_circle:
+                            glColor3f(0.0, 0.0, 1.0)
+                            self.models.draw_sphere(point.position, 600)
+                
                         self.models.render_generic_position_colored(point.position, point in select_optimize, "enemypoint")
-
-                        if point.itemsonly:
-                            glColor3f(1.0, 0.5, 0.1)
-                            self.models.draw_cylinder(point.position, 800, 800)
-                        if point.driftdirection:
-                            glColor3f(0.9, 0.0, 0.1)
-                            self.models.draw_cylinder(point.position, 700, 700)
-                        if point.driftacuteness:
-                            glColor3f(0.1, 0.1, 1.0)
-                            self.models.draw_cylinder(point.position, 600, 600)
-                        if point.driftduration:
-                            glColor3f(0.9, 0.9, 0.1)
-                            self.models.draw_cylinder(point.position, 500, 500)
-                        if point.swerve:
-                            glColor3f(0.1, 0.9, 0.2)
+                        
+                        enemyaction_colors = [ [1.0, 0.0, 0.0], [0.5, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.5, 0.0]    ]
+                        if point.enemyaction in [1, 2, 3, 4]:
+                            glColor3f(  *enemyaction_colors[point.enemyaction - 1]  )
                             self.models.draw_cylinder(point.position, 400, 400)
-                        if point.driftsupplement:
-                            glColor3f(0.9, 0.0, 0.9)
-                            self.models.draw_cylinder(point.position, 300, 300)
-                        if point.nomushroomzone:
-                            glColor3f(0.1, 0.8, 1.0)
-                            self.models.draw_cylinder(point.position, 900, 900)
+                        enemyaction2_colors = [ [0.0, 0.0, 0.5], [0.0, 0.0, 0.75], [0.0, 0.0, 0.1]  ]
+                        if point.enemyaction2 in [1, 2, 3]:
+                            glColor3f(  *enemyaction2_colors[point.enemyaction2 - 1]  )
+                            self.models.draw_cylinder(point.position, 600, 600)
+
+                        
 
                         point_index += 1
 
@@ -1115,38 +1090,165 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                     if group_selected:
                         glLineWidth(1.0)
 
-                    if len(group.points) > 0:
+                
+                for i, group in enumerate( all_groups ):
+                    if len(group.points) == 0:
+                        continue
+                    # Draw the connections between each enemy point group.
+                    # draw to nextgroup only
+                    prevpoint = group.points[-1]
+                    #stores (group index, point)
+                    nextpoints = [ (i, all_groups[i].points[0]) for i in group.nextgroup if len(all_groups[i].points) > 0 and i > -1]
+                    if len(nextpoints) == 0:
+                        continue
 
-                        # Draw the connections between each enemy point group.
-                        pointA = group.points[-1]
-                        color_gen = random.Random(group.id)
-                        color_components = [
-                            color_gen.random() * 0.5,
-                            color_gen.random() * 0.5,
-                            color_gen.random() * 0.2,
-                        ]
-                        color_gen.shuffle(color_components)
-                        color_components[2] += 0.5
-                        glColor3f(*color_components)
-                        for groupB in self.level_file.enemypointgroups.groups:
-                            if group is groupB or len(groupB.points) == 0:
-                                continue
-                            pointB = groupB.points[0]
-                            if pointA.link == pointB.link:
-                                groupB_selected = any(map(lambda p: p in select_optimize, groupB.points))
-                                if group_selected or groupB_selected:
-                                    glLineWidth(3.0)
-                                glBegin(GL_LINES)
-                                glVertex3f(pointA.position.x, -pointA.position.z, pointA.position.y)
-                                glVertex3f(pointB.position.x, -pointB.position.z, pointB.position.y)
-                                glEnd()
-                                if group_selected or groupB_selected:
-                                    glLineWidth(1.0)
+                    #generate the color for inbound stuff
+                    color_gen = random.Random(group.id)
+                    color_components = [
+                        color_gen.random() * 0.5,
+                        color_gen.random() * 0.5,
+                        color_gen.random() * 0.2,
+                    ]
+                    color_gen.shuffle(color_components)
+                    color_components[2] += 0.5
+
+
+                    for group in group.nextgroup:
+                        if group != -1 and used_colors[group] is None:
+                            used_colors[group] = color_components
+                            
+
+                    
+                    for group, point in nextpoints:
+                        glColor3f(*used_colors[group])
+
+                        if selected_groups[i] or selected_groups[group]:
+                            glLineWidth(3.0)
+
+                        glBegin(GL_LINES)
+                        glVertex3f(prevpoint.position.x, -prevpoint.position.z, prevpoint.position.y)
+                        glVertex3f(point.position.x, -point.position.z, point.position.y)
+                        glEnd()
+                    
+                        if selected_groups[i] or selected_groups[group]:
+                            glLineWidth(1.0)
+
+            if vismenu.itemroute.is_visible():
+                enemypoints_to_highlight = set()
+               
+                all_groups = self.level_file.itempointgroups.groups
+                used_colors = [None] * len(all_groups) #stores the ingoing colors
+                selected_groups = [False] * len(all_groups)
+
+                point_index = 0
+                for group in self.level_file.itempointgroups.groups:
+                    if len(group.points) == 0:
+                        continue 
+                        
+                    group_selected = False
+
+                    if group in self.selected:
+                        group_selected = True
+
+                    for point in group.points:
+                        if point in select_optimize:
+                            group_selected = True
+                            glColor3f(0.3, 0.3, 0.3)
+                            self.models.draw_sphere(point.position, point.scale)
+
+                        if point_index in enemypoints_to_highlight:
+                            glColor3f(1.0, 1.0, 0.0)
+                            self.models.draw_sphere(point.position, 300)
+
+                        self.models.render_generic_position_colored(point.position, point in select_optimize, "itempoint")
+
+
+                        billaction_colors = [ [1.0, 0.0, 0.0], [0.5, 0.5, 0.5], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]  ]
+                        glColor3f(*billaction_colors[point.setting1])
+                        self.models.draw_cylinder(point.position, 400, 400)
+
+                        if point.dontdrop != 0:
+                            glColor3f(1.0, 0.0, 0.0)
+                            self.models.draw_cylinder(point.position, 600, 600)
+                        if point.lowpriority != 0:
+                            glColor3f(1.0, 0.0, 0.0)
+                            self.models.draw_cylinder(point.position, 800, 800)
+
+
+                        point_index += 1
+
+                    # Draw the connections between each enemy point.
+                    if group_selected:
+                        glLineWidth(3.0)
+                    glBegin(GL_LINE_STRIP)
+                    glColor3f(0.0, 0.0, 0.0)
+                    for point in group.points:
+                        pos = point.position
+                        glVertex3f(pos.x, -pos.z, pos.y)
+                    glEnd()
+                    if group_selected:
+                        glLineWidth(1.0)
+
+                for i, group in enumerate( all_groups ):
+                    if len(group.points) == 0:
+                        continue
+                    # Draw the connections between each enemy point group.
+                    # draw to nextgroup only
+                    prevpoint = group.points[-1]
+                    #stores (group index, point)
+                    nextpoints = [ (i, all_groups[i].points[0]) for i in group.nextgroup if len(all_groups[i].points) > 0 and i > -1]
+                    if len(nextpoints) == 0:
+                        continue
+
+                    #generate the color for inbound stuff
+                    color_gen = random.Random(group.id)
+                    color_components = [
+                        color_gen.random() * 0.5,
+                        color_gen.random() * 0.2,
+                        color_gen.random() * 0.5,
+                    ]
+                    color_gen.shuffle(color_components)
+                    color_components[1] += 0.5
+
+
+                    for group in group.nextgroup:
+                        if group != -1 and used_colors[group] is None:
+                            used_colors[group] = color_components
+                            
+                    for group, point in nextpoints:
+                        glColor3f(*used_colors[group])
+
+                        if selected_groups[i] or selected_groups[group]:
+                            glLineWidth(3.0)
+
+                        glBegin(GL_LINES)
+                        glVertex3f(prevpoint.position.x, -prevpoint.position.z, prevpoint.position.y)
+                        glVertex3f(point.position.x, -point.position.z, point.position.y)
+                        glEnd()
+                    
+                        if selected_groups[i] or selected_groups[group]:
+                            glLineWidth(1.0)
+
+                            all_groups = self.level_file.enemypointgroups.groups
+                used_colors = [None] * len(all_groups) #stores the ingoing colors
+                selected_groups = [False] * len(all_groups)
+        
+            all_groups = self.level_file.itempointgroups.groups
+            used_colors = [None] * len(all_groups) #stores the ingoing colors
+            selected_groups = [False] * len(all_groups)        
+            
+            respawns_to_highlight = set()
+
             if vismenu.checkpoints.is_visible():
                 checkpoints_to_highlight = set()
+
+                    
+                num_respawns = len(self.level_file.respawnpoints )
+
                 count = 0
                 for i, group in enumerate(self.level_file.checkpoints.groups):
                     prev = None
+                    #draw checkpoint points
                     for checkpoint in group.points:
                         start_point_selected = checkpoint.start in positions
                         end_point_selected = checkpoint.end in positions
@@ -1154,11 +1256,20 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                         self.models.render_generic_position_colored(checkpoint.end, checkpoint.end in positions, "checkpointright")
 
                         if start_point_selected or end_point_selected:
+                            if checkpoint.respawn < num_respawns:
+                               respawns_to_highlight.add(checkpoint.respawn) 
+                            respawns_to_highlight.add 
                             checkpoints_to_highlight.add(count)
+
+                        if checkpoint.respawn < num_respawns and self.level_file.respawnpoints[checkpoint.respawn] in select_optimize:
+
+                            checkpoints_to_highlight.add(count)
+
                         count += 1
 
                     glColor3f(*colors[i % 4])
 
+                    #draw the lines between the points and between successive points
                     glBegin(GL_LINES)
                     for checkpoint in group.points:
                         pos1 = checkpoint.start
@@ -1184,14 +1295,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
 
                     glEnd()
 
-                for respawn_point in self.level_file.respawnpoints:
-                    if respawn_point not in select_optimize:
-                        continue
-                    preceding_checkpoint_index = respawn_point.unk3
-                    if preceding_checkpoint_index != -1:
-                        checkpoints_to_highlight.add(preceding_checkpoint_index)
-                    # What about unk2? In Daisy Cruiser, a respawn point has its unk2 set instead.
-                    # Was that an oversight by the original maker?
+              
 
                 if checkpoints_to_highlight:
                     glLineWidth(4.0)
@@ -1209,11 +1313,9 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                             point_index += 1
                     glLineWidth(1.0)
 
-            #glColor3f(1.0, 1.0, 1.0)
-            #glEnable(GL_TEXTURE_2D)
-            #glBindTexture(GL_TEXTURE_2D, self.arrow.tex)
             glPushMatrix()
-            #lines = []
+            
+            #draw the body of the arrow
             if vismenu.checkpoints.is_visible():
                 for group in self.level_file.checkpoints.groups:
                     prev = None
@@ -1229,6 +1331,9 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                             self.models.draw_arrow_head(mid1, mid2)
                             #lines.append((mid1, mid2))
                             prev = checkpoint
+            
+
+
             glPopMatrix()
             glBegin(GL_LINES)
             """for linestart, lineend in lines:
@@ -1250,6 +1355,9 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                             prev = checkpoint
             glEnd()
 
+            #go between the groups
+
+
             if vismenu.objects.is_visible():
                 for object in self.level_file.objects.objects:
                     self.models.render_generic_position_rotation_colored("objects",
@@ -1269,63 +1377,42 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                         glColor4f(*colors_selection)
                     else:
                         glColor4f(*colors_area)
-                    if object.shape == 1:
-                        self.models.draw_wireframe_cylinder(object.position, object.rotation, object.scale*100 / 2)
+                    if object.shape == 0:
+                        self.models.draw_wireframe_cube(object.position, object.rotation, object.scale*100 * 100)
                     else:
-                        self.models.draw_wireframe_cube(object.position, object.rotation, object.scale*100)
+                        self.models.draw_wireframe_cylinder(object.position, object.rotation, object.scale*50 * 100)
             if vismenu.cameras.is_visible():
                 for object in self.level_file.cameras:
                     self.models.render_generic_position_rotation_colored("camera",
                                                                 object.position, object.rotation,
                                                                  object in select_optimize)
 
-                    if object in select_optimize and object.camtype in [4, 5, 6]:
+                    if object in select_optimize and object.type in [0, 1, 4, 5]:
                         glColor3f(0.0, 1.0, 0.0)
                         self.models.draw_sphere(object.position3, 300)
                         glColor3f(1.0, 0.0, 0.0)
                         self.models.draw_sphere(object.position2, 300)
+
+
             if vismenu.respawnpoints.is_visible():
-                for object in self.level_file.respawnpoints:
+                for i, object in enumerate( self.level_file.respawnpoints) :
                     self.models.render_generic_position_rotation_colored("respawn",
                                                                 object.position, object.rotation,
                                                                  object in select_optimize)
-            if vismenu.lightparams.is_visible():
-                for object in self.level_file.lightparams:
-                    self.models.render_generic_position_colored(object.position, object in select_optimize, "lightparam")
-                object = self.level_file
-                self.models.render_generic_position_colored(object.lightsource, object in select_optimize, "lightsource")
-            
-            if self.minimap is not None and self.minimap.is_available() and vismenu.minimap.is_visible():
-                self.models.render_generic_position(self.minimap.corner1, self.minimap.corner1 in positions)
-                self.models.render_generic_position(self.minimap.corner2, self.minimap.corner2 in positions)
-            #glDisable(GL_TEXTURE_2D)
+                    if i in respawns_to_highlight:
+                        glColor3f(1.0, 1.0, 0.0) # will be replaced with the respawn color
+                        self.models.draw_sphere(object.position, 300)
 
-        glColor3f(0.0, 0.0, 0.0)
-        glDisable(GL_TEXTURE_2D)
-        glColor4f(0.0, 1.0, 0.0, 1.0)
-        rendered = {}
-        for p1i, p2i in self.paths.unique_paths:
-            p1 = self.paths.waypoints[p1i]
-            p2 = self.paths.waypoints[p2i]
-
-            glBegin(GL_LINES)
-            #glVertex3f(p1.position.x, -p1.position.z, p1.position.y+5)
-            #glVertex3f(p2.position.x, -p2.position.z, p2.position.y+5)
-            glEnd()
-
-            if p1i not in rendered:
-                #self.models.draw_sphere(p1.position, p1.radius/2)
-                rendered[p1i] = True
-            if p2i not in rendered:
-                #self.models.draw_sphere(p2.position, p2.radius/2)
-                rendered[p2i] = True
-        glColor4f(0.0, 1.0, 1.0, 1.0)
-        """for points in self.paths.wide_paths:
-            glBegin(GL_LINE_LOOP)
-            for p in points:
-                glVertex3f(p.x, -p.z, p.y + 5)
-
-            glEnd()"""
+            if vismenu.cannonpoints.is_visible():
+                for object in self.level_file.cannonpoints:
+                    self.models.render_generic_position_rotation_colored("cannon",
+                                                                object.position, object.rotation,
+                                                                 object in select_optimize)
+            if vismenu.missionpoints.is_visible():
+                for object in self.level_file.missionpoints:
+                    self.models.render_generic_position_rotation_colored("mission",
+                                                                object.position, object.rotation,
+                                                                 object in select_optimize)
 
         self.gizmo.render_scaled(gizmo_scale, is3d=self.mode == MODE_3D, hover_id=gizmo_hover_id)
 
@@ -1365,8 +1452,13 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
 
         glEnable(GL_DEPTH_TEST)
         glFinish()
-        now = default_timer() - start
+        #now = default_timer() - start
         #print("Frame time:", now, 1/now, "fps")
+
+    def do_selection(self):
+        pass
+
+
 
     @catch_exception
     def mousePressEvent(self, event):
@@ -1462,6 +1554,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
         return Line(pos, dir)
 
 
+
 class ObjectViewSelectionToggle(object):
     def __init__(self, name, menuparent):
         self.name = name
@@ -1514,20 +1607,20 @@ class FilterViewMenu(QMenu):
 
         self.kartstartpoints = ObjectViewSelectionToggle("Kart Start Points", self)
         self.enemyroute = ObjectViewSelectionToggle("Enemy Routes", self)
+        self.itemroute = ObjectViewSelectionToggle("Item Routes", self)
         self.checkpoints = ObjectViewSelectionToggle("Checkpoints", self)
         self.respawnpoints = ObjectViewSelectionToggle("Respawn Points", self)
         
         self.objects = ObjectViewSelectionToggle("Objects", self)
-        self.itemroutes = ObjectViewSelectionToggle("Object Paths", self)
+        self.objectroutes = ObjectViewSelectionToggle("Object Paths", self)
         
         self.areas = ObjectViewSelectionToggle("Areas", self)
         self.cameras = ObjectViewSelectionToggle("Cameras", self)
         self.cameraroutes = ObjectViewSelectionToggle("Camera Paths", self)
 
-        self.lightparams = ObjectViewSelectionToggle("Light Positions", self)
-        
-        
-        self.minimap = ObjectViewSelectionToggle("Minimap", self)
+        self.cannonpoints = ObjectViewSelectionToggle("Cannon Points", self)
+        self.missionpoints = ObjectViewSelectionToggle("Mission Success Points", self)
+
 
         for action in self.get_entries():
             action.action_view_toggle.triggered.connect(self.emit_update)
@@ -1535,16 +1628,18 @@ class FilterViewMenu(QMenu):
 
     def get_entries(self):
         return (self.enemyroute,
-                self.itemroutes,
+                self.itemroute,
                 self.cameraroutes,
                 self.checkpoints,
                 self.objects,
+                self.objectroutes,
                 self.areas,
                 self.cameras,
                 self.respawnpoints,
                 self.kartstartpoints,
-                self.lightparams,
-                self.minimap)
+                self.cannonpoints,
+                self.missionpoints
+               )
 
 
     def handle_show_all(self):

@@ -3,11 +3,11 @@ from .vectors import Vector3, Triangle
 
 
 def collides(face_v1, face_v2, face_v3, box_mid_x, box_mid_z, box_size_x, box_size_z):
-    min_x = min(face_v1[0], face_v2[0], face_v3[0]) - box_mid_x
-    max_x = max(face_v1[0], face_v2[0], face_v3[0]) - box_mid_x
+    min_x = min(face_v1.x, face_v2.x, face_v3.x) - box_mid_x
+    max_x = max(face_v1.x, face_v2.x, face_v3.x) - box_mid_x
 
-    min_z = min(face_v1[2], face_v2[2], face_v3[2]) - box_mid_z
-    max_z = max(face_v1[2], face_v2[2], face_v3[2]) - box_mid_z
+    min_z = min(face_v1.z, face_v2.z, face_v3.z) - box_mid_z
+    max_z = max(face_v1.z, face_v2.z, face_v3.z) - box_mid_z
 
     half_x = box_size_x / 2.0
     half_z = box_size_z / 2.0
@@ -22,7 +22,7 @@ def collides(face_v1, face_v2, face_v3, box_mid_x, box_mid_z, box_size_x, box_si
 
 def subdivide_grid(minx, minz,
                    gridx_start, gridx_end, gridz_start, gridz_end,
-                   cell_size, triangles, vertices, result):
+                   cell_size, triangles, result):
     #print("Subdivision with", gridx_start, gridz_start, gridx_end, gridz_end, (gridx_start+gridx_end) // 2, (gridz_start+gridz_end) // 2)
     if gridx_start == gridx_end-1 and gridz_start == gridz_end-1:
         if gridx_start not in result:
@@ -64,12 +64,7 @@ def subdivide_grid(minx, minz,
 
 
     for i, face in triangles:
-        v1_index, v2_index, v3_index = face[0:3]
-
-
-        v1 = vertices[v1_index[0]-1]
-        v2 = vertices[v2_index[0]-1]
-        v3 = vertices[v3_index[0]-1]
+        v1, v2, v3 = face[0:3]
 
         for quadrant, startx, endx, startz, endz in coordinates:
             if quadrant not in skip:
@@ -90,23 +85,22 @@ def subdivide_grid(minx, minz,
             #print("doing subdivision with", coordinates[quadrant])
             subdivide_grid(minx, minz,
                            startx, endx, startz, endz,
-                           cell_size, quadrants[quadrant], vertices, result)
+                           cell_size, quadrants[quadrant], result)
 
 
 def normalize_vector(v1):
-    n = (v1[0]**2 + v1[1]**2 + v1[2]**2)**0.5
-    return v1[0]/n, v1[1]/n, v1[2]/n
+    norm = v1.copy()
+    norm.normalize()
+    return norm
+
 
 
 def create_vector(v1, v2):
-    return v2[0]-v1[0],v2[1]-v1[1],v2[2]-v1[2]
+    return v2 - v1
 
 
 def cross_product(v1, v2):
-    cross_x = v1[1]*v2[2] - v1[2]*v2[1]
-    cross_y = v1[2]*v2[0] - v1[0]*v2[2]
-    cross_z = v1[0]*v2[1] - v1[1]*v2[0]
-    return cross_x, cross_y, cross_z
+    return v1.cross(v2)
 
 
 MAX_X = 200000
@@ -115,26 +109,22 @@ MAX_Z = 200000
 
 
 class Collision(object):
-    def __init__(self, verts, faces):
-        self.verts = verts
+    def __init__(self, faces):
         self.faces = faces
         self.triangles = []
         #print(self.faces)
         for face in self.faces:
                 
-            v1i, v2i, v3i = face[0:3]
+            v1, v2, v3 = face[0:3]
         
             col_type = 0x0100
             if len(face) > 3:
                 col_type = face[3]
         
             #print(v1i, v2i, v3i, len(self.verts))
-            x, y, z = verts[v1i[0]-1]
-            v1 = Vector3(x, -z, y)
-            x, y, z = verts[v2i[0]-1]
-            v2 = Vector3(x, -z, y)
-            x, y, z = verts[v3i[0]-1]
-            v3 = Vector3(x, -z, y)
+            v1 = Vector3(v1.x, -v1.z, v1.y)
+            v2 = Vector3(v2.x, -v2.z, v2.y)
+            v3 = Vector3(v3.x, -v3.z, v3.y)
 
             
             self.triangles.append(Triangle(v1,v2,v3,col_type))
@@ -148,7 +138,7 @@ class Collision(object):
         smallest_z = -MAX_Z#max(-6000.0, smallest_z)
         biggest_x = MAX_X#min(6000.0, biggest_x)
         biggest_z = MAX_Z#min(6000.0, biggest_z)
-        print("dimensions are changed to", smallest_x, smallest_z, biggest_x, biggest_z)
+        #print("dimensions are changed to", smallest_x, smallest_z, biggest_x, biggest_z)
         start_x = math.floor(smallest_x / box_size_x) * box_size_x
         start_z = math.floor(smallest_z / box_size_z) * box_size_z
         end_x = math.ceil(biggest_x / box_size_x) * box_size_x
@@ -160,9 +150,9 @@ class Collision(object):
 
         self.grid = {}
         triangles = [(i, face) for i, face in enumerate(faces)]
-        subdivide_grid(start_x, start_z, 0, grid_size_x, 0, grid_size_z, self.cell_size, triangles, self.verts, self.grid)
+        subdivide_grid(start_x, start_z, 0, grid_size_x, 0, grid_size_z, self.cell_size, triangles, self.grid)
         print("finished generating triangles")
-        print(grid_size_x, grid_size_z)
+        #print(grid_size_x, grid_size_z)
 
     def collide_ray_downwards(self, x, z, y=99999999):
         grid_x = int((x+MAX_X) // self.cell_size)
@@ -173,7 +163,6 @@ class Collision(object):
 
         triangles = self.grid[grid_x][grid_z]
 
-        verts = self.verts
 
         y = y
         dir_x = 0
@@ -182,7 +171,7 @@ class Collision(object):
 
         hit = None
 
-        result = self._collide(verts, triangles, x, y, z, -1.0)
+        result = self._collide(triangles, x, y, z, -1.0)
 
         return result
 
@@ -195,7 +184,6 @@ class Collision(object):
 
         triangles = self.grid[grid_x][grid_z]
 
-        verts = self.verts
 
         y = y
         dir_x = 0
@@ -204,8 +192,8 @@ class Collision(object):
 
         hit = None
 
-        result1 = self._collide(verts, triangles, x, y, z, -1.0)
-        result2 = self._collide(verts, triangles, x, y, z, 1.0)
+        result1 = self._collide(triangles, x, y, z, -1.0)
+        result2 = self._collide(triangles, x, y, z, 1.0)
 
         if result1 is None and result2 is None:
             return None
@@ -221,38 +209,39 @@ class Collision(object):
             else:
                 return result1
 
-    def _collide(self, verts, triangles, x, y, z, dir_y, ground = False):
+    def _collide(self, triangles, x, y, z, dir_y, ground = False):
         hit = None
         for i, face in triangles:#face in self.faces:#
             #print(face)
-            v1index, v2index, v3index = face[:3]
+            """
             col_type = 0x0100
             if len(face) > 3:
                 col_type = face[3]
+            
             if (col_type & 0x0A00) != 0 and ground:
                 print("no grounding on this deadzone")
                 continue
-
-            v1 = verts[v1index[0]-1]
-            v2 = verts[v2index[0]-1]
-            v3 = verts[v3index[0]-1]
-
+            """
+            v1 = face[0]
+            v2 = face[1]
+            v3 = face[2]
+            
             edge1 = create_vector(v1, v2)
             edge2 = create_vector(v1, v3)
 
             normal = cross_product(edge1, edge2)
-            if normal[0] == normal[1] == normal[2] == 0.0:
+            if normal.x == normal.y == normal.z == 0.0:
                 continue
             normal = normalize_vector(normal)
 
-            D = -v1[0]*normal[0] + -v1[1]*normal[1] + -v1[2]*normal[2]
+            D = -v1.x*normal.x + -v1.y*normal.y + -v1.z*normal.z
 
-            if normal[1]*dir_y == 0.0:#abs(normal[1] * dir_y) < 10**(-6):
+            if normal.y*dir_y == 0.0:#abs(normal[1] * dir_y) < 10**(-6):
                 continue # triangle parallel to ray
 
-            t = -(normal[0] * x + normal[1] * y + normal[2] * z + D) / (normal[1]*dir_y)
+            t = -(normal.x * x + normal.y * y + normal.z * z + D) / (normal.y*dir_y)
 
-            point = x, (y+dir_y*t), z
+            point = Vector3(x, (y+dir_y*t), z)
             #print(point)
             edg1 = create_vector(v1, v2)
             edg2 = create_vector(v2, v3)
@@ -262,11 +251,9 @@ class Collision(object):
             vectest2 = cross_product(edg2, create_vector(v2, point))
             vectest3 = cross_product(edg3, create_vector(v3, point))
 
-            if ((normal[0]*vectest1[0] + normal[1]*vectest1[1] + normal[2]*vectest1[2]) >= 0 and
-                 (normal[0]*vectest2[0] + normal[1]*vectest2[1] + normal[2]*vectest2[2]) >= 0 and
-                  (normal[0]*vectest3[0] + normal[1]*vectest3[1] + normal[2]*vectest3[2]) >= 0):
+            if ((normal.dot(vectest1)) >= 0 and (normal.dot(vectest2)) >= 0 and (normal.dot(vectest3)) >= 0):
 
-                height = point[1]
+                height = point.y
 
                 if hit is None or abs(y - height) < abs(y - hit):
                     hit = height

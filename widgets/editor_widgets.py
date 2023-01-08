@@ -14,9 +14,9 @@ from PyQt5.QtCore import QSize, pyqtSignal, QPoint, QRect
 from PyQt5.QtCore import Qt
 import PyQt5.QtGui as QtGui
 
-import lib.libbol as libbol
+import lib.libkmp as libkmp
 from widgets.data_editor import choose_data_editor, ObjectEdit
-from lib.libbol import get_full_name
+from lib.libkmp import get_kmp_name
 
 
 def catch_exception(func):
@@ -34,9 +34,11 @@ def catch_exception(func):
 def catch_exception_with_dialog(func):
     def handle(*args, **kwargs):
         try:
+            #print(args, kwargs)
             return func(*args, **kwargs)
         except Exception as e:
             traceback.print_exc()
+            #print("hey")
             open_error_dialog(str(e), None)
     return handle
 
@@ -44,6 +46,7 @@ def catch_exception_with_dialog(func):
 def catch_exception_with_dialog_nokw(func):
     def handle(*args, **kwargs):
         try:
+            #print(args, kwargs)
             return func(*args, **kwargs)
         except Exception as e:
             traceback.print_exc()
@@ -58,9 +61,8 @@ def open_error_dialog(errormsg, self):
 
 
 class ErrorAnalyzer(QDialog):
-
     @catch_exception
-    def __init__(self, bol, *args, **kwargs):
+    def __init__(self, kmp, *args, **kwargs):
         super().__init__(*args, **kwargs)
         font = QFont()
         font.setFamily("Consolas")
@@ -73,7 +75,6 @@ class ErrorAnalyzer(QDialog):
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.text_widget)
-
         self.setMinimumSize(QSize(300, 300))
         self.text_widget.setFont(font)
         self.text_widget.setReadOnly(True)
@@ -82,69 +83,34 @@ class ErrorAnalyzer(QDialog):
         height = self.text_widget.fontMetrics().height() * 20
         self.resize(width, height)
 
-        lines = ErrorAnalyzer.analyze_bol(bol)
+        lines = ErrorAnalyzer.analyze_bol(kmp)
         if not lines:
             text = "No known common errors detected!"
         else:
             text ='\n\n'.join(lines)
         self.text_widget.setText(text)
 
+
     @classmethod
     @catch_exception
-    def analyze_bol(cls, bol: libbol.BOL) -> 'list[str]':
+    def analyze_bol(cls, kmp: libkmp.KMP) -> 'list[str]':
         lines: list[str] = []
 
         def write_line(line):
             lines.append(line)
 
-        # Check enemy point linkage errors
-        links = {}
-        for group_index, group in enumerate(bol.enemypointgroups.groups):
-            for i, point in enumerate(group.points):
-                if point.link == -1:
-                    continue
-
-                if point.link not in links:
-                    links[point.link] = [(group_index, i, point)]
-                else:
-                    links[point.link].append(((group_index, i, point)))
-
-        for link_id, points in links.items():
-            if len(points) == 1:
-                group_index, i, point = points[0]
-                write_line("Point {0} in enemy point group {1} has link {2}; No other point has link {2}".format(
-                    i, group_index, point.link
-                ))
-        for group_index, group in enumerate(bol.enemypointgroups.groups):
-            if not group.points:
-                write_line("Empty enemy path {0}.".format(group_index))
-                continue
-
-            if group.points[0].link == -1:
-                write_line("Start point of enemy point group {0} has no valid link to form a loop".format(group_index))
-            if group.points[-1].link == -1:
-                write_line("End point of enemy point group {0} has no valid link to form a loop".format(group_index))
-
-        # Check enemy paths unique ID.
-        enemy_paths_ids = {}
-        for enemy_path_index, enemy_path in enumerate(bol.enemypointgroups.groups):
-            if enemy_path.id in enemy_paths_ids:
-                write_line(f"Enemy path {group_index} using ID {enemy_path.id} that is already "
-                           f"used by enemy path {enemy_paths_ids[enemy_path.id]}.")
-            else:
-                enemy_paths_ids[enemy_path.id] = enemy_path_index
 
         # Check prev/next groups of checkpoints
-        for i, group in enumerate(bol.checkpoints.groups):
+        for i, group in enumerate(kmp.checkpoints.groups):
             for index in chain(group.prevgroup, group.nextgroup):
                 if index != -1:
-                    if index < -1 or index+1 > len(bol.checkpoints.groups):
+                    if index < -1 or index+1 > len(kmp.checkpoints.groups):
                         write_line("Checkpoint group {0} has invalid Prev or Nextgroup index {1}".format(
                             i, index
                         ))
 
         #check for empty (and used!) routes
-        for i, group in enumerate(bol.routes):
+        for i, group in enumerate(kmp.routes):
             
             if len(group.used_by) > 0 :
                 if len(group.points) == 0:
@@ -153,19 +119,19 @@ class ErrorAnalyzer(QDialog):
                     write_line("Route {0} is used, but only has one point".format( i ))
 
         # Validate path id in objects
-        for object in bol.objects.objects:
-            if object.route < -1 or object.route + 1 > len(bol.routes):
+        for object in kmp.objects.objects:
+            if object.route < -1 or object.route + 1 > len(kmp.routes):
                 write_line("Map object {0} uses path id {1} that does not exist".format(
-                    get_full_name(object.objectid), object.route
+                    get_kmp_name(object.objectid), object.route
                 ))
 
         # Validate Kart start positions
-        if len(bol.kartpoints.positions) == 0:
+        if len(kmp.kartpoints.positions) == 0:
             write_line("Map contains no kart start points")
         else:
             exist = [False for x in range(8)]
 
-            for i, kartstartpos in enumerate(bol.kartpoints.positions):
+            for i, kartstartpos in enumerate(kmp.kartpoints.positions):
                 if kartstartpos.playerid == 0xFF:
                     if all(exist):
                         write_line("Duplicate kart start point for all karts")
@@ -181,8 +147,8 @@ class ErrorAnalyzer(QDialog):
                     exist[kartstartpos.playerid] = True
 
         # Check camera indices in areas
-        for i, area in enumerate(bol.areas.areas):
-            if area.camera_index < -1 or area.camera_index + 1 > len(bol.cameras):
+        for i, area in enumerate(kmp.areas.areas):
+            if area.camera_index < -1 or area.camera_index + 1 > len(kmp.cameras):
                 write_line("Area {0} uses invalid camera index {1}".format(i, area.camera_index))
             elif area.area_type == 1 and area.camera_index == -1:
                 write_line("Area {0} uses invalid camera index {1}".format(i, area.camera_index))
@@ -190,14 +156,14 @@ class ErrorAnalyzer(QDialog):
         have_start = False
         first_start = -1
         # Check cameras
-        for i, camera in enumerate(bol.cameras):
-            if camera.nextcam < -1 or camera.nextcam + 1 > len(bol.cameras):
+        for i, camera in enumerate(kmp.cameras):
+            if camera.nextcam < -1 or camera.nextcam + 1 > len(kmp.cameras):
                 write_line("Camera {0} uses invalid nextcam (next camera) index {1}".format(
                     i, camera.nextcam
                 ))
-            if camera.route < -1 or camera.route + 1 > len(bol.cameraroutes):
+            if camera.route < -1 or camera.route + 1 > len(kmp.cameraroutes):
                 write_line("Camera {0} uses invalid path id {1}".format(i, camera.route))
-            if camera.camtype == 1 and camera.route < 0:
+            if camera.type == 1 and camera.route < 0:
                 write_line("Camera {0} uses invalid path id {1}".format(i, camera.route))
             
             if camera.startcamera != 0 and not have_start:
@@ -207,19 +173,19 @@ class ErrorAnalyzer(QDialog):
                 write_line("Camera {0} is a starting cam, but Camera {1} is already a starting cam".format(i, first_start))
         
         
-        if len(bol.checkpoints.groups) == 0:
+        if len(kmp.checkpoints.groups) == 0:
             write_line("You need at least one checkpoint group!")
 
-        if len(bol.enemypointgroups.groups) == 0:
+        if len(kmp.enemypointgroups.groups) == 0:
             write_line("You need at least one enemy point group!")
 
-        cls.check_checkpoints_convex(bol, write_line)
+        cls.check_checkpoints_convex(kmp, write_line)
 
         return lines
 
     @classmethod
-    def check_checkpoints_convex(cls, bol, write_line):
-        for gindex, group in enumerate(bol.checkpoints.groups):
+    def check_checkpoints_convex(cls, kmp, write_line):
+        for gindex, group in enumerate(kmp.checkpoints.groups):
             if len(group.points) > 1:
                 for i in range(1, len(group.points)):
                     c1 = group.points[i-1]
@@ -242,7 +208,70 @@ class ErrorAnalyzer(QDialog):
                                     i-1, i, gindex
                                 ))
                                 break
+class SpecificAddOWindow(QMdiSubWindow):
+    triggered = pyqtSignal(object)
+    closing = pyqtSignal()
 
+    def closeEvent(self, event):
+        self.closing.emit()
+        super().closeEvent(event)
+
+    @catch_exception
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if "windowtype" in kwargs:
+            self.window_name = kwargs["windowtype"]
+        else:
+            self.window_name = "Add Object"
+
+        self.resize(900, 500)
+        self.setMinimumSize(QSize(300, 300))
+
+        self.centralwidget = QWidget(self)
+        self.setWidget(self.centralwidget)
+        self.entity = None
+
+        font = QFont()
+        font.setFamily("Consolas")
+        font.setStyleHint(QFont.Monospace)
+        font.setFixedPitch(True)
+        font.setPointSize(10)
+
+        self.verticalLayout = QVBoxLayout(self.centralwidget)
+        self.verticalLayout.setAlignment(Qt.AlignTop)
+
+        self.editor_widget = None
+        self.editor_layout = QScrollArea()#QVBoxLayout(self.centralwidget)
+        palette = self.editor_layout.palette()
+        palette.setBrush(self.editor_layout.backgroundRole(), palette.dark())
+        self.editor_layout.setPalette(palette)
+        self.editor_layout.setWidgetResizable(True)
+        self.verticalLayout.addWidget(self.editor_layout)
+        #self.textbox_xml = QTextEdit(self.centralwidget)
+        button_area_layout = QHBoxLayout()
+        self.button_savetext = QPushButton(self.centralwidget)
+        self.button_savetext.setText("Add Object")
+        self.button_savetext.setToolTip("Hotkey: Ctrl+S")
+        self.button_savetext.setDisabled(True)
+        button_area_layout.addStretch()
+        button_area_layout.addWidget(self.button_savetext)
+
+        self.verticalLayout.addLayout(button_area_layout)
+        self.setWindowTitle(self.window_name)
+        self.created_object = None
+        #QtWidgets.QShortcut(Qt.CTRL + Qt.Key_S, self).activated.connect(self.emit_add_object)
+
+    def keyPressEvent(self, event: QtGui.QKeyEvent):
+        if event.key() == Qt.CTRL + Qt.Key_S:
+            self.emit_add_object()
+        else:
+            super().keyPressEvent(event)
+
+    def emit_add_object(self):
+        self.button_savetext.pressed.emit()
+
+    def get_content(self): 
+        return self.created_object
 
 class ErrorAnalyzerButton(QtWidgets.QPushButton):
     def __init__(self, parent=None):
@@ -257,7 +286,7 @@ class ErrorAnalyzerButton(QtWidgets.QPushButton):
         self.setStyleSheet("QPushButton { border: 0px; padding: 2px; } "
                            f"QPushButton:hover {{ background: {background_color}; }}")
 
-    def analyze_bol(self, bol: libbol.BOL):
+    def analyze_bol(self, bol: libkmp.KMP):
         lines = ErrorAnalyzer.analyze_bol(bol)
         if lines:
             self.setIcon(self.warning_icon)
@@ -267,9 +296,7 @@ class ErrorAnalyzerButton(QtWidgets.QPushButton):
             self.setText(str())
         self.setEnabled(True)
 
-
 class AddPikObjectWindow(QDialog):
-
     @catch_exception
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -291,13 +318,19 @@ class AddPikObjectWindow(QDialog):
         font.setFixedPitch(True)
         font.setPointSize(10)
 
+        self.dummywidget = QWidget(self)
+        self.dummywidget.setMaximumSize(0,0)
+
 
         self.verticalLayout = QVBoxLayout(self)
         self.verticalLayout.setAlignment(Qt.AlignTop)
+        self.verticalLayout.addWidget(self.dummywidget)
 
 
 
         self.setup_dropdown_menu()
+
+
 
         self.hbox1 = QHBoxLayout()
         self.hbox2 = QHBoxLayout()
@@ -311,12 +344,6 @@ class AddPikObjectWindow(QDialog):
         self.label3.setText("(-1 means end of Group)")
         self.group_edit = QLineEdit(self)
         self.position_edit = QLineEdit(self)
-
-        self.label1.setVisible(False)
-        self.label2.setVisible(False)
-        self.label3.setVisible(False)
-        self.group_edit.setVisible(False)
-        self.position_edit.setVisible(False)
 
         self.group_edit.setValidator(QtGui.QIntValidator(0, 2**31-1))
         self.position_edit.setValidator(QtGui.QIntValidator(-1, 2**31-1))
@@ -342,22 +369,16 @@ class AddPikObjectWindow(QDialog):
 
         self.editor_widget = None
         self.editor_layout = QScrollArea()#QVBoxLayout(self.centralwidget)
-        palette = self.editor_layout.palette()
-        palette.setBrush(self.editor_layout.backgroundRole(), palette.dark())
-        self.editor_layout.setPalette(palette)
-        self.editor_layout.setWidgetResizable(True)
         self.verticalLayout.addWidget(self.editor_layout)
         #self.textbox_xml = QTextEdit(self.centralwidget)
-        button_area_layout = QHBoxLayout()
         self.button_savetext = QPushButton(self)
         self.button_savetext.setText("Add Object")
         self.button_savetext.setToolTip("Hotkey: Ctrl+S")
+        self.button_savetext.setMaximumWidth(400)
         self.button_savetext.setDisabled(True)
         self.button_savetext.clicked.connect(self.accept)
-        button_area_layout.addStretch()
-        button_area_layout.addWidget(self.button_savetext)
 
-        self.verticalLayout.addLayout(button_area_layout)
+        self.verticalLayout.addWidget(self.button_savetext)
         self.setWindowTitle(self.window_name)
         self.created_object = None
         #QtWidgets.QShortcut(Qt.CTRL + Qt.Key_S, self).activated.connect(self.emit_add_object)
@@ -395,45 +416,31 @@ class AddPikObjectWindow(QDialog):
         self.verticalLayout.addWidget(self.category_menu)
 
         self.objecttypes = {
-            "Enemy Path": libbol.EnemyPointGroup,
-            "Enemy Point": libbol.EnemyPoint,
-            "Checkpoint": libbol.Checkpoint,
-            "Object Route": libbol.Route,
-            "Object Route Point": libbol.RoutePoint,
-            "Object": libbol.MapObject,
-            "Area": libbol.Area,
-            "Camera": libbol.Camera,
-            "Respawn Point": libbol.JugemPoint,
-            "Kart Start Point": libbol.KartStartPoint,
+            #"Enemy Path": libkmp.EnemyPointGroup,
+            #"Enemy Point": libkmp.EnemyPoint,
+            "Checkpoint": libkmp.Checkpoint,
+            "Object Path": libkmp.Route,
+            "Object Point": libkmp.RoutePoint,
+            "Object": libkmp.MapObject,
+            "Area": libkmp.Area,
+            "Camera": libkmp.Camera,
+            "Respawn Point": libkmp.JugemPoint,
+            "Kart Start Point": libkmp.KartStartPoint,
             
-            "Checkpoint Group": libbol.CheckpointGroup,
-           
-            "Light Param": libbol.LightParam,
-            "Minigame Param": libbol.MGEntry
-        }
+            #"Checkpoint Group": libkmp.CheckpointGroup,
 
-        self.category_menu.addItem("Enemy Path")
-        self.category_menu.addItem("Enemy Point")
-        self.category_menu.insertSeparator(self.category_menu.count())
-        self.category_menu.addItem("Checkpoint Group")
-        self.category_menu.addItem("Checkpoint")
-        self.category_menu.insertSeparator(self.category_menu.count())
-        self.category_menu.addItem("Object Route")
-        self.category_menu.addItem("Object Route Point")
-        self.category_menu.insertSeparator(self.category_menu.count())
+        }
+    
+      
         self.category_menu.addItem("Object")
         self.category_menu.addItem("Kart Start Point")
-        self.category_menu.addItem("Area")
         self.category_menu.addItem("Camera")
         self.category_menu.addItem("Respawn Point")
         self.category_menu.insertSeparator(self.category_menu.count())
-        self.category_menu.addItem("Light Param")
-        self.category_menu.addItem("Minigame Param")
 
         for i in range(1, self.category_menu.count()):
             text = self.category_menu.itemText(i)
             assert not text or text in self.objecttypes
-
         self.category_menu.currentIndexChanged.connect(self.change_category)
 
     def change_category(self, index):
@@ -450,17 +457,12 @@ class AddPikObjectWindow(QDialog):
 
             self.created_object = objecttype.new()
 
-            if isinstance(self.created_object, (libbol.Checkpoint, libbol.EnemyPoint, libbol.RoutePoint)):
-                self.group_edit.setDisabled(False)
-                self.position_edit.setDisabled(False)
+            if isinstance(self.created_object, (libkmp.Checkpoint, libkmp.EnemyPoint, libkmp.RoutePoint)):
                 self.group_edit.setVisible(True)
                 self.position_edit.setVisible(True)
                 self.group_edit.setText("0")
                 self.position_edit.setText("-1")
-
             else:
-                self.group_edit.setDisabled(True)
-                self.position_edit.setDisabled(True)
                 self.group_edit.setVisible(False)
                 self.position_edit.setVisible(False)
                 self.group_edit.clear()

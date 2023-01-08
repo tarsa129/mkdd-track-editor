@@ -25,63 +25,20 @@ from widgets.tree_view import LevelDataTreeView
 import widgets.tree_view as tree_view
 from configuration import read_config, make_default_config, save_cfg
 
-import mkdd_widgets # as mkddwidgets
+import mkwii_widgets # as mkddwidgets
 from widgets.side_widget import PikminSideWidget
 from widgets.editor_widgets import open_error_dialog, catch_exception_with_dialog
 from widgets.data_editor import load_route_info
-from mkdd_widgets import BolMapViewer, MODE_TOPDOWN
-from lib.libbol import BOL, MGEntry, MapObject, Area, Camera, Route, get_full_name, ObjectContainer, MapObjects, Rotation
-import lib.libbol as libbol
+from mkwii_widgets import KMPMapViewer, MODE_TOPDOWN
+from lib.libkmp import *
+import lib.libkmp as libkmp
 from lib.rarc import Archive
-from lib.BCOllider import RacetrackCollision
-from lib.model_rendering import TexturedModel, CollisionModel, Minimap
+from lib.libkcl import RacetrackCollision
+from lib.model_rendering import TexturedModel, CollisionModel
 from widgets.editor_widgets import ErrorAnalyzer, ErrorAnalyzerButton
-from lib.dolreader import DolFile, read_float, write_float, read_load_immediate_r0, write_load_immediate_r0, UnmappedAddress
 from widgets.file_select import FileSelect
 from PyQt5.QtWidgets import QTreeWidgetItem
-from lib.bmd_render import clear_temp_folder, load_textured_bmd
-from lib.game_visualizer import Game
 from lib.vectors import Vector3
-PIKMIN2GEN = "Generator files (defaultgen.txt;initgen.txt;plantsgen.txt;*.txt)"
-
-
-
-def detect_dol_region(dol):
-    try:
-        dol.seek(0x803CDD38)
-    except UnmappedAddress:
-        pass
-    else:
-        if dol.read(5) == b"title":
-            return "US"
-
-    try:
-        dol.seek(0x803D7B78)
-    except UnmappedAddress:
-        pass
-    else:
-        if dol.read(5) == b"title":
-            return "PAL"
-
-    try:
-        dol.seek(0x803E8358)
-    except UnmappedAddress:
-        pass
-    else:
-        if dol.read(5) == b"title":
-            return "JP"
-    
-    try:
-        dol.seek(0x80419020)
-    except UnmappedAddress:
-        pass
-    else:
-        if dol.read(5) == b"title":
-            return "US_DEBUG"
-
-    
-    raise RuntimeError("Unsupported DOL version/region")
-
 
 def get_treeitem(root:QTreeWidgetItem, obj):
     for i in range(root.childCount()):
@@ -90,32 +47,23 @@ def get_treeitem(root:QTreeWidgetItem, obj):
             return child
     return None
 
-
 class UndoEntry:
 
-    def __init__(self, bol_document: bytes, enemy_path_data: 'tuple[tuple[bool, int]]',
-                 minimap_data: tuple):
+    def __init__(self, bol_document: bytes, enemy_path_data: 'tuple[tuple[bool, int]]'):
         self.bol_document = bol_document
         self.enemy_path_data = enemy_path_data
-        self.minimap_data = minimap_data
 
         self.bol_hash = hash((bol_document, enemy_path_data))
-        self.hash = hash((self.bol_hash, self.minimap_data))
+        self.hash = hash((self.bol_hash))
 
     def __eq__(self, other) -> bool:
         return self.hash == other.hash
 
-
 class GenEditor(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.level_file = BOL.make_useful()
-
-        self.undo_history: list[tuple[int, bytes]] = []
-        self.redo_history: list[tuple[int, bytes]] = []
-
-        document = self.level_file.to_bytes()
-        self.undo_history.append((hash(document), document))
+        self.level_file = KMP.make_useful()
+        self.setMinimumSize(200,200)
 
         self.undo_history: list[UndoEntry] = []
         self.redo_history: list[UndoEntry] = []
@@ -137,8 +85,7 @@ class GenEditor(QMainWindow):
         self.level_view.set_editorconfig(self.configuration["editor"])
         self.level_view.visibility_menu = self.visibility_menu
         self.collision_area_dialog = None
-
-        self.collision_area_dialog = None
+        self.variants = None
 
         self.current_coordinates = None
         self.editing_windows = {}
@@ -156,10 +103,13 @@ class GenEditor(QMainWindow):
         self.loaded_archive_file = None
         self.last_position_clicked = []
 
+        self.connect_start = None
+        self.ready_to_connect = False
+
         self._dontselectfromtree = False
 
-        self.dolphin = Game()
-        self.level_view.dolphin = self.dolphin
+        #self.dolphin = Game()
+        #self.level_view.dolphin = self.dolphin
         self.last_chosen_type = ""
         
         self.first_time_3dview = True
@@ -169,13 +119,18 @@ class GenEditor(QMainWindow):
         self.obj_to_copy = None
         self.objs_to_copy = None
         self.points_added = 0
-
-
+        
+        with open ("toadette.qss") as f:
+            lines = f.read()
+            lines = lines.strip()
+            self.setStyleSheet(lines)
         self.leveldatatreeview.set_objects(self.level_file)    
         self.leveldatatreeview.bound_to_group(self.level_file)
         self.level_view.do_redraw()
         
         self.update_3d()
+
+        self.undo_history.append(self.generate_undo_entry())
 
     def save_geometry(self):
         if "geometry" not in self.configuration:
@@ -213,51 +168,6 @@ class GenEditor(QMainWindow):
 
         super().closeEvent(event)
 
-
-        self.first_time_3dview = True
-
-        self.restore_geometry()
-
-        self.undo_history.append(self.generate_undo_entry())
-
-    def save_geometry(self):
-        if "geometry" not in self.configuration:
-            self.configuration["geometry"] = {}
-        geo_config = self.configuration["geometry"]
-
-        def to_base64(byte_array: QtCore.QByteArray) -> str:
-            return bytes(byte_array.toBase64()).decode(encoding='ascii')
-
-        geo_config["window_geometry"] = to_base64(self.saveGeometry())
-        geo_config["window_state"] = to_base64(self.saveState())
-        geo_config["window_splitter"] = to_base64(self.horizontalLayout.saveState())
-
-        if self.collision_area_dialog is not None:
-            geo_config["collision_window_geometry"] = to_base64(
-                self.collision_area_dialog.saveGeometry())
-
-        save_cfg(self.configuration)
-
-    def restore_geometry(self):
-        if "geometry" not in self.configuration:
-            return
-        geo_config = self.configuration["geometry"]
-
-        def to_byte_array(byte_array: str) -> QtCore.QByteArray:
-            return QtCore.QByteArray.fromBase64(byte_array.encode(encoding='ascii'))
-
-        if "window_geometry" in geo_config:
-            self.restoreGeometry(to_byte_array(geo_config["window_geometry"]))
-        if "window_state" in geo_config:
-            self.restoreState(to_byte_array(geo_config["window_state"]))
-        if "window_splitter" in geo_config:
-            self.horizontalLayout.restoreState(to_byte_array(geo_config["window_splitter"]))
-
-    def closeEvent(self, event: QtGui.QCloseEvent):
-        self.save_geometry()
-
-        super().closeEvent(event)
-
     @catch_exception
     def reset(self):
         self.last_position_clicked = []
@@ -282,33 +192,30 @@ class GenEditor(QMainWindow):
         #self.pik_control.button_move_object.setChecked(False)
         self._window_title = ""
         self._user_made_change = False
-
-        self.addobjectwindow_last_selected = None
-        self.addobjectwindow_last_selected_category = None
         
         self.points_added = 0
 
     def set_base_window_title(self, name):
         self._window_title = name
         if name != "":
-            self.setWindowTitle("MKDD Track Editor - "+name)
+            self.setWindowTitle("gcn kmp editor (demake) - "+name)
         else:
-            self.setWindowTitle("MKDD Track Editor")
+            self.setWindowTitle("gcn kmp editor (demake)")
 
     def set_has_unsaved_changes(self, hasunsavedchanges):
         if hasunsavedchanges and not self._user_made_change:
             self._user_made_change = True
 
             if self._window_title != "":
-                self.setWindowTitle("MKDD Track Editor [Unsaved Changes] - " + self._window_title)
+                self.setWindowTitle("gcn kmp editor (demake) [Unsaved Changes] - " + self._window_title)
             else:
-                self.setWindowTitle("MKDD Track Editor [Unsaved Changes] ")
+                self.setWindowTitle("gcn kmp editor (demake) [Unsaved Changes] ")
         elif not hasunsavedchanges and self._user_made_change:
             self._user_made_change = False
             if self._window_title != "":
-                self.setWindowTitle("MKDD Track Editor - " + self._window_title)
+                self.setWindowTitle("gcn kmp editor (demake) - " + self._window_title)
             else:
-                self.setWindowTitle("MKDD Track Editor")
+                self.setWindowTitle("gcn kmp editor (demake)")
 
     def generate_undo_entry(self) -> UndoEntry:
         bol_document = self.level_file.to_bytes()
@@ -317,14 +224,9 @@ class GenEditor(QMainWindow):
         enemy_paths = self.level_file.enemypointgroups.groups
         enemy_path_data = tuple((not path.points, path.id) for path in enemy_paths)
 
-        minimap = self.level_view.minimap
-        minimap_data = (
-            minimap.corner1.x, minimap.corner1.y, minimap.corner1.z,
-            minimap.corner2.x, minimap.corner2.y, minimap.corner2.z,
-            minimap.orientation
-        )
+        return UndoEntry(bol_document, enemy_path_data)
 
-        return UndoEntry(bol_document, enemy_path_data, minimap_data)
+
 
     def load_top_undo_entry(self):
         if not self.undo_history:
@@ -335,7 +237,7 @@ class GenEditor(QMainWindow):
 
         bol_changed = current_undo_entry.bol_hash != undo_entry.bol_hash
 
-        self.level_file = BOL.from_bytes(undo_entry.bol_document)
+        self.level_file = KMP.from_bytes(undo_entry.bol_document)
 
         # The BOL document cannot store information on empty enemy paths; this information is
         # sourced from a separate list.
@@ -344,7 +246,7 @@ class GenEditor(QMainWindow):
         enemy_path_data = undo_entry.enemy_path_data
         for empty, enemy_path_id in enemy_path_data:
             if empty:
-                empty_enemy_path = libbol.EnemyPointGroup()
+                empty_enemy_path = libkmp.EnemyPointGroup()
                 empty_enemy_path.id = enemy_path_id
                 self.level_file.enemypointgroups.groups.append(empty_enemy_path)
             else:
@@ -354,15 +256,6 @@ class GenEditor(QMainWindow):
 
         self.level_view.level_file = self.level_file
         self.leveldatatreeview.set_objects(self.level_file)
-
-        minimap = self.level_view.minimap
-        minimap.corner1.x = undo_entry.minimap_data[0]
-        minimap.corner1.y = undo_entry.minimap_data[1]
-        minimap.corner1.z = undo_entry.minimap_data[2]
-        minimap.corner2.x = undo_entry.minimap_data[3]
-        minimap.corner2.y = undo_entry.minimap_data[4]
-        minimap.corner2.z = undo_entry.minimap_data[5]
-        minimap.orientation = undo_entry.minimap_data[6]
 
         self.update_3d()
         self.pik_control.update_info()
@@ -386,8 +279,6 @@ class GenEditor(QMainWindow):
     def on_document_potentially_changed(self, update_unsaved_changes=True):
         undo_entry = self.generate_undo_entry()
 
-        if len(self.undo_history) == 0:
-            return
         if self.undo_history[-1] != undo_entry:
             bol_changed = self.undo_history[-1].bol_hash != undo_entry.bol_hash
 
@@ -474,7 +365,12 @@ class GenEditor(QMainWindow):
             for enemy_path in self.level_file.enemypointgroups.groups:
                 for enemy_path_point in enemy_path.points:
                     extend(enemy_path_point.position)
-        if self.visibility_menu.itemroutes.is_visible():
+        if self.visibility_menu.itemroute.is_visible():
+            for item_path in self.level_file.itempointgroups.groups:
+                for item_path_point in item_path.points:
+                    extend(item_path_point.position)
+
+        if self.visibility_menu.objectroutes.is_visible():
             for object_route in self.level_file.routes:
                 for object_route_point in object_route.points:
                     extend(object_route_point.position)
@@ -502,10 +398,14 @@ class GenEditor(QMainWindow):
         if self.visibility_menu.kartstartpoints.is_visible():
             for karts_point in self.level_file.kartpoints.positions:
                 extend(karts_point.position)
-        if (self.level_view.minimap is not None and self.level_view.minimap.is_available()
-                and self.visibility_menu.minimap.is_visible()):
-            extend(self.level_view.minimap.corner1)
-            extend(self.level_view.minimap.corner2)
+
+        if self.visibility_menu.cannonpoints.is_visible():
+            for karts_point in self.level_file.cannonpoints:
+                extend(karts_point.position)
+
+        if self.visibility_menu.missionpoints.is_visible():
+            for karts_point in self.level_file.missionpoints:
+                extend(karts_point.position)
 
         return tuple(extent) or (0, 0, 0, 0, 0, 0)
 
@@ -520,13 +420,15 @@ class GenEditor(QMainWindow):
             #self._dontselectfromtree = False
             return"""
 
-        print("Selected mkdd_editor:", item)
+        #print("Selected kmp editor:", item)
         self.level_view.selected = []
         self.level_view.selected_positions = []
         self.level_view.selected_rotations = []
 
         if isinstance(item, (tree_view.CameraEntry, tree_view.RespawnEntry, tree_view.AreaEntry, tree_view.ObjectEntry,
-                             tree_view.KartpointEntry, tree_view.EnemyRoutePoint, tree_view.ObjectRoutePoint, tree_view.CameraRoutePoint)):
+                             tree_view.KartpointEntry, tree_view.EnemyRoutePoint, tree_view.ItemRoutePoint,
+                             tree_view.ObjectRoutePoint, tree_view.CameraRoutePoint,
+                             tree_view.CannonEntry, tree_view.MissionEntry)):
             bound_to = item.bound_to
             self.level_view.selected = [bound_to]
             self.level_view.selected_positions = [bound_to.position]
@@ -538,12 +440,10 @@ class GenEditor(QMainWindow):
             bound_to = item.bound_to
             self.level_view.selected = [bound_to]
             self.level_view.selected_positions = [bound_to.start, bound_to.end]
-        elif isinstance(item, (tree_view.EnemyPointGroup, tree_view.CheckpointGroup, tree_view.ObjectPointGroup, tree_view.CameraPointGroup)):
+        elif isinstance(item, (tree_view.EnemyPointGroup, tree_view.ItemPointGroup, tree_view.CheckpointGroup, tree_view.ObjectPointGroup, tree_view.CameraPointGroup)):
             self.level_view.selected = [item.bound_to]
-        elif isinstance(item, tree_view.BolHeader) and self.level_file is not None:
+        elif isinstance(item, tree_view.KMPHeader) and self.level_file is not None:
             self.level_view.selected = [self.level_file]
-        elif isinstance(item, (tree_view.LightParamEntry, tree_view.MGEntry)):
-            self.level_view.selected = [item.bound_to]
 
         self.pik_control.set_buttons(item)
 
@@ -569,7 +469,7 @@ class GenEditor(QMainWindow):
         self.leveldatatreeview.itemDoubleClicked.connect(self.do_goto_action)
         self.leveldatatreeview.itemSelectionChanged.connect(self.tree_select_arrowkey)
 
-        self.level_view = BolMapViewer(int(self.editorconfig.get("multisampling", 8)),
+        self.level_view = KMPMapViewer(int(self.editorconfig.get("multisampling", 8)),
                                        self.centralwidget)
 
         self.horizontalLayout.setObjectName("horizontalLayout")
@@ -608,23 +508,17 @@ class GenEditor(QMainWindow):
 
         self.file_load_action = QAction("Load", self)
         self.file_load_recent_menu = QMenu("Load Recent", self)
-       
         self.save_file_action = QAction("Save", self)
         self.save_file_as_action = QAction("Save As", self)
-
         self.save_file_action.setShortcut("Ctrl+S")
         self.file_load_action.setShortcut("Ctrl+O")
- 
         self.save_file_as_action.setShortcut("Ctrl+Alt+S")
-
 
         self.save_file_copy_as_action = QAction("Save Copy As", self)
 
         self.file_load_action.triggered.connect(self.button_load_level)
-
         self.save_file_action.triggered.connect(self.button_save_level)
         self.save_file_as_action.triggered.connect(self.button_save_level_as)
-
         self.save_file_copy_as_action.triggered.connect(self.button_save_level_copy_as)
 
 
@@ -633,11 +527,8 @@ class GenEditor(QMainWindow):
         self.file_menu.addSeparator()
         self.file_menu.addAction(self.save_file_action)
         self.file_menu.addAction(self.save_file_as_action)
-
         self.file_menu.addAction(self.save_file_copy_as_action)
         
-        self.file_menu.aboutToShow.connect(self.on_file_menu_aboutToShow)
-
         self.file_menu.aboutToShow.connect(self.on_file_menu_aboutToShow)
 
         self.edit_menu = QMenu(self)
@@ -653,7 +544,7 @@ class GenEditor(QMainWindow):
         self.redo_action.triggered.connect(self.on_redo_action_triggered)
         self.update_undo_redo_actions()
 
-        self.visibility_menu = mkdd_widgets.FilterViewMenu(self)
+        self.visibility_menu = mkwii_widgets.FilterViewMenu(self)
         self.visibility_menu.filter_update.connect(self.on_filter_update)
         filters = self.editorconfig["filter_view"].split(",")
         for object_toggle in self.visibility_menu.get_entries():
@@ -672,37 +563,16 @@ class GenEditor(QMainWindow):
         self.collision_load_action = QAction("Load OBJ", self)
         self.collision_load_action.triggered.connect(self.button_load_collision)
         self.collision_menu.addAction(self.collision_load_action)
-        self.collision_load_grid_action = QAction("Load BCO", self)
-        self.collision_load_grid_action.triggered.connect(self.button_load_collision_bco)
+        self.collision_load_grid_action = QAction("Load KCL", self)
+        self.collision_load_grid_action.triggered.connect(self.button_load_collision_kcl)
         self.collision_menu.addAction(self.collision_load_grid_action)
-        self.collision_load_bmd_action = QAction("Load BMD", self)
-        self.collision_load_bmd_action.triggered.connect(self.button_load_collision_bmd)
-        self.collision_menu.addAction(self.collision_load_bmd_action)
+
         self.collision_menu.addSeparator()
-        cull_faces_action = self.collision_menu.addAction("Cull Faces")
-        cull_faces_action.setCheckable(True)
-        cull_faces_action.setChecked(self.editorconfig.get("cull_faces") == "True")
-        cull_faces_action.triggered.connect(self.on_cull_faces_triggered)
 
-        self.minimap_menu = QMenu(self.menubar)
-        self.minimap_menu.setTitle("Minimap")
-        load_minimap = QAction("Load Minimap Image", self)
-        load_coordinates_dol = QAction("Load Data from DOL", self)
-        save_coordinates_dol = QAction("Save Data to DOL", self)
-        load_coordinates_json = QAction("Load Data from JSON", self)
-        save_coordinates_json = QAction("Save Data to JSON", self)
-
-
-        load_minimap.triggered.connect(self.action_load_minimap_image)
-        load_coordinates_dol.triggered.connect(self.action_load_dol)
-        save_coordinates_dol.triggered.connect(self.action_save_to_dol)
-        load_coordinates_json.triggered.connect(self.action_load_coordinates_json)
-        save_coordinates_json.triggered.connect(self.action_save_coordinates_json)
-        self.minimap_menu.addAction(load_minimap)
-        self.minimap_menu.addAction(load_coordinates_dol)
-        self.minimap_menu.addAction(save_coordinates_dol)
-        self.minimap_menu.addAction(load_coordinates_json)
-        self.minimap_menu.addAction(save_coordinates_json)
+        self.choose_bco_area = QAction("Collision Areas (KCL)")
+        self.choose_bco_area.triggered.connect(self.action_choose_kcl_flag)
+        self.collision_menu.addAction(self.choose_bco_area)
+        self.choose_bco_area.setShortcut("Ctrl+3")
 
         # Misc
         self.misc_menu = QMenu(self.menubar)
@@ -720,6 +590,7 @@ class GenEditor(QMainWindow):
         self.frame_action.triggered.connect(
             lambda _checked: self.frame_selection(adjust_zoom=True))
         self.frame_action.setShortcut("F")
+        
         self.misc_menu.addAction(self.rotation_mode)
         self.misc_menu.addAction(self.frame_action)
         self.analyze_action = QAction("Analyze for common mistakes", self)
@@ -727,10 +598,6 @@ class GenEditor(QMainWindow):
         self.misc_menu.addAction(self.analyze_action)
         
         
-        self.misc_menu.aboutToShow.connect(
-            lambda: self.frame_action.setText(
-                "Frame Selection" if self.level_view.selected_positions else "Frame All"))
-
         self.misc_menu.aboutToShow.connect(
             lambda: self.frame_action.setText(
                 "Frame Selection" if self.level_view.selected_positions else "Frame All"))
@@ -751,222 +618,25 @@ class GenEditor(QMainWindow):
         self.misc_menu.addAction(self.change_to_3dview_action)
         self.change_to_3dview_action.setCheckable(True)
         self.change_to_3dview_action.setShortcut("Ctrl+2")
-
-        self.choose_bco_area = QAction("Collision Areas (BCO)")
-        self.choose_bco_area.triggered.connect(self.action_choose_bco_area)
-        self.misc_menu.addAction(self.choose_bco_area)
-        self.choose_bco_area.setShortcut("Ctrl+3")
         
         self.do_auto_qol = QAction("Run Auto QOL")
         self.do_auto_qol.triggered.connect(self.auto_qol)
         self.misc_menu.addAction(self.do_auto_qol)
         self.do_auto_qol.setShortcut("Ctrl+4")
 
-        
-
-        self.last_obj_select_pos = 0
-
-        #SEPERATE dolphin bar
-
-        self.dolphin_menu = QMenu(self.menubar)
-        self.dolphin_menu.setTitle("Dolphin")
-
-        self.dolphin_action = QAction("Hook into Dolphin", self)
-        self.dolphin_action.triggered.connect(self.action_hook_into_dolphion)
-        self.dolphin_menu.addAction(self.dolphin_action)
-
-        self.camera_actions = [QAction("Unfollow", self)]
-
-        for i in range(8):
-            self.camera_actions.append(QAction("Follow Player {0}".format(i+1)))
-
-        def make_func(i):
-            def action_follow_player():
-                print("Now Following", i)
-                self.dolphin.stay_focused_on_player = i
-            return action_follow_player
-
-        for i in range(-1, 8):
-            action = self.camera_actions[i+1]
-            action.triggered.connect(make_func(i))
-
-            self.dolphin_menu.addAction(action)
-
         self.menubar.addAction(self.file_menu.menuAction())
         self.menubar.addAction(self.edit_menu.menuAction())
         self.menubar.addAction(self.visibility_menu.menuAction())
         self.menubar.addAction(self.collision_menu.menuAction())
-        self.menubar.addAction(self.minimap_menu.menuAction())
         self.menubar.addAction(self.misc_menu.menuAction())
-        self.menubar.addAction(self.dolphin_menu.menuAction())
         
         self.setMenuBar(self.menubar)
 
-    def action_hook_into_dolphion(self):
-        error = self.dolphin.initialize()
-        if error != "":
-            open_error_dialog(error, self)
+        self.last_obj_select_pos = 0
 
-    def action_load_minimap_image(self):
-        filepath, choosentype = QFileDialog.getOpenFileName(
-            self, "Open File",
-            self.pathsconfig["minimap_png"],
-            "Image (*.png);;All files (*)")
-
-        if filepath:
-            self.level_view.minimap.set_texture(filepath)
-            self.level_view.do_redraw()
-
-            self.pathsconfig["minimap_png"] = filepath
-            save_cfg(self.configuration)
-
-    @catch_exception_with_dialog
-    def action_load_dol(self, val):
-        filepath, choosentype = QFileDialog.getOpenFileName(
-            self, "Open File",
-            self.pathsconfig["dol"],
-            "Game Executable (*.dol);;All files (*)")
-
-        if filepath:
-            with open("lib/minimap_locations.json", "r") as f:
-                addresses_json = json.load(f)
-
-            with open(filepath, "rb") as f:
-                dol = DolFile(f)
-                region = detect_dol_region(dol)
-
-            addresses = addresses_json[region]
-
-            item_list = ["None"]
-            item_list.extend(addresses.keys())
-            result, pos = FileSelect.open_file_list(self, item_list, "Select Track Slot")
-
-            if result == "None" or result is None:
-                return
-
-            corner1x, corner1z, corner2x, corner2z, orientation = addresses[result]
-            with open(filepath, "rb") as f:
-                dol = DolFile(f)
-
-                dol.seek(int(orientation, 16))
-                orientation = read_load_immediate_r0(dol)
-                if orientation not in (0, 1, 2, 3):
-                    raise RuntimeError("Wrong Address, orientation value in DOL isn't in 0-3 range: {0}. Maybe you are using"
-                                       " a dol from a different version?".format(orientation))
-                self.level_view.minimap.orientation = orientation
-                dol.seek(int(corner1x, 16))
-                self.level_view.minimap.corner1.x = read_float(dol)
-                dol.seek(int(corner1z, 16))
-                self.level_view.minimap.corner1.z = read_float(dol)
-                dol.seek(int(corner2x, 16))
-                self.level_view.minimap.corner2.x = read_float(dol)
-                dol.seek(int(corner2z, 16))
-                self.level_view.minimap.corner2.z = read_float(dol)
-                self.level_view.do_redraw()
-
-            self.pathsconfig["dol"] = filepath
-            save_cfg(self.configuration)
-
-    @catch_exception_with_dialog
-    def action_save_to_dol(self, val):
-        filepath, choosentype = QFileDialog.getSaveFileName(
-            self, "Save to File",
-            self.pathsconfig["dol"],
-            "Game Executable (*.dol);;All files (*)")
-
-        if filepath:
-            with open("lib/minimap_locations.json", "r") as f:
-                addresses_json = json.load(f)
-
-            with open(filepath, "rb") as f:
-                dol = DolFile(f)
-                region = detect_dol_region(dol)
-
-            addresses = addresses_json[region]
-
-            item_list = ["None"]
-            item_list.extend(addresses.keys())
-            result, pos = FileSelect.open_file_list(self, item_list, "Select Track Slot")
-
-            if result == "None" or result is None:
-                return
-
-            corner1x, corner1z, corner2x, corner2z, orientation = addresses[result]
-            with open(filepath, "rb") as f:
-                dol = DolFile(f)
-
-            orientation_val = self.level_view.minimap.orientation
-            if orientation_val not in (0, 1, 2, 3):
-                raise RuntimeError(
-                    "Invalid Orientation value: Must be in the range 0-3 but is {0}".format(orientation_val))
-
-            dol.seek(int(orientation, 16))
-            orientation_val = read_load_immediate_r0(dol)
-            if orientation_val not in (0, 1, 2, 3):
-                raise RuntimeError(
-                    "Wrong Address, orientation value in DOL isn't in 0-3 range: {0}. Maybe you are using"
-                    " a dol from a different game version?".format(orientation_val))
-
-            dol.seek(int(orientation, 16))
-            write_load_immediate_r0(dol, self.level_view.minimap.orientation)
-            dol.seek(int(corner1x, 16))
-            write_float(dol, self.level_view.minimap.corner1.x)
-            dol.seek(int(corner1z, 16))
-            write_float(dol, self.level_view.minimap.corner1.z)
-            dol.seek(int(corner2x, 16))
-            write_float(dol, self.level_view.minimap.corner2.x)
-            dol.seek(int(corner2z, 16))
-            write_float(dol, self.level_view.minimap.corner2.z)
-            self.level_view.do_redraw()
-
-            with open(filepath, "wb") as f:
-                dol.save(f)
-
-            self.pathsconfig["dol"] = filepath
-            save_cfg(self.configuration)
-
-    @catch_exception_with_dialog
-    def action_load_coordinates_json(self, val):
-        filepath, choosentype = QFileDialog.getOpenFileName(
-            self, "Open File",
-            self.pathsconfig["minimap_json"],
-            "Json File (*.json);;All files (*)")
-
-        if filepath:
-            with open(filepath, "r") as f:
-                data = json.load(f)
-                self.level_view.minimap.corner1.x = data["Top Left Corner X"]
-                self.level_view.minimap.corner1.z = data["Top Left Corner Z"]
-                self.level_view.minimap.corner2.x = data["Bottom Right Corner X"]
-                self.level_view.minimap.corner2.z = data["Bottom Right Corner Z"]
-                self.level_view.minimap.orientation = data["Orientation"]
-
-            self.pathsconfig["minimap_json"] = filepath
-            save_cfg(self.configuration)
-
-    @catch_exception_with_dialog
-    def action_save_coordinates_json(self, val):
-        filepath, choosentype = QFileDialog.getSaveFileName(
-            self, "Save File",
-            self.pathsconfig["minimap_json"],
-            "Json File (*.json);;All files (*)")
-
-        if filepath:
-            data = {"Top Left Corner X": self.level_view.minimap.corner1.x,
-                    "Top Left Corner Z": self.level_view.minimap.corner1.z,
-                    "Bottom Right Corner X": self.level_view.minimap.corner2.x,
-                    "Bottom Right Corner Z": self.level_view.minimap.corner2.z,
-                    "Orientation": self.level_view.minimap.orientation}
-
-            with open(filepath, "w") as f:
-                json.dump(data, f, indent=4)
-
-            self.pathsconfig["minimap_json"] = filepath
-            save_cfg(self.configuration)
-
-    def action_choose_bco_area(self):
+    def action_choose_kcl_flag(self):
         if not isinstance(self.level_view.alternative_mesh, CollisionModel):
-            QtWidgets.QMessageBox.information(self, "Collision Areas (BCO)",
+            QtWidgets.QMessageBox.information(self, "Collision Areas (KCL)",
                                               "No collision file is loaded.")
             return
 
@@ -977,9 +647,16 @@ class GenEditor(QMainWindow):
         collision_model = self.level_view.alternative_mesh
         colltypes = tuple(sorted(collision_model.meshes))
 
+        if self.variants is None:
+        
+            with open("lib/kcl_variants.json", "r") as f:
+                self.variants = json.load(f)
+
+        #colltypes is every collision flag found
+        #group based on the last five bits
         colltypegroups = {}
         for colltype in colltypes:
-            colltypegroup = colltype & 0xFF00
+            colltypegroup = colltype & 0x001F
             if colltypegroup not in colltypegroups:
                 colltypegroups[colltypegroup] = []
             colltypegroups[colltypegroup].append(colltype)
@@ -994,44 +671,73 @@ class GenEditor(QMainWindow):
 
         tree_widget = DeselectableTableWidget()
         tree_widget.setColumnCount(2)
-        tree_widget.setHeaderLabels(("Type", "Description"))
+        tree_widget.setHeaderLabels(("Basic Type", "Description"))
 
         def get_collision_type_desc(label):
-            # http://wiki.tockdom.com/wiki/BCO_(File_Format)
-            # https://mkdd.miraheze.org/wiki/BCO_(File_Format)#Collision_Flags
-
             group_descs = {
-                "0x00__": "Medium Offroad",
-                "0x01__": "Road",
-                "0x02__": "Wall",
-                "0x03__": "Medium Offroad",
-                "0x04__": "Slippery Ice",
-                "0x05__": "Deadzone",
-                "0x06__": "",
-                "0x07__": "Boost",
-                "0x08__": "Boost",
-                "0x09__": "Cannon Boost",
-                "0x0A__": "Deadzone",
-                "0x0C__": "Weak Offroad",
-                "0x0D__": "Teleport",
-                "0x0E__": "Sand Deadzone",
-                "0x0F__": "Wavy Deadzone",
-                "0x10__": "Quicksand Deadzone",
-                "0x11__": "Deadzone",
-                "0x12__": "Kart-Only Wall",
-                "0x13__": "Heavy Offroad",
-                "0x37__": "Boost",
-                "0x47__": "Boost",
+                "0x00": "Road",
+                "0x01": "Slippery Road 1",
+                "0x02": "Weak Off-road",
+                "0x03": "Medium Off-road",
+                "0x04": "Heavy Off-road",
+                "0x05": "Slippery Road 2",
+                "0x06": "Boost Panel",
+                "0x07": "Boost Ramp",
+                "0x08": "Jump Pad",
+                "0x09": "Item Road",
+                "0x0A": "Solid Fall",
+                "0x0B": "Moving Water",
+                "0x0C": "Wall",
+                "0x0D": "Invisible wall",
+                "0x0E": "Item Wall",
+                "0x0F": "Wall 2",
+                "0x10": "Fall Boundary",
+                "0x11": "Cannon Trigger",
+                "0x12": "Force Recalculation",
+                "0x13": "Half-pipe Ramp",
+                "0x14": "Player-Only Wall",
+                "0x15": "Moving Road",
+                "0x16": "Sticky/Gravity Road",
+                "0x17": "Road 2",
+                "0x18": "Sound Trigger",
+                "0x19": "Weak Wall",
+                "0x1A": "Effect Trigger",
+                "0x1B": "Item State Modifier",
+                "0x1C": "Half-Pipe Invisible Wall",
+                "0x1D": "Rotating Road",
+                "0x1E": "Special Wall",
+                "0x1F": "Invisible Wall 2",
+
             }
 
-            return group_descs.get(label[:-2] + "__", "")
+            return group_descs.get(label, "")
+
+        def get_collision_other_desc(colltype):
+            build_string = ""
+            
+            variant = (colltype & 0x00E0) >> 5
+            coltype = colltype & 0x001F
+
+            if str(coltype) in self.variants:
+                build_string += ", Variant: " + self.variants[str(coltype)][variant]
+            
+            if (colltype & 0x2000) != 0:
+                build_string += ", Trickable"
+
+            if (colltype & 0x4000) != 0:
+                build_string += ", Driveable"
+
+            if (colltype & 0x8000) != 0:
+                build_string += ", Soft Wall"
+
+            return build_string
 
         for colltypegroup in sorted(colltypegroups):
             colltypes = colltypegroups[colltypegroup]
 
             if len(colltypes) == 1 and colltypegroup not in collision_model.hidden_collision_type_groups:
                 colltype = colltypes[0]
-                label = "0x{0:0{1}X}".format(colltype, 4)
+                label = "0x{0:0{1}X}".format(colltypegroup, 2)
                 tree_widget_item = QtWidgets.QTreeWidgetItem(None, (label, ))
                 tree_widget_item.setData(0, QtCore.Qt.UserRole + 1, colltype)
                 tree_widget_item.setData(1, QtCore.Qt.DisplayRole, get_collision_type_desc(label))
@@ -1042,7 +748,7 @@ class GenEditor(QMainWindow):
                 tree_widget.addTopLevelItem(tree_widget_item)
                 continue
 
-            label = "0x{0:0{1}X}".format(colltypegroup, 4)[:-2] + "__"
+            label = "0x{0:0{1}X}".format(colltypegroup, 2)
             tree_widget_item = QtWidgets.QTreeWidgetItem(None, (label, ))
             tree_widget_item.setData(0, QtCore.Qt.UserRole + 1, colltypegroup)
             tree_widget_item.setData(1, QtCore.Qt.DisplayRole, get_collision_type_desc(label))
@@ -1055,6 +761,7 @@ class GenEditor(QMainWindow):
                 label = "0x{0:0{1}X}".format(colltype, 4)
                 child_tree_widget_item = QtWidgets.QTreeWidgetItem(tree_widget_item, (label, ))
                 child_tree_widget_item.setData(0, QtCore.Qt.UserRole + 1, colltype)
+                child_tree_widget_item.setData(1, QtCore.Qt.DisplayRole, get_collision_other_desc(colltype))
                 child_tree_widget_item.setCheckState(
                     0, QtCore.Qt.Checked
                     if colltype not in collision_model.hidden_collision_types
@@ -1089,6 +796,7 @@ class GenEditor(QMainWindow):
             show_all_button.setEnabled(checked_count < len(all_items))
             hide_all_button.setEnabled(checked_count)
 
+        #edits the configuration file
         def on_tree_widget_itemChanged(item, column, tree_widget=tree_widget):
             for item in all_items:
                 checked = item.checkState(0) == QtCore.Qt.Checked
@@ -1134,13 +842,14 @@ class GenEditor(QMainWindow):
         update_both_all_buttons()
 
         self.collision_area_dialog = QtWidgets.QDialog(self)
-        self.collision_area_dialog.setWindowTitle("Collision Areas (BCO)")
+        self.collision_area_dialog.setWindowTitle("Collision Areas (KCL)")
         self.collision_area_dialog.setContentsMargins(0, 0, 0, 0)
         layout = QtWidgets.QVBoxLayout(self.collision_area_dialog)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         layout.addWidget(tree_widget)
         layout.addLayout(buttons_layout)
+        
         if "geometry" in self.configuration:
             geo_config = self.configuration["geometry"]
 
@@ -1150,6 +859,7 @@ class GenEditor(QMainWindow):
             if "collision_window_geometry" in geo_config:
                 self.collision_area_dialog.restoreGeometry(
                     to_byte_array(geo_config["collision_window_geometry"]))
+        
         self.collision_area_dialog.show()
         
         
@@ -1162,18 +872,12 @@ class GenEditor(QMainWindow):
         
         
 
-        def on_dialog_finished(result):
-            _ = result
-            if self.isVisible():
-                self.save_geometry()
-
-        self.collision_area_dialog.finished.connect(on_dialog_finished)
-
     def analyze_for_mistakes(self):
         analyzer_window = ErrorAnalyzer(self.level_file, parent=self)
         analyzer_window.exec_()
         analyzer_window.deleteLater()
 
+    
     def on_file_menu_aboutToShow(self):
         recent_files = self.get_recent_files_list()
 
@@ -1198,6 +902,7 @@ class GenEditor(QMainWindow):
 
         self.level_view.do_redraw()
 
+    
     def on_cull_faces_triggered(self, checked):
         self.editorconfig["cull_faces"] = "True" if checked else "False"
         save_cfg(self.configuration)
@@ -1214,12 +919,6 @@ class GenEditor(QMainWindow):
             self.level_view.change_from_topdown_to_3d()
             self.statusbar.clearMessage()
             
-            # After switching to the 3D view for the first time, the view will be framed to help
-            # users find the objects in the world.
-            if self.first_time_3dview:
-                self.first_time_3dview = False
-                self.frame_selection(adjust_zoom=True)
-
             # After switching to the 3D view for the first time, the view will be framed to help
             # users find the objects in the world.
             if self.first_time_3dview:
@@ -1243,6 +942,7 @@ class GenEditor(QMainWindow):
     def connect_actions(self):
         self.level_view.select_update.connect(self.action_update_info)
         self.level_view.select_update.connect(self.select_from_3d_to_treeview)
+        self.level_view.select_update.connect(self.action_connectedto_final)
         #self.pik_control.lineedit_coordinatex.textChanged.connect(self.create_field_edit_action("coordinatex"))
         #self.pik_control.lineedit_coordinatey.textChanged.connect(self.create_field_edit_action("coordinatey"))
         #self.pik_control.lineedit_coordinatez.textChanged.connect(self.create_field_edit_action("coordinatez"))
@@ -1252,14 +952,17 @@ class GenEditor(QMainWindow):
         #self.pik_control.lineedit_rotationz.textChanged.connect(self.create_field_edit_action("rotationz"))
 
         self.level_view.position_update.connect(self.action_update_position)
+        self.level_view.connected_to_point.connect(self.action_connectedto_end)
 
         self.level_view.customContextMenuRequested.connect(self.mapview_showcontextmenu)
 
-        #self.pik_control.button_add_object.pressed.connect(self.button_open_add_item_window)
-        self.pik_control.button_stop_object.pressed.connect(self.button_add_item_window_close)
-        self.pik_control.button_stop_object.setShortcut("T")
         self.pik_control.button_add_object.clicked.connect(
             lambda _checked: self.button_open_add_item_window())
+        self.pik_control.button_add_object.setShortcut("V")
+
+        self.pik_control.button_stop_object.pressed.connect(self.button_add_item_window_close)
+        self.pik_control.button_stop_object.setShortcut("T")
+
         #self.pik_control.button_move_object.pressed.connect(self.button_move_objects)
         self.level_view.move_points.connect(self.action_move_objects)
         self.level_view.height_update.connect(self.action_change_object_heights)
@@ -1280,7 +983,7 @@ class GenEditor(QMainWindow):
         self.leveldatatreeview.select_all.connect(self.select_all_of_group)
         self.leveldatatreeview.reverse.connect(self.reverse_all_of_group)
         self.leveldatatreeview.duplicate.connect(self.duplicate_group)
-        self.leveldatatreeview.split.connect(self.split_group)
+        self.leveldatatreeview.split.connect(self.split_group_from_tree)
         self.leveldatatreeview.split_checkpoint.connect(self.split_group_checkpoint)
 
     def split_group_checkpoint(self, group_item, item):
@@ -1290,71 +993,59 @@ class GenEditor(QMainWindow):
         if point == group.points[-1]:
             return
 
-        """# Get an unused link to connect the groups with
-        new_link = self.level_file.enemypointgroups.new_link_id()
-        if new_link >= 2**14:
-            raise RuntimeError("Too many links, cannot create more")
-        """
-
         # Get new hopefully unused group id
         new_id = self.level_file.checkpoints.new_group_id()
         new_group = group.copy_group_after(new_id, point)
         self.level_file.checkpoints.groups.append(new_group)
         group.remove_after(point)
-        new_group.prevlinks = [group.grouplink, -1, -1, -1]
+        new_group.prevlinks = [group.grouplink, -1, -1, -1, -1, -1]
         new_group.nextlinks = deepcopy(group.nextgroup)
-        group.nextgroup = [new_group.grouplink, -1, -1, -1]
+        group.nextgroup = [new_group.grouplink, -1, -1, -1, -1, -1]
 
         self.leveldatatreeview.set_objects(self.level_file)
         self.update_3d()
         self.set_has_unsaved_changes(True)
 
-    def split_group(self, group_item, item):
+    def split_group_from_tree(self, group_item, item):
         group = group_item.bound_to
         point = item.bound_to
+        self.split_group(group, point)
 
+    def split_group(self, group, point):
         if point == group.points[-1]:
             return
-
-        # Get an unused link to connect the groups with
-        new_link = self.level_file.enemypointgroups.new_link_id()
-        if new_link >= 2**14:
-            raise RuntimeError("Too many links, cannot create more")
-
+       
         # Get new hopefully unused group id
-        new_id = self.level_file.enemypointgroups.new_group_id()
-        new_group = group.copy_group_after(new_id, point)
-        self.level_file.enemypointgroups.groups.append(new_group)
-        group.remove_after(point)
-
-        group.points[-1].link = new_group.points[0].link = new_link
-
+        to_deal_with = self.level_file.enemypointgroups if isinstance(group, EnemyPointGroup) else self.level_file.itempointgroups
+        to_deal_with.split_group(group, point)
+       
         self.leveldatatreeview.set_objects(self.level_file)
         self.update_3d()
         self.set_has_unsaved_changes(True)
+
 
     def duplicate_group(self, item):
         group = item.bound_to
-        if isinstance(group, libbol.EnemyPointGroup):
-            new_id = len(self.level_file.enemypointgroups.groups)
-            new_group = group.copy_group(new_id)
-            self.level_file.enemypointgroups.groups.append(new_group)
+        if not isinstance(group, PointGroup):
+            return
+        to_deal_with = self.level_file.enemypointgroups if isinstance(group, libkmp.EnemyPointGroup) else self.level_file.itempointgroups
+        to_deal_with.duplicate_group(group)
 
-            self.leveldatatreeview.set_objects(self.level_file)
-            self.update_3d()
-            self.set_has_unsaved_changes(True)
+        self.leveldatatreeview.set_objects(self.level_file)
+        self.update_3d()
+        self.set_has_unsaved_changes(True)
 
     def reverse_all_of_group(self, item):
         group = item.bound_to
-        if isinstance(group, libbol.CheckpointGroup):
+        if isinstance(group, libkmp.CheckpointGroup):
             group.points.reverse()
             for point in group.points:
                 start = point.start
                 point.start = point.end
                 point.end = start
-        elif isinstance(group, libbol.EnemyPointGroup):
+        elif isinstance(group, (libkmp.EnemyPointGroup, libkmp.ItemPointGroup) ):
             group.points.reverse()
-        elif isinstance(group, libbol.Route):
+        elif isinstance(group, libkmp.Route):
             group.points.reverse()
 
         self.leveldatatreeview.set_objects(self.level_file)
@@ -1368,7 +1059,7 @@ class GenEditor(QMainWindow):
         for point in group.points:
             self.level_view.selected.append(point)
 
-            if isinstance(group, libbol.CheckpointGroup):
+            if isinstance(group, libkmp.CheckpointGroup):
                 self.level_view.selected_positions.append(point.start)
                 self.level_view.selected_positions.append(point.end)
             else:
@@ -1377,7 +1068,7 @@ class GenEditor(QMainWindow):
 
     def action_open_rotationedit_window(self):
         if self.edit_spawn_window is None:
-            self.edit_spawn_window = mkdd_widgets.SpawnpointEditor()
+            self.edit_spawn_window = mkwii_widgets.SpawnpointEditor()
             self.edit_spawn_window.position.setText("{0}, {1}, {2}".format(
                 self.pikmin_gen_file.startpos_x, self.pikmin_gen_file.startpos_y, self.pikmin_gen_file.startpos_z
             ))
@@ -1424,8 +1115,8 @@ class GenEditor(QMainWindow):
         if filepath is None:
             filepath, chosentype = QFileDialog.getOpenFileName(
                 self, "Open File",
-                self.pathsconfig["bol"],
-                "BOL or ARC(*.bol *.arc);;BOL files (*.bol);;Archived files (*.arc);;All files (*)",
+                self.pathsconfig["kmp"],
+                "KMP or SZS(*.kmp *.szs);;KMP files (*.kmp);;Archived files (*.szs);;All files (*)",
                 self.last_chosen_type)
         else:
             chosentype = None
@@ -1437,124 +1128,28 @@ class GenEditor(QMainWindow):
             self.reset()
             print("Reset done")
             print("Chosen file type:", chosentype)
-            if chosentype == "Archived files (*.arc)" or filepath.endswith(".arc"):
-                with open(filepath, "rb") as f:
-                    try:
-                        self.loaded_archive = Archive.from_file(f)
-                        root_name = self.loaded_archive.root.name
-                        coursename = find_file(self.loaded_archive.root, "_course.bol")
-                        bol_file = self.loaded_archive[root_name + "/" + coursename]
-                        bol_data = BOL.from_file(bol_file)
-                        self.setup_bol_file(bol_data, filepath)
-                        self.leveldatatreeview.set_objects(bol_data)
-                        self.leveldatatreeview.bound_to_group(bol_data)
-                        self.current_gen_path = filepath
-                        self.loaded_archive_file = coursename
-                    except Exception as error:
-                        print("Error appeared while loading:", error)
-                        traceback.print_exc()
-                        open_error_dialog(str(error), self)
-                        self.loaded_archive = None
-                        self.loaded_archive_file = None
-                        return
-                    
-                    try:
-                        collisionfile = get_file_safe(self.loaded_archive.root, "_course.bco")
-                        if collisionfile is not None:
-                            self.load_collision_from_arc(collisionfile, filepath)
-                    except Exception as error:
-                        print("Error appeared while loading:", error)
-                        traceback.print_exc()
-                        open_error_dialog(str(error), self)
-                    """
-                    
-                    try:
-                        additional_files = []
-                        bmdfile = get_file_safe(self.loaded_archive.root, "_course.bmd")
-                        collisionfile = get_file_safe(self.loaded_archive.root, "_course.bco")
 
-                        if bmdfile is not None:
-                            additional_files.append(os.path.basename(bmdfile.name) + " (3D Model)")
-                        if collisionfile is not None:
-                            additional_files.append(os.path.basename(collisionfile.name) + " (3D Collision)")
+            with open(filepath, "rb") as f:
+                try:
+                    kmp_file = KMP.from_file(f)
+                    self.setup_kmp_file(kmp_file, filepath)
+                    self.leveldatatreeview.set_objects(kmp_file)
+                    self.leveldatatreeview.bound_to_group(kmp_file)
+                    self.current_gen_path = filepath
 
-                        if len(additional_files) > 0:
-                            additional_files.append("None")
-                            self.load_optional_3d_file_arc(additional_files, bmdfile, collisionfile, filepath)
-                    except Exception as error:
-                        print("Error appeared while loading:", error)
-                        traceback.print_exc()
-                        open_error_dialog(str(error), self)
-                    """
-            else:
-                with open(filepath, "rb") as f:
-                    try:
-                        bol_file = BOL.from_file(f)
-                        self.setup_bol_file(bol_file, filepath)
-                        self.leveldatatreeview.set_objects(bol_file)
-                        self.leveldatatreeview.bound_to_group(bol_file)
-                        self.current_gen_path = filepath
+                    filepath_base = os.path.dirname(filepath)
 
-                        if filepath.endswith("_course.bol"):
-                            filepath_base = filepath[:-11]
-                            collisionfile = filepath_base+"_course.bco"
-                            if os.path.exists(collisionfile):
-                                self.load_collision_file(collisionfile)
-                            """
-                            additional_files = []
-                            bmdfile = filepath_base+"_course.bmd"
-                            collisionfile = filepath_base+"_course.bco"
-                            if os.path.exists(bmdfile):
-                                additional_files.append(os.path.basename(bmdfile) + " (3D Model)")
-                            if os.path.exists(collisionfile):
-                                additional_files.append(os.path.basename(collisionfile) + " (3D Collision)")
+                    collisionfile = filepath_base+"/course.kcl"
+                    if os.path.exists(collisionfile):
+                        self.load_collision_kcl(collisionfile)
 
-                            if len(additional_files) > 0:
-                                additional_files.append("None")
-                                self.load_optional_3d_file(additional_files, bmdfile, collisionfile)
-                            """
-                    except Exception as error:
-                        print("Error appeared while loading:", error)
-                        traceback.print_exc()
-                        open_error_dialog(str(error), self)
+                except Exception as error:
+                    print("Error appeared while loading:", error)
+                    traceback.print_exc()
+                    open_error_dialog(str(error), self)
 
             self.update_3d()
 
-    def load_collision_from_arc(self, collisionfile, arcfilepath):
-        bco_coll = RacetrackCollision()
-        verts = []
-        faces = []
-
-        bco_coll.load_file(collisionfile)
-
-        for vert in bco_coll.vertices:
-            verts.append(vert)
-
-        for v1, v2, v3, collision_type, rest in bco_coll.triangles:
-            faces.append(((v1 + 1, None), (v2 + 1, None), (v3 + 1, None), collision_type))
-        model = CollisionModel(bco_coll)
-        self.setup_collision(verts, faces, arcfilepath, alternative_mesh=model)
-
-   
-
-    def load_optional_3d_file(self, additional_files, bmdfile, collisionfile):
-        choice, pos = FileSelect.open_file_list(self, additional_files,
-                                                "Select additional file to load", startat=0)
-
-        self.clear_collision()
-
-        if not choice:
-            return
-
-        if choice.endswith("(3D Model)"):
-            alternative_mesh = load_textured_bmd(bmdfile)
-            with open("lib/temp/temp.obj", "r") as f:
-                verts, faces, normals = py_obj.read_obj(f)
-
-            self.setup_collision(verts, faces, bmdfile, alternative_mesh)
-
-        elif choice.endswith("(3D Collision)"):
-            self.load_collision_file(collisionfile)
 
     def load_collision_file(self, collisionfile):
         bco_coll = RacetrackCollision()
@@ -1572,154 +1167,11 @@ class GenEditor(QMainWindow):
         model = CollisionModel(bco_coll)
         self.setup_collision(verts, faces, collisionfile, alternative_mesh=model)
 
-    def load_optional_3d_file_arc(self, additional_files, bmdfile, collisionfile, arcfilepath):
-        choice, pos = FileSelect.open_file_list(self, additional_files,
-                                                "Select additional file to load", startat=0)
-
-        self.clear_collision()
-
-        if not choice:
-            return
-
-        if choice.endswith("(3D Model)"):
-            with open("lib/temp/temp.bmd", "wb") as f:
-                f.write(bmdfile.getvalue())
-
-            bmdpath = "lib/temp/temp.bmd"
-            alternative_mesh = load_textured_bmd(bmdpath)
-            with open("lib/temp/temp.obj", "r") as f:
-                verts, faces, normals = py_obj.read_obj(f)
-
-            self.setup_collision(verts, faces, arcfilepath, alternative_mesh)
-
-        elif choice.endswith("(3D Collision)"):
-            bco_coll = RacetrackCollision()
-            verts = []
-            faces = []
-
-            bco_coll.load_file(collisionfile)
-
-            for vert in bco_coll.vertices:
-                verts.append(vert)
-
-            for v1, v2, v3, collision_type, rest in bco_coll.triangles:
-                faces.append(((v1 + 1, None), (v2 + 1, None), (v3 + 1, None), collision_type))
-            model = CollisionModel(bco_coll)
-            self.setup_collision(verts, faces, arcfilepath, alternative_mesh=model)
-
-    def load_file(self, filepath, additional=None):
-        if filepath.endswith('.bol'):
-            return self.load_bol_file(filepath, additional=additional)
-
-        if filepath.endswith('.arc'):
-            return self.load_arc_file(filepath, additional=additional)
-
-    def load_bol_file(self, filepath, additional=None):
-        with open(filepath, "rb") as f:
-            bol_file = BOL.from_file(f)
-            self.setup_bol_file(bol_file, filepath)
-            self.leveldatatreeview.set_objects(bol_file)
-            self.current_gen_path = filepath
-
-        if not filepath.endswith('_course.bol'):
-            return
-
-        self.clear_collision()
-
-        if additional == 'model':
-            bmdfile = filepath[:-len('.bol')] + ".bmd"
-            if not os.path.isfile(bmdfile):
-                return
-
-            alternative_mesh = load_textured_bmd(bmdfile)
-            with open("lib/temp/temp.obj", "r") as f:
-                verts, faces, normals = py_obj.read_obj(f)
-
-            self.setup_collision(verts, faces, bmdfile, alternative_mesh)
-
-        elif additional == 'collision':
-            collisionfile = filepath[:-len('.bol')] + ".bco"
-            if not os.path.isfile(collisionfile):
-                return
-
-            bco_coll = RacetrackCollision()
-            with open(collisionfile, "rb") as f:
-                bco_coll.load_file(f)
-
-            verts = []
-            for vert in bco_coll.vertices:
-                verts.append(vert)
-
-            faces = []
-            for v1, v2, v3, collision_type, rest in bco_coll.triangles:
-                faces.append(((v1 + 1, None), (v2 + 1, None), (v3 + 1, None), collision_type))
-
-            model = CollisionModel(bco_coll)
-            self.setup_collision(verts, faces, collisionfile, alternative_mesh=model)
-
-        QtCore.QTimer.singleShot(0, self.update_3d)
-
-    def load_arc_file(self, filepath, additional=None):
-        with open(filepath, "rb") as f:
-            try:
-                self.loaded_archive = Archive.from_file(f)
-                root_name = self.loaded_archive.root.name
-                coursename = find_file(self.loaded_archive.root, "_course.bol")
-                bol_file = self.loaded_archive[root_name + "/" + coursename]
-                bol_data = BOL.from_file(bol_file)
-                self.setup_bol_file(bol_data, filepath)
-                self.leveldatatreeview.set_objects(bol_data)
-                self.current_gen_path = filepath
-                self.loaded_archive_file = coursename
-            except:
-                self.loaded_archive = None
-                self.loaded_archive_file = None
-                raise
-
-        self.clear_collision()
-
-        if additional == 'model':
-            bmdfile = get_file_safe(self.loaded_archive.root, "_course.bmd")
-            if bmdfile is None:
-                return
-
-            bmdpath = "lib/temp/temp.bmd"
-            with open(bmdpath, "wb") as f:
-                f.write(bmdfile.getvalue())
-
-            alternative_mesh = load_textured_bmd(bmdpath)
-            with open("lib/temp/temp.obj", "r") as f:
-                verts, faces, normals = py_obj.read_obj(f)
-
-            self.setup_collision(verts, faces, filepath, alternative_mesh)
-
-        elif additional == 'collision':
-            collisionfile = get_file_safe(self.loaded_archive.root, "_course.bco")
-            if collisionfile is None:
-                return
-
-            bco_coll = RacetrackCollision()
-            bco_coll.load_file(collisionfile)
-
-            verts = []
-            for vert in bco_coll.vertices:
-                verts.append(vert)
-
-            faces = []
-            for v1, v2, v3, collision_type, rest in bco_coll.triangles:
-                faces.append(((v1 + 1, None), (v2 + 1, None), (v3 + 1, None), collision_type))
-
-            model = CollisionModel(bco_coll)
-            self.setup_collision(verts, faces, filepath, alternative_mesh=model)
-
-        QtCore.QTimer.singleShot(0, self.update_3d)
-
-    def setup_bol_file(self, bol_file, filepath):
+    def setup_kmp_file(self, bol_file, filepath):
         self.level_file = bol_file
         self.level_view.level_file = self.level_file
         # self.pikmin_gen_view.update()
         self.level_view.do_redraw()
-        self.on_document_potentially_changed(update_unsaved_changes=False)
 
         self.on_document_potentially_changed(update_unsaved_changes=False)
 
@@ -1727,7 +1179,7 @@ class GenEditor(QMainWindow):
         # self.bw_map_screen.update()
         # path_parts = path.split(filepath)
         self.set_base_window_title(filepath)
-        self.pathsconfig["bol"] = filepath
+        self.pathsconfig["kmp"] = filepath
         self.update_recent_files_list(filepath)
         save_cfg(self.configuration)
         self.current_gen_path = filepath
@@ -1750,7 +1202,7 @@ class GenEditor(QMainWindow):
                 self.statusbar.showMessage("Saved to {0}".format(self.current_gen_path))
 
             else:
-                gen_path = self.current_gen_path[:-3] + "bol"
+                gen_path = self.current_gen_path[:-3] + ".backup.kmp"
                 with open(gen_path, "wb") as f:
                     self.level_file.write(f)
                     self.set_has_unsaved_changes(False)
@@ -1758,9 +1210,6 @@ class GenEditor(QMainWindow):
                     self.statusbar.showMessage("Saved to {0}".format(gen_path))
         else:
             self.button_save_level_as()
-
-   
-
 
     def button_save_level_as(self, *args, **kwargs):
         self._button_save_level_as(True, *args, **kwargs)
@@ -1772,8 +1221,8 @@ class GenEditor(QMainWindow):
     def _button_save_level_as(self, modify_current_path, *args, **kwargs):
         filepath, choosentype = QFileDialog.getSaveFileName(
             self, "Save File",
-            self.pathsconfig["bol"],
-            "MKDD Track Data (*.bol);;Archived files (*.arc);;All files (*)",
+            self.pathsconfig["kmp"],
+            "MKWii Track Data (*.kmp);;All files (*)",
             self.last_chosen_type)
 
         if filepath:
@@ -1800,7 +1249,7 @@ class GenEditor(QMainWindow):
 
                     self.set_has_unsaved_changes(False)
 
-            self.pathsconfig["bol"] = filepath
+            self.pathsconfig["kmp"] = filepath
             save_cfg(self.configuration)
 
             if modify_current_path:
@@ -1820,95 +1269,49 @@ class GenEditor(QMainWindow):
                 return
 
             with open(filepath, "r") as f:
-                verts, faces, normals = py_obj.read_obj(f)
+                faces = py_obj.read_obj(f)
             alternative_mesh = TexturedModel.from_obj_path(filepath, rotate=True)
 
 
-            self.setup_collision(verts, faces, filepath, alternative_mesh)
+            self.setup_collision(faces, filepath, alternative_mesh)
 
         except Exception as e:
             traceback.print_exc()
             open_error_dialog(str(e), self)
-
         finally:
             self.update_3d()
 
-    def button_load_collision_bmd(self):
+    def button_load_collision_kcl(self):
         try:
             filepath, choosentype = QFileDialog.getOpenFileName(
                 self, "Open File",
                 self.pathsconfig["collision"],
-                "Course Model (*.bmd);;Archived files (*.arc);;All files (*)")
-
-            if not filepath:
-                return
-            bmdpath = filepath
-            clear_temp_folder()
-            if choosentype == "Archived files (*.arc)" or filepath.endswith(".arc"):
-                with open(filepath, "rb") as f:
-                    rarc = Archive.from_file(f)
-
-                root_name = rarc.root.name
-                bmd_filename = find_file(rarc.root, "_course.bmd")
-                bmd = rarc[root_name][bmd_filename]
-                with open("lib/temp/temp.bmd", "wb") as f:
-                    f.write(bmd.getvalue())
-
-                bmdpath = "lib/temp/temp.bmd"
-
-            self.clear_collision()
-
-            alternative_mesh = load_textured_bmd(bmdpath)
-            with open("lib/temp/temp.obj", "r") as f:
-                verts, faces, normals = py_obj.read_obj(f)
-
-            self.setup_collision(verts, faces, filepath, alternative_mesh)
-
-        except Exception as e:
-            traceback.print_exc()
-            open_error_dialog(str(e), self)
-
-        finally:
-            self.update_3d()
-
-    def button_load_collision_bco(self):
-        try:
-            filepath, choosentype = QFileDialog.getOpenFileName(
-                self, "Open File",
-                self.pathsconfig["collision"],
-                "MKDD Collision (*.bco);;Archived files (*.arc);;All files (*)")
+                "MKWII Collision (*.kcl);;All files (*)")
             if filepath:
-                bco_coll = RacetrackCollision()
-                verts = []
-                faces = []
-
-                if choosentype == "Archived files (*.arc)" or filepath.endswith(".arc"):
-                    with open(filepath, "rb") as f:
-                        rarc = Archive.from_file(f)
-
-
-                    root_name = rarc.root.name
-                    collision_file = find_file(rarc.root, "_course.bco")
-                    bco = rarc[root_name][collision_file]
-                    bco_coll.load_file(bco)
-                else:
-                    with open(filepath, "rb") as f:
-                        bco_coll.load_file(f)
-
-                for vert in bco_coll.vertices:
-                    verts.append(vert)
-
-                for v1, v2, v3, collision_type, rest in bco_coll.triangles:
-                    faces.append(((v1+1, None), (v2+1, None), (v3+1, None), collision_type))
-                model = CollisionModel(bco_coll)
-                self.setup_collision(verts, faces, filepath, alternative_mesh=model)
+                self.load_collision_kcl(filepath)
 
         except Exception as e:
             traceback.print_exc()
             open_error_dialog(str(e), self)
-
         finally:
             self.update_3d()
+
+    def load_collision_kcl(self, filepath):
+        kcl_coll = RacetrackCollision()
+        faces = []
+
+        
+        with open(filepath, "rb") as f:
+            kcl_coll.load_file(f)
+
+        #these are the actual vertices
+
+        #for v1, v2, v3, collision_type in kcl_coll.triangles:
+        #    faces.append((v1, v2, v3, collision_type))
+        faces = kcl_coll.triangles
+
+        model = CollisionModel(kcl_coll)
+        self.setup_collision(faces, filepath, alternative_mesh=model)
 
     def clear_collision(self):
         self.level_view.clear_collision()
@@ -1917,8 +1320,8 @@ class GenEditor(QMainWindow):
         self.level_view.update()
         QApplication.instance().processEvents()
 
-    def setup_collision(self, verts, faces, filepath, alternative_mesh=None):
-        self.level_view.set_collision(verts, faces, alternative_mesh)
+    def setup_collision(self, faces, filepath, alternative_mesh=None):
+        self.level_view.set_collision(faces, alternative_mesh)
         self.pathsconfig["collision"] = filepath
         editor_config = self.configuration["editor"]
         alternative_mesh.hidden_collision_types = \
@@ -1944,12 +1347,29 @@ class GenEditor(QMainWindow):
         self.set_has_unsaved_changes(True)
 
     def button_open_add_item_window(self):
-        accepted = self.add_object_window.exec_()
-        if accepted:
-            self.add_item_window_save()
+
+        if len(self.level_view.selected) == 1:
+
+            obj = self.level_view.selected[0]
+            #add points to group at current position
+            if isinstance(obj, KMPPoint):
+                to_deal_with = self.level_file.enemypointgroups if isinstance(obj, (EnemyPoint) ) else self.level_file.itempointgroups
+                start_groupind, start_group, start_pointind = to_deal_with.find_group_of_point(obj)
+
+                thing_to_add = libkmp.EnemyPoint.new() if isinstance(obj, EnemyPoint ) else ItemPoint.new()
+                self.object_to_be_added = [thing_to_add, start_groupind, start_pointind + 1  ]
+                #self.object_to_be_added[0].group = obj.id
+                #actively adding objects
+                self.pik_control.button_add_object.setChecked(True)
+                self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
+
         else:
-            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_NONE)
-            self.pik_control.button_add_object.setChecked(False)
+            accepted = self.add_object_window.exec_()
+            if accepted:
+                self.add_item_window_save()
+            else:
+                self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_NONE)
+                self.pik_control.button_add_object.setChecked(False)
 
     def shortcut_open_add_item_window(self):
         self.button_open_add_item_window()
@@ -1958,8 +1378,34 @@ class GenEditor(QMainWindow):
         self.object_to_be_added = self.add_object_window.get_content()
         if self.object_to_be_added is None:
             return
-
         obj = self.object_to_be_added[0]
+
+        if isinstance(obj, (libkmp.EnemyPointGroup, libkmp.CheckpointGroup, libkmp.Route) ):
+            obj = deepcopy(obj)
+
+
+
+
+            if isinstance(obj, libkmp.EnemyPointGroup):
+                self.level_file.enemypointgroups.groups.append(obj)
+            elif isinstance(obj, libkmp.CheckpointGroup):
+                self.level_file.checkpoints.groups.append(obj)
+            elif isinstance(obj, libkmp.Route):
+                if obj.type == 0:
+                    self.level_file.routes.append(obj)
+                elif obj.type == 1:
+                    self.level_file.cameraroutes.append(obj)
+
+            self.object_to_be_added = None
+            self.pik_control.button_add_object.setChecked(False)
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_NONE)
+            self.leveldatatreeview.set_objects(self.level_file)
+
+        elif self.object_to_be_added is not None:
+            self.pik_control.button_add_object.setChecked(True)
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
+
+
 
     #this is what happens when you close out of the window
     @catch_exception
@@ -1973,22 +1419,19 @@ class GenEditor(QMainWindow):
 
             obj = self.object_to_be_added[0]
             self.points_added = 0
-            if isinstance(obj, (libbol.EnemyPointGroup, libbol.CheckpointGroup, libbol.Route, 
-                                                    libbol.LightParam, libbol.MGEntry)):
-                if isinstance(obj, libbol.EnemyPointGroup):
+            if isinstance(obj, (libkmp.PointGroup, libkmp.Route )):
+                if isinstance(obj, libkmp.EnemyPointGroup):
                     self.level_file.enemypointgroups.groups.append(obj)
-                elif isinstance(obj, libbol.CheckpointGroup):
+                elif isinstance(obj, libkmp.ItemPointGroup):
+                    self.level_file.itempointgroups.groups.append(obj)
+                elif isinstance(obj, libkmp.CheckpointGroup):
                     self.level_file.checkpoints.groups.append(obj)
-                elif isinstance(obj, libbol.Route):
+                elif isinstance(obj, libkmp.Route):
                     if obj.type == 0:
                         self.level_file.routes.append(obj)
                     elif obj.type == 1:
                          self.level_file.cameraroutes.append(obj)
 
-                elif isinstance(obj, libbol.LightParam):
-                    self.level_file.lightparams.append(obj)
-                elif isinstance(obj, libbol.MGEntry):
-                    self.level_file.mgentries.append(obj)
 
                 self.addobjectwindow_last_selected_category = self.add_object_window.category_menu.currentIndex()
                 self.object_to_be_added = None
@@ -2002,7 +1445,7 @@ class GenEditor(QMainWindow):
                 
                 self.pik_control.button_add_object.setChecked(True)
                 #self.pik_control.button_move_object.setChecked(False)
-                self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)
+                self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
                 self.add_object_window.destroy()
                 self.add_object_window = None
                 #self.pikmin_gen_view.setContextMenuPolicy(Qt.DefaultContextMenu)
@@ -2013,7 +1456,7 @@ class GenEditor(QMainWindow):
         self.add_object_window = None
         copy_current_obj = None
         self.pik_control.button_add_object.setChecked(False)
-        self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_NONE)
+        self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_NONE)
         self.objects_to_be_added = None
         self.object_to_be_added = None
     
@@ -2023,36 +1466,45 @@ class GenEditor(QMainWindow):
         self.points_added = 0
         copy_current_obj = None
         self.pik_control.button_add_object.setChecked(False)
-        self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_NONE)
+        self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_NONE)
         self.objects_to_be_added = None
         self.object_to_be_added = None
         
         
         if option == 0: #add an empty enemy group
-            new_enemy_group = libbol.EnemyPointGroup()
-            new_enemy_group.id = self.level_file.enemypointgroups.new_group_id()
-            self.level_file.enemypointgroups.groups.append( new_enemy_group )
+            if isinstance(obj, (EnemyPointGroups, EnemyPointGroup)):
+                new_enemy_group = libkmp.EnemyPointGroup()
+                new_enemy_group.id = self.level_file.enemypointgroups.new_group_id()
+                self.level_file.enemypointgroups.groups.append( new_enemy_group )
+
+            if isinstance(obj, (ItemPointGroups, ItemPointGroup)):
+                new_item_group = libkmp.ItemPointGroup()
+                new_item_group.id = self.level_file.itempointgroups.new_group_id()
+                self.level_file.itempointgroups.groups.append( new_item_group )
         elif option == 1: #adding an enemy point to a group, the group is obj
             #self.addobjectwindow_last_selected_category = 2
-            self.object_to_be_added = [libbol.EnemyPoint.new(), obj.id, -1 ]
+            thing_to_add = libkmp.EnemyPoint.new() if isinstance(obj, (EnemyPoint, EnemyPointGroup) ) else ItemPoint.new()
+            self.object_to_be_added = [thing_to_add, obj.id, -1 ]
             #self.object_to_be_added[0].group = obj.id
             #actively adding objects
             self.pik_control.button_add_object.setChecked(True)
-            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
         elif option == 2:   #add new checkpoint group
-            new_check_group = libbol.CheckpointGroup( self.level_file.checkpoints.new_group_id() )
+            new_check_group = libkmp.CheckpointGroup( self.level_file.checkpoints.new_group_id() )
             self.level_file.checkpoints.groups.append( new_check_group )
         elif option == 3: #add item box
             #self.addobjectwindow_last_selected_category = 6
-            default_item_box = libbol.MapObject.default_item_box()
+
+            default_item_box = libkmp.MapObject.new(obj)
             self.object_to_be_added = [default_item_box, None, None ]
+
             self.pik_control.button_add_object.setChecked(True)
-            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
         elif option == 4:   #generic copy
             #self.addobjectwindow_last_selected_category = 6
             self.objects_to_be_added = []
             self.pik_control.button_add_object.setChecked(True)
-            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
             
             self.obj_to_copy = obj
             self.copy_current_obj()
@@ -2061,49 +1513,49 @@ class GenEditor(QMainWindow):
             self.objects_to_be_added = []
             self.object_to_be_added = None
             
-            new_route = libbol.Route()    
+            new_route = libkmp.Route()    
             
-            to_append_to = self.level_file.routes if isinstance(obj, libbol.MapObject) else self.level_file.cameraroutes
-            new_route.type = 1 if isinstance(obj, libbol.Camera) else 0
+            to_append_to = self.level_file.routes if isinstance(obj, libkmp.MapObject) else self.level_file.cameraroutes
+            new_route.type = 1 if isinstance(obj, libkmp.Camera) else 0
 
             if obj.route != -1 :
                 for point in to_append_to[obj.route].points: 
-                    new_point = libbol.RoutePoint.new()
+                    new_point = libkmp.RoutePoint.new()
                     new_point.position = point.position - obj.position
                     new_point.partof = new_route
                     new_route.points.append(new_point)
             else:
                 for i in range(2):
-                    point = libbol.RoutePoint.new()
+                    point = libkmp.RoutePoint.new()
                     point.partof = new_route
                     new_route.points.append(point)
             
             self.objects_to_be_added.append( [new_route, None, None ]  )
             
-            if isinstance(obj, libbol.Camera):
-                new_camera = libbol.Camera.default()
+            if isinstance(obj, libkmp.Camera):
+                new_camera = libkmp.Camera.default()
                 self.objects_to_be_added.append( [new_camera, None, None ]  )
 
-            elif isinstance(obj, libbol.MapObject):
+            elif isinstance(obj, libkmp.MapObject):
                 new_object = obj.copy()
                 self.objects_to_be_added.append( [new_object, None, None ]  )
                    
             self.pik_control.button_add_object.setChecked(True)
-            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
             
             self.object_to_be_added = None
         elif option == 5: #new object route
-            new_route_group = libbol.Route()
+            new_route_group = libkmp.Route()
             self.level_file.routes.append(new_route_group)
         elif option == 5.5: #new camera route
-            new_route_group = libbol.Route.new_camera()
+            new_route_group = libkmp.Route.new_camera()
             self.level_file.cameraroutes.append(new_route_group)
         elif option == 6: #add route point
             #find route in routepoints
             id = 0
             idx = 0
 
-            to_look_through = self.level_file.routes if obj.type == 0 else self.level_file.cameraroutes
+            to_look_through = self.level_file.routes if obj.type == 1 else self.level_file.cameraroutes
 
             for route in to_look_through:
                 if route is obj:
@@ -2113,77 +1565,99 @@ class GenEditor(QMainWindow):
                     idx += 1
             
             #self.addobjectwindow_last_selected_category = 5
-            new_point = libbol.RoutePoint.new()
+            new_point = libkmp.RoutePoint.new()
             new_point.partof = obj
             self.object_to_be_added = [new_point, id, -1 ]
+
             #self.object_to_be_added[0].group = obj.id
             #actively adding objects
             self.pik_control.button_add_object.setChecked(True)
-            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
         elif option == 7: #add new area
             #self.addobjectwindow_last_selected_category = 7
-            self.object_to_be_added = [libbol.Area.default(obj), None, None ]
+            self.object_to_be_added = [libkmp.Area.default(obj), None, None ]
             self.pik_control.button_add_object.setChecked(True)
-            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)            
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP) 
+        elif option == 7.5: #add new type 8/9 areas
+            self.objects_to_be_added = []
+            self.objects_to_be_added.append( [libkmp.Area.default(8), None, None ]  )
+            self.objects_to_be_added.append( [libkmp.Area.default(9), None, None ]  )
+            self.object_to_be_added = None
+            self.pik_control.button_add_object.setChecked(True)
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP) 
         elif option == 8:  #add new camera with route
              
             if obj in [1, 3, 4, 5]:
                 self.objects_to_be_added = []
                 self.object_to_be_added = None
 
-                new_route = libbol.Route.new_camera()
+                new_route = libkmp.Route.new_camera()
                 
                 
                 for i in range(2):
-                    point = libbol.RoutePoint.new()
+                    point = libkmp.RoutePoint.new()
                     point.partof = new_route
                     new_route.points.append(point)
                 
                 #self.addobjectwindow_last_selected_category = 8
                 self.objects_to_be_added.append( [new_route, None, None ]  )
-                self.objects_to_be_added.append( [libbol.Camera.default(obj), None, None ] )
+                self.objects_to_be_added.append( [libkmp.Camera.default(obj), None, None ] )
             else:
                 self.objects_to_be_added = None
-                self.object_to_be_added = [libbol.Camera.default(obj), None, None ]
+                self.object_to_be_added = [libkmp.Camera.default(obj), None, None ]
                 
             
             self.pik_control.button_add_object.setChecked(True)
-            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
             self.object_to_be_added = None
         elif option == 9: #add new respawn point
+
+
             #self.addobjectwindow_last_selected_category = 9
             #get next id
-            rsp = libbol.JugemPoint.new()
+            rsp = libkmp.JugemPoint.new()
             
             self.object_to_be_added = [rsp, None, None ]
             self.pik_control.button_add_object.setChecked(True)
-            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)
-        elif option == 10: #add new lightparam
-            self.level_file.lightparams.append( libbol.LightParam.new() )
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)    
+        elif option == 10:
+            to_deal_with = self.level_file.enemypointgroups if isinstance(obj, (EnemyPointGroups) ) else self.level_file.itempointgroups
+
+            to_deal_with.merge_groups()
+        
+        
         elif option == 11: #new enemy point here
             #find its position in the enemy point group
             pos = -1
             idx = 0
-            for point in self.level_file.enemypointgroups.groups[obj.group].points:
-                if point is obj:
-                    pos = idx
-                    break
-                idx += 1
+
+            to_look_through = self.level_file.enemypointgroups.groups if isinstance(obj, EnemyPoint) else self.level_file.itempointgroups.groups
+
+            #yeah so, there is no way we can set all the points? so just like, look through all points i suppose
+            group_idx = 0
+            for i, group in enumerate(to_look_through):
+                idx = 0
+                for point in group.points:
+                    if point is obj:
+                        pos = idx
+                        group_idx = i
+                        break
+                    idx += 1
+
+            thing_to_add = libkmp.EnemyPoint.new() if isinstance(obj, EnemyPoint) else libkmp.ItemPoint.new()
         
-            #self.addobjectwindow_last_selected_category = 2
-            self.object_to_be_added = [libbol.EnemyPoint.new(), obj.group, pos + 1 ]
-            #self.object_to_be_added[0].group = obj.id
-            #actively adding objects
+            self.object_to_be_added = [thing_to_add, group_idx, pos + 1 ]
+
             self.pik_control.button_add_object.setChecked(True)
-            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
         elif option == 12: #area camera route add
             self.objects_to_be_added = []
-            new_area = libbol.Area.default()
-            new_camera = libbol.Camera.default()
-            new_route = libbol.Route.new_camera()
+            new_area = libkmp.Area.default()
+            new_camera = libkmp.Camera.default()
+            new_route = libkmp.Route.new_camera()
             
             for i in range(2):
-                point = libbol.RoutePoint.new()
+                point = libkmp.RoutePoint.new()
                 point.partof = new_route
                 new_route.points.append(point)
                         
@@ -2193,29 +1667,27 @@ class GenEditor(QMainWindow):
             
                 
             self.pik_control.button_add_object.setChecked(True)
-            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
             
             self.object_to_be_added = None
-        
         elif option == 12.5: #area camera add
             self.objects_to_be_added = []
-            new_area = libbol.Area.default()
-            new_camera = libbol.Camera.default(0)
+            new_area = libkmp.Area.default()
+            new_camera = libkmp.Camera.default(1)
             
             self.objects_to_be_added.append( [new_camera, None, None ]  )
             self.objects_to_be_added.append( [new_area, None, None ]  )    
             
             self.pik_control.button_add_object.setChecked(True)
-            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
             
             self.object_to_be_added = None
-        
         elif option == 13: #add new checkpoint to end
-            self.object_to_be_added = [libbol.Checkpoint.new(), obj.grouplink, -1 ]
+            self.object_to_be_added = [libkmp.Checkpoint.new(), obj.grouplink, -1 ]
             #self.object_to_be_added[0].group = obj.id
             #actively adding objects
             self.pik_control.button_add_object.setChecked(True)
-            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
         elif option == 14: #add new checkpoint here
             group_id = -1
             pos_in_grp = -1 
@@ -2227,9 +1699,9 @@ class GenEditor(QMainWindow):
                         pos_in_grp = point_idx
                         break
             
-            self.object_to_be_added = [libbol.Checkpoint.new(), group_id, pos_in_grp + 1 ]
+            self.object_to_be_added = [libkmp.Checkpoint.new(), group_id, pos_in_grp + 1 ]
             self.pik_control.button_add_object.setChecked(True)
-            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
         elif option == 15: #add new route point here
             group_id = -1
             pos_in_grp = -1 
@@ -2245,10 +1717,11 @@ class GenEditor(QMainWindow):
                         group_id = group_idx
                         pos_in_grp = point_idx
                         break
+
             
-            self.object_to_be_added = [libbol.RoutePoint.new_partof(obj), group_id, pos_in_grp + 1 ]
+            self.object_to_be_added = [libkmp.RoutePoint.new_partof(obj), group_id, pos_in_grp + 1 ]
             self.pik_control.button_add_object.setChecked(True)
-            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
         elif option == 16: #auto route single
             self.auto_route_obj(obj)
         elif option == 17: #auto route group
@@ -2340,7 +1813,7 @@ class GenEditor(QMainWindow):
             diff_angle = Vector3( *objs[1].rotation.get_euler()) - Vector3( *objs[0].rotation.get_euler())
             
             for i in range(1, 4):
-                default_item_box = libbol.MapObject.default_item_box()
+                default_item_box = libkmp.MapObject.default_item_box()
                 default_item_box.position = objs[0].position + diff_vector * ( i / 4.0)
                 default_item_box.rotation = Rotation.from_euler(Vector3( *objs[0].rotation.get_euler()) + diff_angle * ( i / 4.0) )
             
@@ -2367,20 +1840,16 @@ class GenEditor(QMainWindow):
                     max_group = max(max_group, checkpoint.unk1)
             for obj in objs:
                 obj.unk1 = max_group + 1
-        if option == 3:
-            link_id = self.level_file.enemypointgroups.new_link_id()
-            for obj in objs:
-                obj.link = link_id
 
     def auto_route_obj(self, obj):
         #do object route
         route_collec = self.level_file.routes if isinstance(obj, MapObject) else self.level_file.cameraroutes
         if isinstance(obj, MapObject):
-            route_data = load_route_info(get_full_name(obj.objectid))
+            route_data = load_route_info(get_kmp_name(obj.objectid))
             #print("route_data",  route_data )
         elif isinstance(obj, Camera):
             is_object = False
-            if obj.camtype == 1 or (obj.camtype in [2, 5, 6] and  obj.name == "mkwi"):
+            if obj.type == 1 or (obj.type in [2, 5, 6] and  obj.name == "mkwi"):
                 route_data = 2
             else:
                 route_data = -1
@@ -2408,10 +1877,10 @@ class GenEditor(QMainWindow):
 
         if create:
             if isinstance(obj, MapObject):
-                new_route_group = libbol.Route.new()
+                new_route_group = libkmp.Route.new()
                
             elif isinstance(obj, Camera):
-                new_route_group = libbol.Route.new_camera()
+                new_route_group = libkmp.Route.new_camera()
             route_collec.append(new_route_group)
             obj.route = len(route_collec) - 1 
 
@@ -2423,7 +1892,7 @@ class GenEditor(QMainWindow):
         
         
     def place_points(self, obj, num):   
-        new_point = libbol.RoutePoint.new()
+        new_point = libkmp.RoutePoint.new()
         
         new_point.partof = self.level_file.routes[obj.route] if isinstance(obj, MapObject) else self.level_file.cameraroutes[obj.route] 
         self.object_to_be_added = [new_point, obj.route, -1]
@@ -2447,7 +1916,7 @@ class GenEditor(QMainWindow):
             y = 0
             object, group, position = self.object_to_be_added
             #if self.editorconfig.getboolean("GroundObjectsWhenAdding") is True:
-            if isinstance(object, libbol.Checkpoint):
+            if isinstance(object, libkmp.Checkpoint):
                 y = object.start.y
             else:
                 if self.level_view.collision is not None:
@@ -2463,7 +1932,7 @@ class GenEditor(QMainWindow):
         if position is not None and position < 0:
             position = 99999999 # this forces insertion at the end of the list
 
-        if isinstance(object, libbol.Checkpoint):
+        if isinstance(object, libkmp.Checkpoint):
             if len(self.last_position_clicked) == 1:
                 try:
                     placeobject = deepcopy(object)
@@ -2479,9 +1948,11 @@ class GenEditor(QMainWindow):
                 placeobject.end.y = y
                 placeobject.end.z = z
                 self.last_position_clicked = []
-
+                # For convenience, create a group if none exists yet.
                 if group == 0 and not self.level_file.checkpoints.groups:
-                    self.level_file.checkpoints.groups.append(libbol.CheckpointGroup.new())
+                    self.level_file.checkpoints.groups.append(libkmp.CheckpointGroup.new())
+
+
                 self.level_file.checkpoints.groups[group].points.insert(position + self.points_added, placeobject)
                 self.points_added += 1
                 self.level_view.do_redraw()
@@ -2500,35 +1971,27 @@ class GenEditor(QMainWindow):
             placeobject.position.z = z
 
 
-            if isinstance(object, libbol.EnemyPoint):
+            if isinstance(object, libkmp.EnemyPoint):
                 # For convenience, create a group if none exists yet.
                 if group == 0 and not self.level_file.enemypointgroups.groups:
-                    self.level_file.enemypointgroups.groups.append(libbol.EnemyPointGroup.new())
-                placeobject.group = group
-                if group == 0 and not self.level_file.enemypointgroups.groups:
-                    self.level_file.enemypointgroups.groups.append(libbol.EnemyPointGroup.new())
-
+                    self.level_file.enemypointgroups.groups.append(libkmp.EnemyPointGroup.new())
                 self.level_file.enemypointgroups.groups[group].points.insert(position + self.points_added, placeobject)
                 self.points_added += 1
-            elif isinstance(object, libbol.RoutePoint):
-    
+            elif isinstance(object, libkmp.ItemPoint):
+                self.level_file.itempointgroups.groups[group].points.insert(position + self.points_added, placeobject)
+                self.points_added += 1
+            elif isinstance(object, libkmp.RoutePoint):
+                # For convenience, create a group if none exists yet.
+                if group == 0 and not self.level_file.routes:
+                    self.level_file.routes.append(libkmp.Route.new())
                 if object.partof.type == 0:
-                    if group == 0 and not self.level_file.routes:
-                        self.level_file.routes.append(libbol.Route.new())
-
-
                     placeobject.partof = self.level_file.routes[group]
                     self.level_file.routes[group].points.insert(position+ self.points_added, placeobject)
                 elif object.partof.type == 1:
-                    if group == 0 and not self.level_file.cameraroutes:
-                        new_route = libbol.Route.new()
-                        new_route.type = 1
-                        self.level_file.cameraroutes.append(new_route)
-
                     placeobject.partof = self.level_file.cameraroutes[group]
                     self.level_file.cameraroutes[group].points.insert(position+ self.points_added, placeobject)
                 self.points_added += 1
-            elif isinstance(object, libbol.MapObject):
+            elif isinstance(object, libkmp.MapObject):
                 self.level_file.objects.objects.append(placeobject)
                 placeobject.set_route_info()
                 if placeobject.route != -1:
@@ -2549,33 +2012,16 @@ class GenEditor(QMainWindow):
                             closest_dis = distance
                     object.unk_2a = closest_idx    
                 
-            elif isinstance(object, libbol.KartStartPoint):
+            elif isinstance(object, libkmp.KartStartPoint):
                 self.level_file.kartpoints.positions.append(placeobject)
-            elif isinstance(object, libbol.JugemPoint):
+            elif isinstance(object, libkmp.JugemPoint):
                 self.level_file.respawnpoints.append(placeobject)
                 #find the closest enemy point
                 
-                max_id = 0
-                for point in self.level_file.respawnpoints:
-                   max_id = max(point.respawn_id, max_id)
-                placeobject.respawn_id = max_id + 1
-                
-                min_dis = 999999999999999999
-                min_idx = 0
-                idx = 0              
-                
-                if len(self.level_file.enemypointgroups.groups ) > 0:
-                    for group in self.level_file.enemypointgroups.groups:
-                        for point in group.points:
-                            this_dis =  point.position.distance(placeobject.position) 
-                            if this_dis < min_dis:
-                                min_dis = this_dis
-                                min_idx = idx
-                            idx += 1    
-                placeobject.unk1 = min_idx
-            elif isinstance(object, libbol.Area):
+               
+            elif isinstance(object, libkmp.Area):
                 self.level_file.areas.areas.append(placeobject)
-            elif isinstance(object, libbol.Camera):
+            elif isinstance(object, libkmp.Camera):
                 self.level_file.cameras.append(placeobject)
             else:
                 raise RuntimeError("Unknown object type {0}".format(type(object)))
@@ -2614,7 +2060,7 @@ class GenEditor(QMainWindow):
             if position is not None and position < 0:
                 position = 99999999 # this forces insertion at the end of the list
 
-            if isinstance(object, libbol.Checkpoint):
+            if isinstance(object, libkmp.Checkpoint):
                 if len(self.last_position_clicked) == 1:
                     placeobject = deepcopy(object)
 
@@ -2638,24 +2084,27 @@ class GenEditor(QMainWindow):
                 if hasattr(placeobject, "position"):
                     placeobject.position = Vector3(x, y, z)
 
-                if isinstance(object, libbol.EnemyPoint):
-                    placeobject.group = group
+                if isinstance(object, libkmp.EnemyPoint):
                     self.level_file.enemypointgroups.groups[group].points.insert(position + self.points_added, placeobject)
                     self.points_added += 1
-                elif isinstance(object, libbol.RoutePoint):
+                if isinstance(object, libkmp.ItemPoint):
+                    self.level_file.itempointgroups.groups[group].points.insert(position + self.points_added, placeobject)
+                    self.points_added += 1
+                
+                elif isinstance(object, libkmp.RoutePoint):
                     self.level_file.routes[group].points.insert(position, placeobject)
-                elif isinstance(object, libbol.MapObject):
+                elif isinstance(object, libkmp.MapObject):
         
                 
                     self.level_file.objects.objects.append(placeobject)
-                elif isinstance(object, libbol.KartStartPoint):
+                elif isinstance(object, libkmp.KartStartPoint):
                     self.level_file.kartpoints.positions.append(placeobject)
-                elif isinstance(object, libbol.JugemPoint):
+                elif isinstance(object, libkmp.JugemPoint):
                     self.level_file.respawnpoints.append(placeobject)
-                elif isinstance(object, libbol.Area):
+                elif isinstance(object, libkmp.Area):
                     added_area = True
                     self.level_file.areas.areas.append(placeobject)
-                elif isinstance(object, libbol.Camera):
+                elif isinstance(object, libkmp.Camera):
                     self.level_file.cameras.append(placeobject)
                 elif isinstance(object, Route):
                     #placeobject.points.append( libbol.RoutePoint( Vector3(x, y, z) ))
@@ -2668,27 +2117,31 @@ class GenEditor(QMainWindow):
                     raise RuntimeError("Unknown object type {0}".format(type(object)))
 
         for object in placed_objects:
-            if isinstance(object, libbol.Camera):
+            if isinstance(object, libkmp.Camera):
             
                 if added_area: 
                     object.position.x += 3000
                 object.position.y += 3000
+                
 
-                if object.camtype in [1, 4, 5]:
+                if object.type in [2, 5, 6]:
                     object.route = len(self.level_file.cameraroutes) - 1
                     self.level_file.cameraroutes[object.route].used_by.append(object)              
                     
                     self.level_file.cameraroutes[object.route].points[0].position = Vector3( object.position.x, object.position.y, object.position.z + 3500)      
                     self.level_file.cameraroutes[object.route].points[1].position = Vector3( object.position.x, object.position.y, object.position.z - 3500)           
                 
-            if isinstance(object, libbol.Area):
-                object.camera_index = len(self.level_file.cameras) - 1
-                self.level_file.cameras[-1].used_by.append(object)
+            if isinstance(object, libkmp.Area):
+                if object.type == 0:
+                    object.camera_index = len(self.level_file.cameras) - 1
+                    self.level_file.cameras[-1].used_by.append(object)
+                elif object.type == 9:
+                    object.position.z += 300
             if isinstance(object, Route): 
                 
                 for point in object.points:
                     self.action_ground_spec_object(point)
-            if isinstance(object, libbol.MapObject):
+            if isinstance(object, libkmp.MapObject):
             
                 object.route = len(self.level_file.routes) - 1    
             
@@ -2736,7 +2189,7 @@ class GenEditor(QMainWindow):
             pos.y += deltay
             pos.z += deltaz
 
-        self.level_view.gizmo.move_to_average(self.level_view.selected_positions)
+            self.level_view.gizmo.move_to_average(self.level_view.selected_positions)
 
 
         #if len(self.pikmin_gen_view.selected) == 1:
@@ -2769,9 +2222,8 @@ class GenEditor(QMainWindow):
 
         if event.key() == Qt.Key_Escape:
             self.points_added = 0
-            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_NONE)
-            self.pik_control.button_add_object.clicked.connect(
-                lambda _checked: self.button_open_add_item_window())
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_NONE)
+            self.pik_control.button_add_object.setChecked(False)
             #self.pik_control.button_move_object.setChecked(False)
 
         if event.key() == Qt.Key_Shift:
@@ -2799,6 +2251,12 @@ class GenEditor(QMainWindow):
         elif event.key() == Qt.Key_Minus:
             self.level_view.zoom_out()
 
+        if event.key() == Qt.Key_C:
+            if len(self.level_view.selected) == 1:
+                if isinstance( self.level_view.selected[0], (EnemyPoint, ItemPoint) ):
+                    self.connect_start = self.level_view.selected[0]
+                    self.level_view.connecting_mode = True
+
     def keyReleaseEvent(self, event: QtGui.QKeyEvent):
         if event.key() == Qt.Key_Shift:
             self.level_view.shift_is_pressed = False
@@ -2820,6 +2278,10 @@ class GenEditor(QMainWindow):
         elif event.key() == Qt.Key_E:
             self.level_view.MOVE_DOWN = 0
 
+        if event.key() == Qt.Key_C:
+            self.level_view.connecting_mode = False
+            self.connect_start = None
+
     def reset_move_flags(self):
         self.level_view.MOVE_FORWARD = 0
         self.level_view.MOVE_BACKWARD = 0
@@ -2833,13 +2295,14 @@ class GenEditor(QMainWindow):
 
     def action_rotate_object(self, deltarotation):
         #obj.set_rotation((None, round(angle, 6), None))
+        #print(deltarotation)
         for rot in self.level_view.selected_rotations:
             if deltarotation.x != 0:
-                rot.rotate_around_y(deltarotation.x)
+                rot.rotate_around_x(deltarotation.x) #originally y
             elif deltarotation.y != 0:
-                rot.rotate_around_z(deltarotation.y)
+                rot.rotate_around_y(deltarotation.y) #originally z
             elif deltarotation.z != 0:
-                rot.rotate_around_x(deltarotation.z)
+                rot.rotate_around_z(deltarotation.z) #originally x
 
         if self.rotation_mode.isChecked():
             middle = self.level_view.gizmo.position
@@ -2891,55 +2354,62 @@ class GenEditor(QMainWindow):
             pos.y = height
 
     def action_delete_objects(self):
-        tobedeleted = []
+        #tobedeleted = []
         for obj in self.level_view.selected:
-            if isinstance(obj, libbol.EnemyPoint):
+            if isinstance(obj, libkmp.EnemyPoint):
                 for group in self.level_file.enemypointgroups.groups:
                     if obj in group.points:
                         group.points.remove(obj)
                         break
 
-            elif isinstance(obj, libbol.RoutePoint):
-                to_look_through = obj.partof.type == 0 if self.level_file.routes else  self.level_file.cameraroutes
+            if isinstance(obj, libkmp.ItemPoint):
+                for group in self.level_file.itempointgroups.groups:
+                    if obj in group.points:
+                        group.points.remove(obj)
+                        break
 
-                for route in to_look_through:
+
+            elif isinstance(obj, libkmp.RoutePoint):
+                for route in self.level_file.routes:
                     if obj in route.points:
                         route.points.remove(obj)
                         break
-                
 
-            elif isinstance(obj, libbol.Checkpoint):
+            elif isinstance(obj, libkmp.Checkpoint):
                 for group in self.level_file.checkpoints.groups:
                     if obj in group.points:
                         group.points.remove(obj)
                         break
 
-            elif isinstance(obj, libbol.MapObject):
+            elif isinstance(obj, libkmp.MapObject):
                 if obj.route != -1 and obj.route < len(self.level_file.routes):
                     self.level_file.routes[obj.route].used_by.remove(obj)
                    
                 self.level_file.objects.objects.remove(obj)
-            elif isinstance(obj, libbol.KartStartPoint):
+            elif isinstance(obj, libkmp.KartStartPoint):
                 self.level_file.kartpoints.positions.remove(obj)
-            elif isinstance(obj, libbol.JugemPoint):
+            elif isinstance(obj, libkmp.JugemPoint):
                 self.level_file.respawnpoints.remove(obj)
-            elif isinstance(obj, libbol.Area):
+            elif isinstance(obj, libkmp.Area):
                 if obj.camera_index != -1 and obj.camera_index < len(self.level_file.areas.areas):
                     self.level_file.cameras[obj.camera_index].used_by.remove(obj)
                 
             
                 self.level_file.areas.areas.remove(obj)
-            elif isinstance(obj, libbol.Camera):
+            elif isinstance(obj, libkmp.Camera):
                 if obj.route != -1 and obj.route < len(self.level_file.routes):
                     self.level_file.routes[obj.route].used_by.remove(obj)
             
                 self.level_file.cameras.remove(obj)
-            elif isinstance(obj, libbol.CheckpointGroup):
-                self.level_file.checkpoints.groups.remove(obj)
-            elif isinstance(obj, libbol.EnemyPointGroup):
-                self.level_file.enemypointgroups.groups.remove(obj)
+            elif isinstance(obj, libkmp.CheckpointGroup):
+                #self.level_file.checkpoints.groups.remove(obj)
+                self.level_file.remove_group(obj)
+            elif isinstance(obj, (libkmp.EnemyPointGroup, libkmp.ItemPointGroup) ):
+                #self.level_file.enemypointgroups.groups.remove(obj)
+
+                self.level_file.remove_group(obj)
             
-            elif isinstance(obj, libbol.Route):
+            elif isinstance(obj, libkmp.Route):
                 #set all 
                 route_index = 0
                 for i, route in enumerate(self.level_file.routes):
@@ -2951,11 +2421,7 @@ class GenEditor(QMainWindow):
                 self.level_file.routes.remove(obj)
             
                 self.level_file.reset_routes( route_index )
-            
-            elif isinstance(obj, libbol.LightParam):
-                self.level_file.lightparams.remove(obj)
-            elif isinstance(obj, libbol.MGEntry):
-                self.level_file.mgentries.remove(obj)
+       
         self.level_view.selected = []
         self.level_view.selected_positions = []
         self.level_view.selected_rotations = []
@@ -2974,17 +2440,10 @@ class GenEditor(QMainWindow):
         
         #print("old", self.level_file.routes[old].used_by, "new", self.level_file.routes[new].used_by)
         
-        if (isinstance(obj, libbol.Camera)):
-            if old != -1 and ( obj in self.level_file.routes or obj) :
-                self.level_file.cameraroutes[old].used_by.remove(obj)
-            if new != -1:
-                self.level_file.cameraroutes[new].used_by.append(obj)
-        else:
-
-            if old != -1 and ( obj in self.level_file.routes or obj) :
-                self.level_file.routes[old].used_by.remove(obj)
-            if new != -1:
-                self.level_file.routes[new].used_by.append(obj)
+        if old != -1:
+            self.level_file.routes[old].used_by.remove(obj)
+        if new != -1:
+            self.level_file.routes[new].used_by.append(obj)
         
         #print("old", self.level_file.routes[old].used_by, "new", self.level_file.routes[new].used_by)
         
@@ -2999,8 +2458,7 @@ class GenEditor(QMainWindow):
             self.level_file.cameras[old].used_by.remove(obj)
         if new != -1:
             self.level_file.cameras[new].used_by.append(obj)
-  
-
+        
     def update_3d(self):
         self.level_view.gizmo.move_to_average(self.level_view.selected_positions)
         self.level_view.do_redraw()
@@ -3011,21 +2469,28 @@ class GenEditor(QMainWindow):
             if len(selected) == 1:
                 currentobj = selected[0]
                 item = None
-                if isinstance(currentobj, libbol.EnemyPoint):
+                if isinstance(currentobj, libkmp.EnemyPoint):
                     for i in range(self.leveldatatreeview.enemyroutes.childCount()):
                         child = self.leveldatatreeview.enemyroutes.child(i)
                         item = get_treeitem(child, currentobj)
                         if item is not None:
                             break
 
-                elif isinstance(currentobj, libbol.Checkpoint):
+                if isinstance(currentobj, libkmp.ItemPoint):
+                    for i in range(self.leveldatatreeview.itemroutes.childCount()):
+                        child = self.leveldatatreeview.itemroutes.child(i)
+                        item = get_treeitem(child, currentobj)
+                        if item is not None:
+                            break
+
+                elif isinstance(currentobj, libkmp.Checkpoint):
                     for i in range(self.leveldatatreeview.checkpointgroups.childCount()):
                         child = self.leveldatatreeview.checkpointgroups.child(i)
                         item = get_treeitem(child, currentobj)
                         if item is not None:
                             break
 
-                elif isinstance(currentobj, libbol.RoutePoint):
+                elif isinstance(currentobj, libkmp.RoutePoint):
                     to_look_through = self.leveldatatreeview.objectroutes if currentobj.partof.type == 0 else self.leveldatatreeview.cameraroutes
 
 
@@ -3035,15 +2500,15 @@ class GenEditor(QMainWindow):
                         if item is not None:
                             break
 
-                elif isinstance(currentobj, libbol.MapObject):
+                elif isinstance(currentobj, libkmp.MapObject):
                     item = get_treeitem(self.leveldatatreeview.objects, currentobj)
-                elif isinstance(currentobj, libbol.Camera):
+                elif isinstance(currentobj, libkmp.Camera):
                     item = get_treeitem(self.leveldatatreeview.cameras, currentobj)
-                elif isinstance(currentobj, libbol.Area):
+                elif isinstance(currentobj, libkmp.Area):
                     item = get_treeitem(self.leveldatatreeview.areas, currentobj)
-                elif isinstance(currentobj, libbol.JugemPoint):
+                elif isinstance(currentobj, libkmp.JugemPoint):
                     item = get_treeitem(self.leveldatatreeview.respawnpoints, currentobj)
-                elif isinstance(currentobj, libbol.KartStartPoint):
+                elif isinstance(currentobj, libkmp.KartStartPoint):
                     item = get_treeitem(self.leveldatatreeview.kartpoints, currentobj)
 
                 #assert item is not None
@@ -3065,19 +2530,12 @@ class GenEditor(QMainWindow):
                     objects = []
                     for thing in currentobj.used_by:
                         if isinstance(thing, MapObject):
-                            objects.append(get_full_name(thing.objectid))
+                            objects.append(get_kmp_name(thing.objectid))
                         elif isinstance(thing, Camera):
                             for i, camera in enumerate(self.level_file.cameras):
                                 if camera is thing:
                                     objects.append("Camera {0}".format(i))
-                    """
-                    
-                    
-                    for object in self.level_file.objects.objects:
-                        if object.route == index:
-                            objects.append(get_full_name(object.objectid))
-                    
-                    """
+
                     
                     self.pik_control.set_info(currentobj, self.update_3d, objects)
                 else:
@@ -3088,11 +2546,15 @@ class GenEditor(QMainWindow):
                 
                 
                 
-            else:
-                #something is selected
-                
-                self.pik_control.reset_info("{0} objects selected".format(len(self.level_view.selected)))
-                self.pik_control.set_objectlist(selected)
+            else:            
+                #need a way to add a control for cameras being selected
+                if self.leveldatatreeview.cameras.isSelected():
+                    self.pik_control.set_info(self.leveldatatreeview.cameras.bound_to, self.update_3d)
+                    self.pik_control.update_info()
+                    
+                else:
+                    self.pik_control.reset_info("{0} objects selected".format(len(self.level_view.selected)))
+                    self.pik_control.set_objectlist(selected)
 
     @catch_exception
     def mapview_showcontextmenu(self, position):
@@ -3140,35 +2602,131 @@ class GenEditor(QMainWindow):
         self.statusbar.showMessage(str(pos))
 
         
+    def action_connectedto_end(self):
+        
+        if self.connect_start is not None and self.level_view.connecting_mode:
+            self.ready_to_connect = True
+        else:
+            self.ready_to_connect = False
+
+                 
+
+    def action_connectedto_final(self):
+        if not self.ready_to_connect:
+            return
+        self.ready_to_connect = False
+
+        #create a new group
+        if len(self.level_view.selected) == 0:
+            to_deal_with = self.level_file.enemypointgroups if isinstance(self.connect_start, EnemyPoint) else self.level_file.itempointgroups
+            obj = self.connect_start
+            start_groupind, start_group, start_pointind = to_deal_with.find_group_of_point(self.connect_start)
+            if start_group.num_next() == 6:
+                return
+
+            point_to_add = libkmp.EnemyPoint.new() if isinstance(obj, EnemyPoint) else libkmp.ItemPoint.new()
+            group_to_add = libkmp.EnemyPointGroup.new() if isinstance(obj, EnemyPoint) else libkmp.ItemPointGroup.new()
+            if start_pointind == len(start_group.points) - 1:
+                group_to_add.id = to_deal_with.new_group_id()
+                to_deal_with.groups.append(group_to_add)
+                self.object_to_be_added = [point_to_add, group_to_add.id, 0 ]
+            else:
+                self.split_group( start_group, self.connect_start )
+
+                group_to_add.id = to_deal_with.new_group_id()
+                to_deal_with.groups.append(group_to_add)
+
+                group_to_add.add_new_prev(start_groupind)
+                start_group.add_new_next(group_to_add.id)
+
+                self.object_to_be_added = [point_to_add, group_to_add.id, 0 ]
+
+            self.pik_control.button_add_object.setChecked(True)
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
+
+
+        elif len(self.level_view.selected) != 1:
+            return
+        else:
+            endpoint = self.level_view.selected[0]
+
+            if isinstance(endpoint, EnemyPoint) and isinstance(self.connect_start, EnemyPoint):
+                to_deal_with = self.level_file.enemypointgroups
+            elif isinstance(endpoint, ItemPoint) and isinstance(self.connect_start, ItemPoint):
+                to_deal_with = self.level_file.itempointgroups
+        
+            if to_deal_with is not None:
+                self.connect_two_groups(endpoint, to_deal_with)
+                return
             
 
+        self.connect_start = None
+        
+
+        self.leveldatatreeview.set_objects(self.level_file)
+        self.update_3d()
+        self.set_has_unsaved_changes(True)   
+
+    def connect_two_groups(self, endpoint, to_deal_with):
+        if endpoint == self.connect_start:
+            return
+
+        end_groupind, end_group, end_pointind = to_deal_with.find_group_of_point(endpoint)
+        
+        start_groupind, start_group, start_pointind = to_deal_with.find_group_of_point(self.connect_start)
+
+        #make sure that start_group is good to add another
+        if start_group.num_next() == 6:
+            return
+
+        #if drawing from and endpoint to a startpoint of the next group
+        if (start_pointind + 1 == len(start_group.points) and end_pointind == 0):
+            if end_group.num_prev() < 6:
+                start_group.add_new_next( end_groupind  )
+                end_group.add_new_prev(start_groupind)
+            
+            return
+
+        self.split_group( start_group, self.connect_start )
+        group_1 = to_deal_with.groups[-1]
+        self.split_group( end_group, end_group.points[end_pointind - 1])
+        group_2 = to_deal_with.groups[-1]
+
+        #redo connections
+        start_group.add_new_next(group_2.id)
+        #group_1.add_new_next(group_2.id)
+        group_2.add_new_prev(start_groupind)
+
+
     def set_and_start_copying(self):
-        print(self.level_view.selected)
-        print(isinstance( self.level_view.selected[0], (MapObject, Area, Camera)))
-        if len(self.level_view.selected) == 1 and isinstance( self.level_view.selected[0], (MapObject, Area, Camera)):
+        #print(self.level_view.selected)
+        
+
+        if len(self.level_view.selected) == 1 and self.level_view.selected[0].can_copy:
             self.obj_to_copy = self.level_view.selected[0]
             self.copy_current_obj()
+
 
 
     def copy_current_obj(self):
         if self.obj_to_copy is not None:
             self.object_to_be_added = None
             #if isinstance(self.obj_to_copy, libbol.MapObject) and self.obj_to_copy.route_info == 2: 
-            if isinstance(self.obj_to_copy, (Camera, MapObject)) and self.obj_to_copy.route_info is not None : 
+            if isinstance(self.obj_to_copy, (libkmp.MapObject, Camera) ) and self.obj_to_copy.route_info is not None : 
                 
                 self.objects_to_be_added = []
                 
-                new_route = libbol.Route()    
+                new_route = libkmp.Route()    
                 
                 if self.obj_to_copy.route != -1 :
                     for point in self.level_file.routes[self.obj_to_copy.route].points: 
-                        new_point = libbol.RoutePoint.new()
+                        new_point = libkmp.RoutePoint.new()
                         new_point.partof = new_route
                         new_point.position = point.position - self.obj_to_copy.position
                         new_route.points.append(new_point)
                 else:
                     for i in range(2):
-                        point = libbol.RoutePoint.new()
+                        point = libkmp.RoutePoint.new()
                         new_point.partof = new_route
                         new_route.points.append(point)
                 
@@ -3181,7 +2739,7 @@ class GenEditor(QMainWindow):
             else:
                 self.object_to_be_added = [self.obj_to_copy, None, None ]
             self.pik_control.button_add_object.setChecked(True)
-            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
         #will use self.obj_to_copy
 
 
@@ -3192,9 +2750,6 @@ class GenEditor(QMainWindow):
         self.level_view.do_redraw()
         
         self.update_3d()
-
-
-
 
 def find_file(rarc_folder, ending):
     for filename in rarc_folder.files.keys():
@@ -3227,28 +2782,11 @@ class Application(QtWidgets.QApplication):
     def notify(self, receiver: QtCore.QObject, event: QtCore.QEvent) -> bool:
         if event.type() in POTENTIALLY_EDITING_EVENTS:
             if isinstance(receiver, QtGui.QWindow):
-                self.document_potentially_changed.emit()
-
-        return super().notify(receiver, event)
-
-
-
-POTENTIALLY_EDITING_EVENTS = (
-    QtCore.QEvent.KeyRelease,
-    QtCore.QEvent.MouseButtonRelease,
-)
-
-
-class Application(QtWidgets.QApplication):
-
-    document_potentially_changed = QtCore.pyqtSignal()
-
-    def notify(self, receiver: QtCore.QObject, event: QtCore.QEvent) -> bool:
-        if event.type() in POTENTIALLY_EDITING_EVENTS:
-            if isinstance(receiver, QtGui.QWindow):
                 QtCore.QTimer.singleShot(0, self.document_potentially_changed)
 
         return super().notify(receiver, event)
+
+
 
 
 if __name__ == "__main__":
@@ -3325,6 +2863,7 @@ if __name__ == "__main__":
 
         app.document_potentially_changed.connect(
             editor_gui.on_document_potentially_changed)
+
 
         editor_gui.show()
 
