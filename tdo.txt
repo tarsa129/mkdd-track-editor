@@ -1,6 +1,6 @@
 mkwii to do list:
 
-- add arrows for directions
+- add arrows for directions of links in enemy/item/checkpoints
 
 fix local bugs found (make sure that current qol works and is relevant to mkwii)
 compare scale to lorenzis for enemy points
@@ -17,7 +17,7 @@ when selecting areas, the camera and route should also be highlighted
 
 mkwii optimizations
 
-checkpoints: also link groups together in render
+checkpoints: link groups together in render
 object: all those .json files
 routes: show splines
 area: highlight camera / route point when relevant. deal with area routes
