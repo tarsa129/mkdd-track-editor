@@ -268,14 +268,14 @@ class RespawnEntry(NamedItem):
         for i in range(self.parent().childCount()):
             if self == self.parent().child(i):
                 #self.setText(0, "Respawn Point {0} (ID: {1})".format(i, self.bound_to.respawn_id))
-                self.setText(0, "Respawn ID: ({0})".format(self.bound_to.respawn_id))
+                self.setText(0, "Respawn ID: ({0})".format(i))
                 break
 
 class CannonEntry(NamedItem):
     def update_name(self):
         for i in range(self.parent().childCount()):
             if self == self.parent().child(i):
-                #self.setText(0, "Respawn Point {0} (ID: {1})".format(i, self.bound_to.respawn_id))
+             
                 self.setText(0, "Cannon ID: ({0})".format(self.bound_to.id))
                 break
 
@@ -284,7 +284,7 @@ class MissionEntry(NamedItem):
     def update_name(self):
         for i in range(self.parent().childCount()):
             if self == self.parent().child(i):
-                #self.setText(0, "Respawn Point {0} (ID: {1})".format(i, self.bound_to.respawn_id))
+              
                 self.setText(0, "Mission ID: ({0})".format(self.bound_to.mission_id))
                 break
 

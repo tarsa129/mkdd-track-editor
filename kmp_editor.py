@@ -2389,7 +2389,8 @@ class GenEditor(QMainWindow):
             elif isinstance(obj, libkmp.KartStartPoint):
                 self.level_file.kartpoints.positions.remove(obj)
             elif isinstance(obj, libkmp.JugemPoint):
-                self.level_file.respawnpoints.remove(obj)
+                self.level_file.remove_respawn(obj)
+                #self.level_file.respawnpoints.remove(obj)
             elif isinstance(obj, libkmp.Area):
                 if obj.camera_index != -1 and obj.camera_index < len(self.level_file.areas.areas):
                     self.level_file.cameras[obj.camera_index].used_by.remove(obj)

@@ -708,7 +708,11 @@ class Checkpoint(object):
         return cls(Vector3(0.0, 0.0, 0.0),
                    Vector3(0.0, 0.0, 0.0))
 
-
+    def assign_to_closest(self, respawns):
+        mid = (self.start + self.end) / 2
+        distances = [ respawn.position.distance( mid  ) for respawn in respawns ]
+        smallest = [ i for i, x in enumerate(distances) if x == min(distances)]
+        self.respawn = smallest[0]
    
 
     @classmethod
@@ -1528,7 +1532,7 @@ class JugemPoint(object):
     def __init__(self, position):
         self.position = position
         self.rotation = Rotation.default()
-        self.respawn_id = 0
+        #self.respawn_id = 0
         self.range = 0
 
 
@@ -1547,7 +1551,8 @@ class JugemPoint(object):
         jugem.rotation = Rotation.from_file(f)
         
         
-        jugem.respawn_id = read_uint16(f)
+        #jugem.respawn_id = read_uint16(f)
+        read_uint16(f)
 
         jugem.range = read_int16(f)
 
@@ -2151,23 +2156,6 @@ class KMP(object):
         self.remove_unused_cameras()
         self.remove_unused_routes()
         self.copy_enemy_to_item()
-
-    def set_checkpoint_respawns():
-    
-        for checkgroup in self.checkpoints.groups:
-            for checkpoint in checkgroup.points:
-                closest_idx = -1
-                closest_dis = 9999999999999999
-                for i, point in enumerate( self.respawnpoints ):
-                    center = (checkpoint.start + checkpoint.end ) / 2.0
-                    dis = point.position.distance(center)
-                    if dis < closest_dis:
-                        closest_idx = i
-                        closest_dis = dis
-                checkpoint.unk1 = closest_idx
-                    
-    
-        pass
     
     def reset_routes(self, start_at = 0):
         for route_index in range(start_at, len(self.routes) ):
@@ -2282,7 +2270,7 @@ class KMP(object):
 
 
                 respawn_new = JugemPoint( (checkpoint_mid1 + checkpoint_mid2) / 2 )
-                respawn_new.respawn_id = rsp_idx
+                #respawn_new.respawn_id = rsp_idx
 
                 for j in range(i - 4, i + 4):
                     checkgroup.points[j].respawn = rsp_idx
@@ -2303,10 +2291,26 @@ class KMP(object):
         
         for checkgroup in self.checkpoints.groups:
             for checkpoint in checkgroup.points:
-                mid = (checkpoint.start + checkpoint.end) / 2
-                distances = [ respawn.position.distance( mid  ) for respawn in self.respawnpoints ]
-                smallest = [ i for i, x in enumerate(distances) if x == min(distances)]
-                checkpoint.respawn = smallest[0]
+                checkpoint.assign_to_closest(self.respawnpoints)
+
+    def remove_respawn(self, rsp: JugemPoint):
+        respawn_idx = self.get_index_of_respawn(rsp)
+        self.respawnpoints.remove(rsp)
+        if respawn_idx != -1:
+            #edit the respawn link of all checkpoints
+            for checkgroup in self.checkpoints.groups:
+                for checkpoint in checkgroup.points:
+                    if checkpoint.respawn > respawn_idx:
+                        checkpoint.respawn -= 1
+                    elif checkpoint.respawn == respawn_idx:
+                        checkpoint.assign_to_closest(self.respawnpoints)
+
+
+    def get_index_of_respawn(self, rsp: JugemPoint):
+        for i, respawn in enumerate( self.respawnpoints) :
+            if rsp == respawn:
+                return i
+        return -1
 
     def remove_group(self, del_group):
         if isinstance(del_group, EnemyPointGroup):
