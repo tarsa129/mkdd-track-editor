@@ -998,9 +998,9 @@ class GenEditor(QMainWindow):
         new_group = group.copy_group_after(new_id, point)
         self.level_file.checkpoints.groups.append(new_group)
         group.remove_after(point)
-        new_group.prevlinks = [group.grouplink, -1, -1, -1, -1, -1]
+        new_group.prevlinks = [group.id, -1, -1, -1, -1, -1]
         new_group.nextlinks = deepcopy(group.nextgroup)
-        group.nextgroup = [new_group.grouplink, -1, -1, -1, -1, -1]
+        group.nextgroup = [new_group.id, -1, -1, -1, -1, -1]
 
         self.leveldatatreeview.set_objects(self.level_file)
         self.update_3d()
@@ -1683,7 +1683,7 @@ class GenEditor(QMainWindow):
             
             self.object_to_be_added = None
         elif option == 13: #add new checkpoint to end
-            self.object_to_be_added = [libkmp.Checkpoint.new(), obj.grouplink, -1 ]
+            self.object_to_be_added = [libkmp.Checkpoint.new(), obj.id, -1 ]
             #self.object_to_be_added[0].group = obj.id
             #actively adding objects
             self.pik_control.button_add_object.setChecked(True)

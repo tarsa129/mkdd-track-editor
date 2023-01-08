@@ -666,7 +666,7 @@ class ItemPointEdit(DataEditor):
 
 class CheckpointGroupEdit(DataEditor):
     def setup_widgets(self):
-        self.grouplink = self.add_integer_input("Group ID", "id",
+        self.id = self.add_integer_input("Group ID", "id",
                                                 MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
         self.prevgroup = self.add_multiple_integer_input_list("Previous Groups", "prevgroup",
                                                               MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
@@ -675,7 +675,7 @@ class CheckpointGroupEdit(DataEditor):
 
     def update_data(self):
         obj = self.bound_to
-        self.grouplink.setText(str(obj.id))
+        self.id.setText(str(obj.id))
         for i, widget in enumerate(self.prevgroup):
             widget.setText(str(obj.prevgroup[i]))
         for i, widget in enumerate(self.nextgroup):

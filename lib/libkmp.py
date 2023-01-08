@@ -748,7 +748,7 @@ class Checkpoint(object):
         return key
 
 class CheckpointGroup(PointGroup):
-    def __init__(self, grouplink):
+    def __init__(self, id):
         super().__init__()
 
     @classmethod
