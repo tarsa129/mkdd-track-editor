@@ -1270,18 +1270,28 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     glColor3f(*colors[i % 4])
 
                     #draw the lines between the points and between successive points
-                    glBegin(GL_LINES)
+                    
                     for checkpoint in group.points:
                         pos1 = checkpoint.start
                         pos2 = checkpoint.end
 
-                        #self.models.render_generic_position(pos1, False)
-                        #self.models.render_generic_position(pos2, False)
+                        if checkpoint.type == 1:
+                            glColor3f( 1.0, 1.0, 0.0 )
+                            glLineWidth(4.0)
+                        else:
+                            glColor3f(*colors[i % 4])
+                            glLineWidth(1.0)
+                        
+                        glBegin(GL_LINES)
 
                         glVertex3f(pos1.x, -pos1.z, pos1.y)
                         glVertex3f(pos2.x, -pos2.z, pos2.y)
                         #glColor3f(0.0, 0.0, 0.0)
+                        glEnd()
 
+                        glColor3f(*colors[i % 4])
+                        glLineWidth(1.0)
+                        glBegin(GL_LINES)
                         if prev is not None:
                             pos3 = prev.start
                             pos4 = prev.end
@@ -1291,27 +1301,30 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                             glVertex3f(pos2.x, -pos2.z, pos2.y)
                             glVertex3f(pos4.x, -pos4.z, pos4.y)
 
+                        glEnd()
                         prev = checkpoint
 
-                    glEnd()
-
-              
-
                 if checkpoints_to_highlight:
-                    glLineWidth(4.0)
+                    glLineWidth(8.0)
                     point_index = 0
                     for i, group in enumerate(self.level_file.checkpoints.groups):
-                        glColor3f(*colors[i % 4])
                         for checkpoint in group.points:
                             if point_index in checkpoints_to_highlight:
                                 pos1 = checkpoint.start
                                 pos2 = checkpoint.end
+
+                                if checkpoint.type == 1:
+                                    glColor3f( 1.0, 1.0, 0.0 )
+                                else:
+                                    glColor3f(*colors[i % 4])
+
                                 glBegin(GL_LINES)
                                 glVertex3f(pos1.x, -pos1.z, pos1.y)
                                 glVertex3f(pos2.x, -pos2.z, pos2.y)
                                 glEnd()
                             point_index += 1
-                    glLineWidth(1.0)
+                glColor3f(*colors[i % 4])
+                glLineWidth(1.0)
 
             glPushMatrix()
             
