@@ -1401,7 +1401,10 @@ class Areas(object):
         f.seek(end_sec)
 # Section 8
 # Cameras
-
+class FOV:
+    def __ini__(self):
+        self.start = 0
+        self.end = 0
 class Cameras(list):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -1432,10 +1435,7 @@ class Camera(object):
         self.position = position
         self.rotation = Rotation.default()
 
-        class FOV:
-            def __ini__(self):
-                self.start = 0
-                self.end = 0
+        
 
         self.fov = FOV()
 
@@ -1768,6 +1768,40 @@ class KMP(object):
         for mission in self.missionpoints:
             assert mission is not None
             yield mission
+
+    def get_all_objects(self):
+        objects = []
+
+        for group in self.enemypointgroups.groups:
+            objects.append(group)
+            objects.extend(group.points)
+
+        for group in self.itempointgroups.groups:
+            objects.append(group)
+            objects.extend(group.points)
+
+        for group in self.checkpoints.groups:
+            objects.append(group)
+            objects.extend(group.points)
+
+        for route in self.routes:
+            objects.append(route)
+            objects.extend(route.points)
+
+        for route in self.cameraroutes:
+            objects.append(route)
+            objects.extend(route.points)
+
+        objects.extend(self.objects.objects)
+        objects.extend(self.kartpoints.positions)
+        objects.extend(self.areas.areas)
+        objects.extend(self.cameras)
+        objects.extend(self.respawnpoints)
+        objects.extend(self.cannonpoints)
+        objects.extend(self.missionpoints)
+
+        return objects
+
 
     @classmethod
     def from_file(cls, f):

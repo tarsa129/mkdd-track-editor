@@ -26,7 +26,7 @@ from widgets.tree_view import LevelDataTreeView
 import widgets.tree_view as tree_view
 from configuration import read_config, make_default_config, save_cfg
 
-import mkwii_widgets # as mkddwidgets
+import mkwii_widgets 
 from widgets.side_widget import PikminSideWidget
 from widgets.editor_widgets import open_error_dialog, catch_exception_with_dialog
 from widgets.data_editor import load_route_info
@@ -997,7 +997,7 @@ class GenEditor(QMainWindow):
         self.level_view.rotate_current.connect(self.action_rotate_object)
         self.leveldatatreeview.select_all.connect(self.select_all_of_group)
         self.leveldatatreeview.reverse.connect(self.reverse_all_of_group)
-        self.leveldatatreeview.duplicate.connect(self.duplicate_group)
+        self.leveldatatreeview.duplicate.connect(self.duplicate_group_from_tree)
         self.leveldatatreeview.split.connect(self.split_group_from_tree)
     
     
@@ -1021,12 +1021,16 @@ class GenEditor(QMainWindow):
         self.set_has_unsaved_changes(True)
 
 
-    def duplicate_group(self, item):
+    def duplicate_group_from_tree(self, item):
         group = item.bound_to
         if not isinstance(group, PointGroup) :
             return
+        self.duplicate_group(self, group)
         #make sure that a group *can* be duplicated by checking the group's next to see if all can handle another prev, and all prev to see if they can handle another next
         
+        
+
+    def duplicate_group(self, group):
         to_deal_with = self.level_file.get_to_deal_with(group) 
 
         if not to_deal_with.check_if_duplicate_possible(group):
@@ -2154,8 +2158,6 @@ class GenEditor(QMainWindow):
                 elif isinstance(object, libkmp.Camera):
                     self.level_file.cameras.append(placeobject)
                 elif isinstance(object, Route):
-                    #placeobject.points.append( libbol.RoutePoint( Vector3(x, y, z) ))
-                    #placeobject.points.append( libbol.RoutePoint( Vector3(x, y, z) ))
                     if object.type == 0:
                         self.level_file.routes.append(placeobject)
                     elif object.type == 1:
@@ -2515,12 +2517,21 @@ class GenEditor(QMainWindow):
         # Widgets are unpickleable, so they need to be temporarily stashed. This needs to be done
         # recursively, as top-level groups main contain points associated with widgets too.
         object_to_widget = {}
+        object_to_usedby = {}
+        object_to_partof = {}
         pending = list(self.level_view.selected)
+        print(len(pending))
         while pending:
             obj = pending.pop(0)
             if hasattr(obj, 'widget'):
                 object_to_widget[obj] = obj.widget
                 obj.widget = None
+            if hasattr(obj, 'used_by'):
+                object_to_usedby[obj] = obj.used_by
+                obj.used_by = None
+            if hasattr(obj, 'partof'):
+                object_to_partof[obj] = obj.partof
+                obj.partof = None
             if hasattr(obj, '__dict__'):
                 pending.extend(list(obj.__dict__.values()))
             if isinstance(obj, list):
@@ -2529,17 +2540,20 @@ class GenEditor(QMainWindow):
             # Effectively serialize the data.
             data = pickle.dumps(self.level_view.selected)
         finally:
-            # Restore the widgets.
+            # Restore the widgets and usedby.
             for obj, widget in object_to_widget.items():
                 obj.widget = widget
-
+            for obj, widget in object_to_usedby.items():
+                obj.used_by = widget
+            for obj, partof in object_to_partof.items():
+                obj.partof = partof
         mimedata = QtCore.QMimeData()
-        mimedata.setData("application/mkdd-track-editor", QtCore.QByteArray(data))
+        mimedata.setData("application/mkwii-track-editor", QtCore.QByteArray(data))
         QtWidgets.QApplication.instance().clipboard().setMimeData(mimedata)
 
     def on_paste_action_triggered(self):
         mimedata = QtWidgets.QApplication.instance().clipboard().mimeData()
-        data = bytes(mimedata.data("application/mkdd-track-editor"))
+        data = bytes(mimedata.data("application/mkwii-track-editor"))
         if not data:
             return
 
@@ -2556,25 +2570,18 @@ class GenEditor(QMainWindow):
         target_checkpoint_group = None
         target_route = None
 
-        if isinstance(selected_obj, libbol.EnemyPointGroup):
-            target_path = selected_obj
-        elif isinstance(selected_obj, libbol.EnemyPoint):
-            for group in self.level_file.enemypointgroups.groups:
-                if group.id == selected_obj.group:
-                    target_path = group
-                    break
-
-        if isinstance(selected_obj, libbol.CheckpointGroup):
-            target_checkpoint_group = selected_obj
-        elif isinstance(selected_obj, libbol.Checkpoint):
-            for group in self.level_file.checkpoints.groups:
+        if isinstance(selected_obj, KMPPoint):
+            to_deal_with = self.level_file.get_to_deal_with(selected_obj)
+            groupind, target_path, pointind = to_deal_with.find_group_of_point(selected_obj)
+            for group in to_deal_with.groups:
                 if selected_obj in group.points:
-                    target_checkpoint_group = group
                     break
+        elif isinstance(selected_obj, PointGroup):
+            target_path = selected_obj
 
-        if isinstance(selected_obj, libbol.Route):
+        if isinstance(selected_obj, libkmp.Route):
             target_route = selected_obj
-        elif isinstance(selected_obj, libbol.RoutePoint):
+        elif isinstance(selected_obj, libkmp.RoutePoint):
             for route in self.level_file.routes:
                 if selected_obj in route.points:
                     target_route = route
@@ -2584,68 +2591,59 @@ class GenEditor(QMainWindow):
 
         for obj in copied_objects:
             # Group objects.
-            if isinstance(obj, libbol.EnemyPointGroup):
-                obj.id = self.level_file.enemypointgroups.new_group_id()
-                self.level_file.enemypointgroups.groups.append(obj)
-                for point in obj.points:
-                    point.link = -1
-                    point.group_id = obj.id
-            elif isinstance(obj, libbol.CheckpointGroup):
-                self.level_file.checkpoints.groups.append(obj)
-            elif isinstance(obj, libbol.Route):
-                self.level_file.routes.append(obj)
+            if isinstance(obj, PointGroup):
+                self.duplicate_group(obj)
+                #to_deal_with = self.level_file.get_to_deal_with(obj)
+                #obj.id = self.level_file.enemypointgroups.new_group_id()
+                #self.level_file.enemypointgroups.groups.append(obj)
+
+            elif isinstance(obj, libkmp.Route):
+                obj.used_by = []
+                if obj.type == 0:
+                    self.level_file.routes.append(obj)
+                else:
+                    self.level_file.cameraroutes.append(obj)
 
             # Objects in group objects.
-            elif isinstance(obj, libbol.EnemyPoint):
+            elif isinstance(obj, libkmp.KMPPoint):
+                to_deal_with = self.level_file.get_to_deal_with(obj)
                 if target_path is None:
                     if not self.level_file.enemypointgroups.groups:
-                        self.level_file.enemypointgroups.groups.append(libbol.EnemyPointGroup.new())
+                        self.level_file.enemypointgroups.groups.append(libkmp.EnemyPointGroup.new())
                     target_path = self.level_file.enemypointgroups.groups[-1]
 
-                obj.group = target_path.id
-                if not target_path.points:
-                    obj.link = 0
-                else:
-                    obj.link = target_path.points[-1].link
-                    if len(target_path.points) > 1:
-                        target_path.points[-1].link = -1
+              
                 target_path.points.append(obj)
 
-            elif isinstance(obj, libbol.Checkpoint):
-                if target_checkpoint_group is None:
-                    if not self.level_file.checkpoints.groups:
-                        self.level_file.checkpoints.groups.append(libbol.CheckpointGroup.new())
-                    target_checkpoint_group = self.level_file.checkpoints.groups[-1]
-
-                target_checkpoint_group.points.append(obj)
-
-            elif isinstance(obj, libbol.RoutePoint):
+            elif isinstance(obj, libkmp.RoutePoint):
                 if target_route is None:
                     if not self.level_file.routes:
-                        self.level_file.routes.append(libbol.Route.new())
+                        self.level_file.routes.append(libkmp.Route.new())
                     target_route = self.level_file.routes[-1]
 
                 target_route.points.append(obj)
 
             # Autonomous objects.
-            elif isinstance(obj, libbol.MapObject):
+            elif isinstance(obj, libkmp.MapObject):
                 self.level_file.objects.objects.append(obj)
-            elif isinstance(obj, libbol.KartStartPoint):
+            elif isinstance(obj, libkmp.KartStartPoint):
                 self.level_file.kartpoints.positions.append(obj)
-            elif isinstance(obj, libbol.JugemPoint):
-                max_respawn_id = -1
-                for point in self.level_file.respawnpoints:
-                    max_respawn_id = max(point.respawn_id, max_respawn_id)
-                obj.respawn_id = max_respawn_id + 1
+            elif isinstance(obj, libkmp.JugemPoint):
+                
                 self.level_file.respawnpoints.append(obj)
-            elif isinstance(obj, libbol.Area):
+            elif isinstance(obj, libkmp.Area):
                 self.level_file.areas.areas.append(obj)
-            elif isinstance(obj, libbol.Camera):
+            elif isinstance(obj, libkmp.Camera):
+                obj.used_by = []
                 self.level_file.cameras.append(obj)
-            elif isinstance(obj, libbol.LightParam):
-                self.level_file.lightparams.append(obj)
-            elif isinstance(obj, libbol.MGEntry):
-                self.level_file.mgentries.append(obj)
+            elif isinstance(obj, libkmp.CannonPoint):
+                max_cannon_id = -1
+                for point in self.level_file.cannonpoints:
+                    max_cannon_id = max(point.id, max_cannon_id)
+                obj.id = max_cannon_id + 1
+                self.level_file.cannonpoints.append(obj)
+            elif isinstance(obj, libkmp.MissionPoint):
+                self.level_file.missionpoints.append(obj)
             else:
                 continue
 
@@ -2951,7 +2949,7 @@ class GenEditor(QMainWindow):
     def copy_current_obj(self):
         if self.obj_to_copy is not None:
             self.object_to_be_added = None
-            #if isinstance(self.obj_to_copy, libbol.MapObject) and self.obj_to_copy.route_info == 2: 
+            #if isinstance(self.obj_to_copy, libkmp.MapObject) and self.obj_to_copy.route_info == 2: 
             if isinstance(self.obj_to_copy, (libkmp.MapObject, Camera) ) and self.obj_to_copy.route_info is not None : 
                 
                 self.objects_to_be_added = []
