@@ -143,21 +143,21 @@ class MoreButtons(QWidget):
             
                 all_options = False
                 new_item_copy = QPushButton(self)
-                new_item_copy.setText("Copy Current Object (Same Route)")
+                new_item_copy.setText("Copy and Place Current Object (Same Route)")
                 new_item_copy.clicked.connect(lambda: self.parent.button_add_from_addi_options(4, option.bound_to.copy()) )
                 self.vbox.addWidget(new_item_copy)
             
             
                 all_options = False
                 new_item_copy = QPushButton(self)
-                new_item_copy.setText("Copy Current Object (New Route)")
+                new_item_copy.setText("Copy and Place Current Object (New Route)")
                 new_item_copy.clicked.connect(lambda: self.parent.button_add_from_addi_options(4.5, option.bound_to.copy()) )
                 self.vbox.addWidget(new_item_copy)
         
             else:
                 all_options = False
                 new_item_copy = QPushButton(self)
-                new_item_copy.setText("Copy Current Object")
+                new_item_copy.setText("Copy and Place Current Object")
                 new_item_copy.clicked.connect(lambda: self.parent.button_add_from_addi_options(4, option.bound_to.copy()) )
                 self.vbox.addWidget(new_item_copy)
       
@@ -230,7 +230,7 @@ class MoreButtons(QWidget):
                 
 
                 copy_camera = QPushButton(self)
-                copy_camera.setText("Copy Camera (New Route)")
+                copy_camera.setText("Copy and Place Camera (New Route)")
                 copy_camera.clicked.connect(lambda: self.parent.button_add_from_addi_options(4.5, option.bound_to.copy()) )
                 self.vbox.addWidget(copy_camera)
                 
@@ -240,7 +240,7 @@ class MoreButtons(QWidget):
                 self.vbox.addWidget(snap_camera)
             else:
                 copy_camera = QPushButton(self)
-                copy_camera.setText("Copy Camera")
+                copy_camera.setText("Copy and Place Camera")
                 copy_camera.clicked.connect(lambda: self.parent.button_add_from_addi_options(4, option.bound_to.copy()) )
                 self.vbox.addWidget(copy_camera)
 

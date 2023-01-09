@@ -661,6 +661,12 @@ class GenEditor(QMainWindow):
         self.copy_action = self.edit_menu.addAction("Copy")
         self.copy_action.setShortcut(QtGui.QKeySequence('Ctrl+C'))
         self.copy_action.triggered.connect(self.on_copy_action_triggered)
+
+
+        self.copy_and_place_action = self.edit_menu.addAction("Copy and Place")
+        self.copy_and_place_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+C'))
+        self.copy_and_place_action.triggered.connect(self.set_and_start_copying)
+
         self.paste_action = self.edit_menu.addAction("Paste")
         self.paste_action.setShortcut(QtGui.QKeySequence('Ctrl+V'))
         self.paste_action.triggered.connect(self.on_paste_action_triggered)
@@ -1285,8 +1291,7 @@ class GenEditor(QMainWindow):
         delete_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence(Qt.Key_Delete), self)
         delete_shortcut.activated.connect(self.action_delete_objects)
 
-        copy_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence(Qt.CTRL + Qt.Key_C), self)
-        copy_shortcut.activated.connect(self.set_and_start_copying)
+       
 
         self.level_view.rotate_current.connect(self.action_rotate_object)
         self.leveldatatreeview.select_all.connect(self.select_all_of_group)
@@ -3367,8 +3372,8 @@ class GenEditor(QMainWindow):
             
 
     def set_and_start_copying(self):
-        print(self.level_view.selected)
-        print(isinstance( self.level_view.selected[0], (MapObject, Area, Camera)))
+        #print(self.level_view.selected)
+        #print(isinstance( self.level_view.selected[0], (MapObject, Area, Camera)))
         if len(self.level_view.selected) == 1 and isinstance( self.level_view.selected[0], (MapObject, Area, Camera)):
             self.obj_to_copy = self.level_view.selected[0]
             self.copy_current_obj()
