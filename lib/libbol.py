@@ -1029,6 +1029,13 @@ AREA_TYPES = {
 
 REVERSE_AREA_TYPES = dict(zip(AREA_TYPES.values(), AREA_TYPES.keys()))
 
+
+class Feather:
+    def __init__(self):
+        self.i0 = 0
+        self.i1 = 0
+
+
 class Area(object):
 
     can_copy = True
@@ -1039,12 +1046,6 @@ class Area(object):
         self.shape = 0
         self.area_type = 0
         self.camera_index = -1
-
-        class Feather:
-            def __init__(self):
-                self.i0 = 0
-                self.i1 = 0
-
         self.feather = Feather()
         self.unkfixedpoint = 0
         self.unkshort = 0
@@ -1132,6 +1133,19 @@ class Areas(object):
 
 # Section 8
 # Cameras
+
+class FOV:
+    def __init__(self):
+        self.start = 0
+        self.end = 0
+
+
+class Shimmer:
+    def __init__(self):
+        self.z0 = 0
+        self.z1 = 0
+
+
 class Camera(object):
     can_copy = True
     route_info = 2
@@ -1494,6 +1508,30 @@ class BOL(object):
             assert respawn is not None
             yield respawn
 
+    def get_all_objects(self):
+        objects = []
+
+        for group in self.enemypointgroups.groups:
+            objects.append(group)
+            objects.extend(group.points)
+
+        for group in self.checkpoints.groups:
+            objects.append(group)
+            objects.extend(group.points)
+
+        for route in self.routes:
+            objects.append(route)
+            objects.extend(route.points)
+
+        objects.extend(self.objects.objects)
+        objects.extend(self.kartpoints.positions)
+        objects.extend(self.areas.areas)
+        objects.extend(self.cameras)
+        objects.extend(self.respawnpoints)
+        objects.extend(self.lightparams)
+        objects.extend(self.mgentries)
+
+        return objects
 
     @classmethod
     def from_file(cls, f):
