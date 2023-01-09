@@ -1,4 +1,5 @@
 from argparse import _MutuallyExclusiveGroup
+import pickle
 import traceback
 import os
 from timeit import default_timer
@@ -544,6 +545,22 @@ class GenEditor(QMainWindow):
         self.redo_action.triggered.connect(self.on_redo_action_triggered)
         self.update_undo_redo_actions()
 
+        self.edit_menu.addSeparator()
+        self.cut_action = self.edit_menu.addAction("Cut")
+        self.cut_action.setShortcut(QtGui.QKeySequence('Ctrl+X'))
+        self.cut_action.triggered.connect(self.on_cut_action_triggered)
+        self.copy_action = self.edit_menu.addAction("Copy")
+        self.copy_action.setShortcut(QtGui.QKeySequence('Ctrl+C'))
+        self.copy_action.triggered.connect(self.on_copy_action_triggered)
+
+        self.copy_and_place_action = self.edit_menu.addAction("Copy and Place")
+        self.copy_and_place_action.setShortcut(QtGui.QKeySequence('Ctrl+Shift+C'))
+        self.copy_and_place_action.triggered.connect(self.set_and_start_copying)
+
+        self.paste_action = self.edit_menu.addAction("Paste")
+        self.paste_action.setShortcut(QtGui.QKeySequence('Ctrl+V'))
+        self.paste_action.triggered.connect(self.on_paste_action_triggered)
+
         self.visibility_menu = mkwii_widgets.FilterViewMenu(self)
         self.visibility_menu.filter_update.connect(self.on_filter_update)
         filters = self.editorconfig["filter_view"].split(",")
@@ -976,8 +993,6 @@ class GenEditor(QMainWindow):
         delete_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence(Qt.Key_Delete), self)
         delete_shortcut.activated.connect(self.action_delete_objects)
 
-        copy_shortcut = QtWidgets.QShortcut(QtGui.QKeySequence(Qt.CTRL + Qt.Key_C), self)
-        copy_shortcut.activated.connect(self.set_and_start_copying)
 
         self.level_view.rotate_current.connect(self.action_rotate_object)
         self.leveldatatreeview.select_all.connect(self.select_all_of_group)
@@ -1372,6 +1387,34 @@ class GenEditor(QMainWindow):
     def shortcut_open_add_item_window(self):
         self.button_open_add_item_window()
 
+    def select_tree_item_bound_to(self, obj):
+        # Iteratively traverse all the tree widget items.
+        pending_items = [self.leveldatatreeview.invisibleRootItem()]
+        while pending_items:
+            item = pending_items.pop(0)
+            for child_index in range(item.childCount()):
+                child_item = item.child(child_index)
+
+                # Check whether the item contains any item that happens to be bound to the target
+                # object.
+                bound_item = get_treeitem(child_item, obj)
+                if bound_item is not None:
+                    # If found, deselect current selection, and select the new item.
+                    for selected_item in self.leveldatatreeview.selectedItems():
+                        selected_item.setSelected(False)
+                    bound_item.setSelected(True)
+
+                    # Ensure that the new item is visible.
+                    parent_item = bound_item.parent()
+                    while parent_item is not None:
+                        parent_item.setExpanded(True)
+                        parent_item = parent_item.parent()
+                    self.leveldatatreeview.scrollToItem(bound_item)
+
+                    return
+                else:
+                    pending_items.append(child_item)
+
     def add_item_window_save(self):
         self.object_to_be_added = self.add_object_window.get_content()
         if self.object_to_be_added is None:
@@ -1398,6 +1441,8 @@ class GenEditor(QMainWindow):
             self.pik_control.button_add_object.setChecked(False)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_NONE)
             self.leveldatatreeview.set_objects(self.level_file)
+
+            self.select_tree_item_bound_to(obj)
 
         elif self.object_to_be_added is not None:
             self.pik_control.button_add_object.setChecked(True)
@@ -1957,6 +2002,8 @@ class GenEditor(QMainWindow):
                 self.level_view.do_redraw()
                 self.set_has_unsaved_changes(True)
                 self.leveldatatreeview.set_objects(self.level_file)
+
+                self.select_tree_item_bound_to(placeobject)
             else:
                 self.last_position_clicked = [(x, y, z)]
 
@@ -2029,6 +2076,7 @@ class GenEditor(QMainWindow):
             self.leveldatatreeview.set_objects(self.level_file)
             self.set_has_unsaved_changes(True)
 
+            self.select_tree_item_bound_to(placeobject)
 
     @catch_exception
     def action_add_objects(self, x, z):
@@ -2459,6 +2507,171 @@ class GenEditor(QMainWindow):
         if new != -1:
             self.level_file.cameras[new].used_by.append(obj)
         
+    def on_cut_action_triggered(self):
+        self.on_copy_action_triggered()
+        self.action_delete_objects()
+
+    def on_copy_action_triggered(self):
+        # Widgets are unpickleable, so they need to be temporarily stashed. This needs to be done
+        # recursively, as top-level groups main contain points associated with widgets too.
+        object_to_widget = {}
+        pending = list(self.level_view.selected)
+        while pending:
+            obj = pending.pop(0)
+            if hasattr(obj, 'widget'):
+                object_to_widget[obj] = obj.widget
+                obj.widget = None
+            if hasattr(obj, '__dict__'):
+                pending.extend(list(obj.__dict__.values()))
+            if isinstance(obj, list):
+                pending.extend(obj)
+        try:
+            # Effectively serialize the data.
+            data = pickle.dumps(self.level_view.selected)
+        finally:
+            # Restore the widgets.
+            for obj, widget in object_to_widget.items():
+                obj.widget = widget
+
+        mimedata = QtCore.QMimeData()
+        mimedata.setData("application/mkdd-track-editor", QtCore.QByteArray(data))
+        QtWidgets.QApplication.instance().clipboard().setMimeData(mimedata)
+
+    def on_paste_action_triggered(self):
+        mimedata = QtWidgets.QApplication.instance().clipboard().mimeData()
+        data = bytes(mimedata.data("application/mkdd-track-editor"))
+        if not data:
+            return
+
+        copied_objects = pickle.loads(data)
+        if not copied_objects:
+            return
+
+        # If an tree item is selected, use it as a reference point for adding the objects that are
+        # about to be pasted.
+        selected_items = self.leveldatatreeview.selectedItems()
+        selected_obj = selected_items[-1].bound_to if selected_items else None
+
+        target_path = None
+        target_checkpoint_group = None
+        target_route = None
+
+        if isinstance(selected_obj, libbol.EnemyPointGroup):
+            target_path = selected_obj
+        elif isinstance(selected_obj, libbol.EnemyPoint):
+            for group in self.level_file.enemypointgroups.groups:
+                if group.id == selected_obj.group:
+                    target_path = group
+                    break
+
+        if isinstance(selected_obj, libbol.CheckpointGroup):
+            target_checkpoint_group = selected_obj
+        elif isinstance(selected_obj, libbol.Checkpoint):
+            for group in self.level_file.checkpoints.groups:
+                if selected_obj in group.points:
+                    target_checkpoint_group = group
+                    break
+
+        if isinstance(selected_obj, libbol.Route):
+            target_route = selected_obj
+        elif isinstance(selected_obj, libbol.RoutePoint):
+            for route in self.level_file.routes:
+                if selected_obj in route.points:
+                    target_route = route
+                    break
+
+        added = []
+
+        for obj in copied_objects:
+            # Group objects.
+            if isinstance(obj, libbol.EnemyPointGroup):
+                obj.id = self.level_file.enemypointgroups.new_group_id()
+                self.level_file.enemypointgroups.groups.append(obj)
+                for point in obj.points:
+                    point.link = -1
+                    point.group_id = obj.id
+            elif isinstance(obj, libbol.CheckpointGroup):
+                self.level_file.checkpoints.groups.append(obj)
+            elif isinstance(obj, libbol.Route):
+                self.level_file.routes.append(obj)
+
+            # Objects in group objects.
+            elif isinstance(obj, libbol.EnemyPoint):
+                if target_path is None:
+                    if not self.level_file.enemypointgroups.groups:
+                        self.level_file.enemypointgroups.groups.append(libbol.EnemyPointGroup.new())
+                    target_path = self.level_file.enemypointgroups.groups[-1]
+
+                obj.group = target_path.id
+                if not target_path.points:
+                    obj.link = 0
+                else:
+                    obj.link = target_path.points[-1].link
+                    if len(target_path.points) > 1:
+                        target_path.points[-1].link = -1
+                target_path.points.append(obj)
+
+            elif isinstance(obj, libbol.Checkpoint):
+                if target_checkpoint_group is None:
+                    if not self.level_file.checkpoints.groups:
+                        self.level_file.checkpoints.groups.append(libbol.CheckpointGroup.new())
+                    target_checkpoint_group = self.level_file.checkpoints.groups[-1]
+
+                target_checkpoint_group.points.append(obj)
+
+            elif isinstance(obj, libbol.RoutePoint):
+                if target_route is None:
+                    if not self.level_file.routes:
+                        self.level_file.routes.append(libbol.Route.new())
+                    target_route = self.level_file.routes[-1]
+
+                target_route.points.append(obj)
+
+            # Autonomous objects.
+            elif isinstance(obj, libbol.MapObject):
+                self.level_file.objects.objects.append(obj)
+            elif isinstance(obj, libbol.KartStartPoint):
+                self.level_file.kartpoints.positions.append(obj)
+            elif isinstance(obj, libbol.JugemPoint):
+                max_respawn_id = -1
+                for point in self.level_file.respawnpoints:
+                    max_respawn_id = max(point.respawn_id, max_respawn_id)
+                obj.respawn_id = max_respawn_id + 1
+                self.level_file.respawnpoints.append(obj)
+            elif isinstance(obj, libbol.Area):
+                self.level_file.areas.areas.append(obj)
+            elif isinstance(obj, libbol.Camera):
+                self.level_file.cameras.append(obj)
+            elif isinstance(obj, libbol.LightParam):
+                self.level_file.lightparams.append(obj)
+            elif isinstance(obj, libbol.MGEntry):
+                self.level_file.mgentries.append(obj)
+            else:
+                continue
+
+            added.append(obj)
+
+        if not added:
+            return
+
+        self.set_has_unsaved_changes(True)
+        self.leveldatatreeview.set_objects(self.level_file)
+
+        self.select_tree_item_bound_to(added[-1])
+        self.level_view.selected = added
+        self.level_view.selected_positions = []
+        self.level_view.selected_rotations = []
+        for obj in added:
+            if hasattr(obj, 'position'):
+                self.level_view.selected_positions.append(obj.position)
+            if hasattr(obj, 'start') and hasattr(obj, 'end'):
+                self.level_view.selected_positions.append(obj.start)
+                self.level_view.selected_positions.append(obj.end)
+            if hasattr(obj, 'rotation'):
+                self.level_view.selected_rotations.append(obj.rotation)
+
+        self.update_3d()
+
     def update_3d(self):
         self.level_view.gizmo.move_to_average(self.level_view.selected_positions)
         self.level_view.do_redraw()
@@ -2555,6 +2768,20 @@ class GenEditor(QMainWindow):
                 else:
                     self.pik_control.reset_info("{0} objects selected".format(len(self.level_view.selected)))
                     self.pik_control.set_objectlist(selected)
+
+                # Without emitting any signal, programmatically update the currently selected item
+                # in the tree view.
+                with QtCore.QSignalBlocker(self.leveldatatreeview):
+                    if selected:
+                        # When there is more than one object selected, pick the last one.
+                        self.select_tree_item_bound_to(selected[-1])
+                    else:
+                        # If no selection occurred, ensure that no tree item remains selected. This
+                        # is relevant to ensure that non-pickable objects (such as the top-level
+                        # items) do not remain selected when the user clicks on an empty space in
+                        # the viewport.
+                        for selected_item in self.leveldatatreeview.selectedItems():
+                            selected_item.setSelected(False)
 
     @catch_exception
     def mapview_showcontextmenu(self, position):
