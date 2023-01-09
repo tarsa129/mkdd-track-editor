@@ -3059,12 +3059,21 @@ class GenEditor(QMainWindow):
         # Widgets are unpickleable, so they need to be temporarily stashed. This needs to be done
         # recursively, as top-level groups main contain points associated with widgets too.
         object_to_widget = {}
+        object_to_usedby = {}
+        object_to_partof = {}
         pending = list(self.level_view.selected)
+        print(len(pending))
         while pending:
             obj = pending.pop(0)
             if hasattr(obj, 'widget'):
                 object_to_widget[obj] = obj.widget
                 obj.widget = None
+            if hasattr(obj, 'used_by'):
+                object_to_usedby[obj] = obj.used_by
+                obj.used_by = None
+            if hasattr(obj, 'partof'):
+                object_to_partof[obj] = obj.partof
+                obj.partof = None
             if hasattr(obj, '__dict__'):
                 pending.extend(list(obj.__dict__.values()))
             if isinstance(obj, list):
@@ -3073,9 +3082,13 @@ class GenEditor(QMainWindow):
             # Effectively serialize the data.
             data = pickle.dumps(self.level_view.selected)
         finally:
-            # Restore the widgets.
+            # Restore the widgets and usedby.
             for obj, widget in object_to_widget.items():
                 obj.widget = widget
+            for obj, widget in object_to_usedby.items():
+                obj.used_by = widget
+            for obj, partof in object_to_partof.items():
+                obj.partof = partof
 
         mimedata = QtCore.QMimeData()
         mimedata.setData("application/mkdd-track-editor", QtCore.QByteArray(data))
@@ -3123,6 +3136,10 @@ class GenEditor(QMainWindow):
                 if selected_obj in route.points:
                     target_route = route
                     break
+            for route in self.level_file.cameraroutes:
+                if selected_obj in route.points:
+                    target_route = route
+                    break
 
         added = []
 
@@ -3137,7 +3154,14 @@ class GenEditor(QMainWindow):
             elif isinstance(obj, libbol.CheckpointGroup):
                 self.level_file.checkpoints.groups.append(obj)
             elif isinstance(obj, libbol.Route):
-                self.level_file.routes.append(obj)
+                obj.used_by = []
+
+                if obj.type == 0:
+                    self.level_file.routes.append(obj)
+                else:
+                    self.level_file.cameraroutes.append(obj)
+                for point in obj.points:
+                    point.partof = obj
 
             # Objects in group objects.
             elif isinstance(obj, libbol.EnemyPoint):
@@ -3164,11 +3188,13 @@ class GenEditor(QMainWindow):
                 target_checkpoint_group.points.append(obj)
 
             elif isinstance(obj, libbol.RoutePoint):
-                if target_route is None:
+                if target_route is None:    
                     if not self.level_file.routes:
                         self.level_file.routes.append(libbol.Route.new())
                     target_route = self.level_file.routes[-1]
-
+                
+                if target_route is not None:
+                    obj.partof = target_route
                 target_route.points.append(obj)
 
             # Autonomous objects.
@@ -3185,6 +3211,7 @@ class GenEditor(QMainWindow):
             elif isinstance(obj, libbol.Area):
                 self.level_file.areas.areas.append(obj)
             elif isinstance(obj, libbol.Camera):
+                obj.used_by = []
                 self.level_file.cameras.append(obj)
             elif isinstance(obj, libbol.LightParam):
                 self.level_file.lightparams.append(obj)

@@ -1157,20 +1157,11 @@ class Camera(object):
 
         self.chase = 0
         self.camtype = 0
-        
-        class FOV:
-            def __init__(self):
-                self.start = 0
-                self.end = 0
-
+    
         self.fov = FOV()
 
         self.camduration = 0
         self.startcamera = 0
-        class Shimmer:
-            def __init__(self):
-                self.z0 = 0
-                self.z1 = 0
 
         self.shimmer = Shimmer()
         self.route = -1
