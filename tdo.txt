@@ -1,5 +1,9 @@
 mkwii to do list:
 
+ktpt
+- move header stuff to ktpt / ktpts at load, only move back at save
+- display the range using render_cube
+
 enemy/item/checkpoint
 - add arrows for directions of links between groups
 - handle automatic routing for prev/next groups when edited manually
@@ -8,28 +12,49 @@ enemy/item/checkpoint
 -- if selecting a group, 'v' should add points at the end of the group
 -- if selecting a groups, 'v' should add empty groups
 - add a "remove empty groups" button, and empty groups should be deleted upon all the points being removed
+- refactor more_buttons and button_add_from_addi_option to clean up the buttons
+- enemy/item: get the scale rendering correct 
+- enemy/item multiselect: increase/decrease scale
+- checkpoint: add "assign to closest respawn" button
+- checkpoint: refactor respawn_id so that it stores the actual respawn itself. then in data_editor, use the id
+- pointgroups: add helper function for getting the absolute index of a point 
 
-fix local bugs found (make sure that current qol works and is relevant to mkwii)
-compare scale to lorenzis for enemy points
-deal with juge / mspt ids
-render key checkpoints
+gobj:
+- all those dang .json files
+- proper hiding of routes field
+- add "remove all of type" option as a treeview custom object
+- add "add pocha" object
 
-general optimizations:
-more options for multi select like
--enemy routes: mass edit scale
-camera replaying???
-properly hide fields for cameras
-when selecting areas, the camera and route should also be highlighted
+poti:
+- check autorouting for cameras / Objects
+-- just make an array for camera types that connect to a route in data_editor_options and use that everywhere
+- show splines
+- v options
+-- route: add to end of groups
+-- point: add point here
 
+area:
+- highlight camera / route point when relevant. (ALSO APPLIES TO MKDD)
+- deal/check with area type 3 routes
+- deal with area connections in general
+- type four: refactor enemypoint so that it stores the actual enemy point itself. then in data_editor, use the index. 
+-- ONLY have to worry about deletions, as additions will preserve the existence of the point
+- add helper functions in areas to get all areas of a specific type
 
-mkwii optimizations
+came:
+- camera replaying (long shot)
+- properly hide fields
 
-object: all those .json files
-routes: show splines
-area: highlight camera / route point when relevant. deal with area type 3 routes
-objects: do not show route in dataeditor if there is none
-jugem: add a "grab closest button for existing jugem" and an "add and grab closest" button
+jugem:
+- add a "grab closest button for existing jugem"
+- add a "add and grab closest" button
+
+mspt:
+ - deal with mspt ids (how are they used?)
+
 before release: match lorenzis with colors
-error analyzer
+
+general:
+error analyzer - i'll figure this out when i get to it
 
 
