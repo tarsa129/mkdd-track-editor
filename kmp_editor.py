@@ -2520,7 +2520,6 @@ class GenEditor(QMainWindow):
         object_to_usedby = {}
         object_to_partof = {}
         pending = list(self.level_view.selected)
-        print(len(pending))
         while pending:
             obj = pending.pop(0)
             if hasattr(obj, 'widget'):
