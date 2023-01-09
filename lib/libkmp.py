@@ -242,6 +242,8 @@ class PointGroup(object):
         group.prevgroup = self.prevgroup.copy()
         group.nextgroup = self.nextgroup.copy()
 
+        return group
+
     def copy_group_after(self, new_id, point, group):
         group.id = new_id
         pos = self.points.index(point)
@@ -269,7 +271,6 @@ class PointGroup(object):
         for point in group.points:
             self.points.append(deepcopy(point))
 
-
     def num_prev(self):
         return sum ( [1 for id in self.prevgroup if id != -1]  )
 
@@ -277,7 +278,7 @@ class PointGroup(object):
         return sum ( [1 for id in self.nextgroup if id != -1]  )
 
     def add_new_prev(self, id):
-        if id in self.prevgroup:
+        if id in self.prevgroup or id == -1:
             return
         self.prevgroup = [id for id in self.prevgroup if id != -1]
         if len(self.prevgroup) == 6:
@@ -286,7 +287,7 @@ class PointGroup(object):
         self.prevgroup += [-1] * (6 - len(self.prevgroup))
 
     def add_new_next(self, id):
-        if id in self.nextgroup:
+        if id in self.nextgroup or id == -1:
             return
         self.nextgroup = [id for id in self.nextgroup if id != -1]
         if len(self.nextgroup) == 6:
@@ -329,8 +330,13 @@ class PointGroups(object):
             if other_group != group and other_group != new_group:
                 other_group.prevgroup = [new_id if id == group.id else id for id in other_group.prevgroup]
 
+    def check_if_duplicate_possible(self, group):
+        num_prevs_of_nexts = max( [ self.groups[idx].num_prev() for idx in group.nextgroup if idx != -1 ] )
+        num_nexts_of_prevs = max( [ self.groups[idx].num_next() for idx in group.prevgroup if idx != -1 ] )
+        return num_prevs_of_nexts < 6 and num_nexts_of_prevs < 6
+
     def duplicate_group(self, group):
-        new_id = len(self.groups)
+        new_id = self.new_group_id()
         new_group = group.copy_group(new_id)
         self.groups.append(new_group)
 

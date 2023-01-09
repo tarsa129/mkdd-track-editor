@@ -1008,10 +1008,26 @@ class GenEditor(QMainWindow):
 
     def duplicate_group(self, item):
         group = item.bound_to
-        if not isinstance(group, PointGroup):
+        if not isinstance(group, PointGroup) :
             return
-        to_deal_with = self.level_file.get_to_deal_with(item) 
-        to_deal_with.duplicate_group(group)
+        #make sure that a group *can* be duplicated by checking the group's next to see if all can handle another prev, and all prev to see if they can handle another next
+        
+        to_deal_with = self.level_file.get_to_deal_with(group) 
+
+        if not to_deal_with.check_if_duplicate_possible(group):
+            return
+
+        new_group_id = to_deal_with.new_group_id()
+        to_deal_with.groups.append( group.copy_group(new_group_id) )
+
+        #add new links to next and prev groups
+        for idx in group.prevgroup:
+            if idx != -1:
+                to_deal_with.groups[idx].add_new_next(new_group_id)
+        for idx in group.nextgroup:
+            if idx != -1:
+                to_deal_with.groups[idx].add_new_prev(new_group_id)
+
 
         self.leveldatatreeview.set_objects(self.level_file)
         self.update_3d()
