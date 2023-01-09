@@ -2586,6 +2586,10 @@ class GenEditor(QMainWindow):
                 if selected_obj in route.points:
                     target_route = route
                     break
+            for route in self.level_file.cameraroutes:
+                if selected_obj in route.points:
+                    target_route = route
+                    break
 
         added = []
 
@@ -2603,6 +2607,8 @@ class GenEditor(QMainWindow):
                     self.level_file.routes.append(obj)
                 else:
                     self.level_file.cameraroutes.append(obj)
+                for point in obj.points:
+                    point.partof = obj
 
             # Objects in group objects.
             elif isinstance(obj, libkmp.KMPPoint):
@@ -2620,7 +2626,9 @@ class GenEditor(QMainWindow):
                     if not self.level_file.routes:
                         self.level_file.routes.append(libkmp.Route.new())
                     target_route = self.level_file.routes[-1]
-
+                
+                if target_route is not None:
+                    obj.partof = target_route
                 target_route.points.append(obj)
 
             # Autonomous objects.
@@ -2938,9 +2946,8 @@ class GenEditor(QMainWindow):
 
     def set_and_start_copying(self):
         #print(self.level_view.selected)
-        
-
-        if len(self.level_view.selected) == 1 and self.level_view.selected[0].can_copy:
+        #print(isinstance( self.level_view.selected[0], (MapObject, Area, Camera)))
+        if len(self.level_view.selected) == 1 and isinstance( self.level_view.selected[0], (MapObject, Area, Camera)):
             self.obj_to_copy = self.level_view.selected[0]
             self.copy_current_obj()
 
