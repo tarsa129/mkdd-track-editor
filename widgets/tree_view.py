@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem
-from lib.libkmp import KMP,  get_kmp_name
+from lib.libkmp import KMP,  get_kmp_name, KMPPoint
 from widgets.data_editor_options import AREA_TYPES
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QAction, QMenu
@@ -74,7 +74,7 @@ class ItemPointGroup(PointGroup):
             0,
             "Item Path {0}".format(index,          self.bound_to.id))
 
-class CheckpointGroup(ObjectGroup):
+class CheckpointGroup(PointGroup):
     def __init__(self, parent, bound_to):
         super().__init__("Checkpoint Group", parent=parent, bound_to=bound_to)
         self.update_name()
@@ -165,7 +165,7 @@ class ItemRoutePoint(RoutePoint):
 
         self.setText(0, "Item Point {0} (pos={1})".format(index + offset, index))
 
-class Checkpoint(NamedItem):
+class Checkpoint(RoutePoint):
     def update_name(self):
         offset = 0
         group_item = self.parent()
@@ -293,7 +293,7 @@ class LevelDataTreeView(QTreeWidget):
     reverse = pyqtSignal(ObjectGroup)
     duplicate = pyqtSignal(ObjectGroup)
     split = pyqtSignal(PointGroup, RoutePoint)
-    split_checkpoint = pyqtSignal(CheckpointGroup, Checkpoint)
+    #split_checkpoint = pyqtSignal(CheckpointGroup, Checkpoint)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args)

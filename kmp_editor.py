@@ -984,27 +984,8 @@ class GenEditor(QMainWindow):
         self.leveldatatreeview.reverse.connect(self.reverse_all_of_group)
         self.leveldatatreeview.duplicate.connect(self.duplicate_group)
         self.leveldatatreeview.split.connect(self.split_group_from_tree)
-        self.leveldatatreeview.split_checkpoint.connect(self.split_group_checkpoint)
-
-    def split_group_checkpoint(self, group_item, item):
-        group = group_item.bound_to
-        point = item.bound_to
-
-        if point == group.points[-1]:
-            return
-
-        # Get new hopefully unused group id
-        new_id = self.level_file.checkpoints.new_group_id()
-        new_group = group.copy_group_after(new_id, point)
-        self.level_file.checkpoints.groups.append(new_group)
-        group.remove_after(point)
-        new_group.prevlinks = [group.id, -1, -1, -1, -1, -1]
-        new_group.nextlinks = deepcopy(group.nextgroup)
-        group.nextgroup = [new_group.id, -1, -1, -1, -1, -1]
-
-        self.leveldatatreeview.set_objects(self.level_file)
-        self.update_3d()
-        self.set_has_unsaved_changes(True)
+    
+    
 
     def split_group_from_tree(self, group_item, item):
         group = group_item.bound_to
@@ -1016,8 +997,9 @@ class GenEditor(QMainWindow):
             return
        
         # Get new hopefully unused group id
-        to_deal_with = self.level_file.enemypointgroups if isinstance(group, EnemyPointGroup) else self.level_file.itempointgroups
-        to_deal_with.split_group(group, point)
+        
+        to_deal_with = self.level_file.get_to_deal_with(point) 
+        to_deal_with.split_group( group, point  )
        
         self.leveldatatreeview.set_objects(self.level_file)
         self.update_3d()
@@ -1028,7 +1010,7 @@ class GenEditor(QMainWindow):
         group = item.bound_to
         if not isinstance(group, PointGroup):
             return
-        to_deal_with = self.level_file.enemypointgroups if isinstance(group, libkmp.EnemyPointGroup) else self.level_file.itempointgroups
+        to_deal_with = self.level_file.get_to_deal_with(item) 
         to_deal_with.duplicate_group(group)
 
         self.leveldatatreeview.set_objects(self.level_file)
@@ -1202,7 +1184,7 @@ class GenEditor(QMainWindow):
                 self.statusbar.showMessage("Saved to {0}".format(self.current_gen_path))
 
             else:
-                gen_path = self.current_gen_path[:-3] + ".backup.kmp"
+                gen_path = self.current_gen_path[:-3] + "backup.kmp"
                 with open(gen_path, "wb") as f:
                     self.level_file.write(f)
                     self.set_has_unsaved_changes(False)
@@ -1353,7 +1335,7 @@ class GenEditor(QMainWindow):
             obj = self.level_view.selected[0]
             #add points to group at current position
             if isinstance(obj, KMPPoint):
-                to_deal_with = self.level_file.enemypointgroups if isinstance(obj, (EnemyPoint) ) else self.level_file.itempointgroups
+                to_deal_with = self.level_file.get_to_deal_with(obj)
                 start_groupind, start_group, start_pointind = to_deal_with.find_group_of_point(obj)
 
                 thing_to_add = libkmp.EnemyPoint.new() if isinstance(obj, EnemyPoint ) else ItemPoint.new()
@@ -1472,6 +1454,9 @@ class GenEditor(QMainWindow):
         
         
         if option == 0: #add an empty enemy group
+            to_deal_with = self.level_file.get_to_deal_with(obj)
+            to_deal_with.add_new_group()
+            """
             if isinstance(obj, (EnemyPointGroups, EnemyPointGroup)):
                 new_enemy_group = libkmp.EnemyPointGroup()
                 new_enemy_group.id = self.level_file.enemypointgroups.new_group_id()
@@ -1480,7 +1465,7 @@ class GenEditor(QMainWindow):
             if isinstance(obj, (ItemPointGroups, ItemPointGroup)):
                 new_item_group = libkmp.ItemPointGroup()
                 new_item_group.id = self.level_file.itempointgroups.new_group_id()
-                self.level_file.itempointgroups.groups.append( new_item_group )
+                self.level_file.itempointgroups.groups.append( new_item_group )"""
         elif option == 1: #adding an enemy point to a group, the group is obj
             #self.addobjectwindow_last_selected_category = 2
             thing_to_add = libkmp.EnemyPoint.new() if isinstance(obj, (EnemyPoint, EnemyPointGroup) ) else ItemPoint.new()
@@ -1490,8 +1475,7 @@ class GenEditor(QMainWindow):
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
         elif option == 2:   #add new checkpoint group
-            new_check_group = libkmp.CheckpointGroup( self.level_file.checkpoints.new_group_id() )
-            self.level_file.checkpoints.groups.append( new_check_group )
+            self.level_file.checkpoints.add_new_group()
         elif option == 3: #add item box
             #self.addobjectwindow_last_selected_category = 6
 
@@ -1621,9 +1605,8 @@ class GenEditor(QMainWindow):
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)    
         elif option == 10:
-            to_deal_with = self.level_file.enemypointgroups if isinstance(obj, (EnemyPointGroups) ) else self.level_file.itempointgroups
 
-            to_deal_with.merge_groups()
+            obj.merge_groups()
         
         
         elif option == 11: #new enemy point here
@@ -2253,7 +2236,7 @@ class GenEditor(QMainWindow):
 
         if event.key() == Qt.Key_C:
             if len(self.level_view.selected) == 1:
-                if isinstance( self.level_view.selected[0], (EnemyPoint, ItemPoint) ):
+                if isinstance( self.level_view.selected[0], (KMPPoint) ):
                     self.connect_start = self.level_view.selected[0]
                     self.level_view.connecting_mode = True
 
@@ -2619,14 +2602,16 @@ class GenEditor(QMainWindow):
 
         #create a new group
         if len(self.level_view.selected) == 0:
-            to_deal_with = self.level_file.enemypointgroups if isinstance(self.connect_start, EnemyPoint) else self.level_file.itempointgroups
+            to_deal_with = self.level_file.get_to_deal_with(self.connect_start)
+            
             obj = self.connect_start
             start_groupind, start_group, start_pointind = to_deal_with.find_group_of_point(self.connect_start)
             if start_group.num_next() == 6:
                 return
 
-            point_to_add = libkmp.EnemyPoint.new() if isinstance(obj, EnemyPoint) else libkmp.ItemPoint.new()
-            group_to_add = libkmp.EnemyPointGroup.new() if isinstance(obj, EnemyPoint) else libkmp.ItemPointGroup.new()
+            
+            point_to_add = to_deal_with.get_new_point()
+            group_to_add = to_deal_with.get_new_group()
             if start_pointind == len(start_group.points) - 1:
                 group_to_add.id = to_deal_with.new_group_id()
                 to_deal_with.groups.append(group_to_add)
@@ -2642,6 +2627,9 @@ class GenEditor(QMainWindow):
 
                 self.object_to_be_added = [point_to_add, group_to_add.id, 0 ]
 
+            start_group.remove_next(start_group.id)
+            start_group.remove_prev(start_group.id)
+
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
 
@@ -2655,7 +2643,8 @@ class GenEditor(QMainWindow):
                 to_deal_with = self.level_file.enemypointgroups
             elif isinstance(endpoint, ItemPoint) and isinstance(self.connect_start, ItemPoint):
                 to_deal_with = self.level_file.itempointgroups
-        
+            elif isinstance(endpoint, Checkpoint) and isinstance(self.connect_start, Checkpoint):
+                to_deal_with = self.level_file.checkpoints
             if to_deal_with is not None:
                 self.connect_two_groups(endpoint, to_deal_with)
                 return
@@ -2685,6 +2674,9 @@ class GenEditor(QMainWindow):
             if end_group.num_prev() < 6:
                 start_group.add_new_next( end_groupind  )
                 end_group.add_new_prev(start_groupind)
+
+                start_group.remove_next(start_group.id)
+                start_group.remove_prev(start_group.id)
             
             return
 
@@ -2694,6 +2686,10 @@ class GenEditor(QMainWindow):
         group_2 = to_deal_with.groups[-1]
 
         #redo connections
+        print(start_group.id)
+        start_group.remove_next(start_group.id)
+        start_group.remove_prev(start_group.id)
+
         start_group.add_new_next(group_2.id)
         #group_1.add_new_next(group_2.id)
         group_2.add_new_prev(start_groupind)

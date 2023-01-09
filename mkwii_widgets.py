@@ -1024,8 +1024,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         glVertex3f(pos.x, -pos.z, pos.y)
                     glEnd()
                     if selected:
-                        glLineWidth(1.0)
-          
+                        glLineWidth(1.0)        
             if vismenu.enemyroute.is_visible():
                 enemypoints_to_highlight = set()
                 all_groups = self.level_file.enemypointgroups.groups
@@ -1328,7 +1327,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
             glPushMatrix()
             
-            #draw the body of the arrow
+            #draw the arrow
             if vismenu.checkpoints.is_visible():
                 for group in self.level_file.checkpoints.groups:
                     prev = None
@@ -1344,6 +1343,59 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                             self.models.draw_arrow_head(mid1, mid2)
                             #lines.append((mid1, mid2))
                             prev = checkpoint
+
+            #draw arrows between groups
+            if vismenu.checkpoints.is_visible():
+                all_groups = self.level_file.checkpoints.groups
+                for i, group in enumerate( all_groups ):
+                    if len(group.points) == 0:
+                        continue
+                    # Draw the connections between each enemy point group.
+                    # draw to nextgroup only
+                    prevpoint = group.points[-1]
+                    #stores (group index, point)
+                    nextpoints = [ (i, all_groups[i].points[0]) for i in group.nextgroup if len(all_groups[i].points) > 0 and i > -1]
+                    if len(nextpoints) == 0:
+                        continue
+
+                    #generate the color for inbound stuff
+                    color_gen = random.Random(group.id)
+                    color_components = [
+                        color_gen.random() * 0.2,
+                        color_gen.random() * 0.5,
+                        color_gen.random() * 0.2,
+                    ]
+                    color_gen.shuffle(color_components)
+                    color_components[2] += 0.5
+
+
+                    for group in group.nextgroup:
+                        if group != -1 and used_colors[group] is None:
+                            used_colors[group] = color_components
+                            
+
+                    
+                    for group, point in nextpoints:
+                        glColor3f(*used_colors[group])
+
+                        if selected_groups[i] or selected_groups[group]:
+                            glLineWidth(3.0)
+
+                        glBegin(GL_LINES)
+                        glVertex3f(prevpoint.start.x, -prevpoint.start.z, prevpoint.start.y)
+                        glVertex3f(point.start.x, -point.start.z, point.start.y)
+                        glEnd()
+
+                        glBegin(GL_LINES)
+                        glVertex3f(prevpoint.end.x, -prevpoint.end.z, prevpoint.end.y)
+                        glVertex3f(point.end.x, -point.end.z, point.end.y)
+                        glEnd()
+                    
+                    
+                        if selected_groups[i] or selected_groups[group]:
+                            glLineWidth(1.0)
+
+
             
 
 

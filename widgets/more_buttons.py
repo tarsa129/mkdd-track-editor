@@ -7,7 +7,7 @@ from lib.vectors import Vector3
 from PyQt5.QtCore import pyqtSignal
 from lib.libkmp import (EnemyPoint, EnemyPointGroup, EnemyPointGroups, ItemPoint, ItemPointGroup, ItemPointGroups, CheckpointGroups, CheckpointGroup, Checkpoint, Route, RoutePoint, Area, Areas,
                         MapObject, KartStartPoint, Camera, KMP, JugemPoint, MapObjects, MapObject,
-                         OBJECTNAMES, ObjectContainer, KartStartPoints)
+                         OBJECTNAMES, ObjectContainer, KartStartPoints, PointGroups, PointGroup)
 from widgets.tree_view import KMPHeader, EnemyRoutePoint
 #will create buttons based on the current selection
 #when nothing selected - add anything
@@ -36,6 +36,8 @@ class MoreButtons(QWidget):
             pass
 
         elif isinstance(option.bound_to, (EnemyPointGroups, ItemPointGroups)): #enemy point group select
+
+            
 
             point_type = "Enemy" if isinstance(option.bound_to, EnemyPointGroups) else "Item"
             new_enemy_group = QPushButton(self)
@@ -85,7 +87,7 @@ class MoreButtons(QWidget):
             
             new_check_group = QPushButton(self)
             new_check_group.setText("Add Checkpoint Group")
-            new_check_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(2) )
+            new_check_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(0, option.bound_to) )
             self.vbox.addWidget(new_check_group)
 
             set_key_automatically = QPushButton(self)
@@ -97,7 +99,7 @@ class MoreButtons(QWidget):
             all_options = False
             new_check_group = QPushButton(self)
             new_check_group.setText("Add Checkpoint Group")
-            new_check_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(2) )
+            new_check_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(0, option.bound_to) )
             self.vbox.addWidget(new_check_group)
             
             new_check_end = QPushButton(self)

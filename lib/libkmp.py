@@ -293,6 +293,18 @@ class PointGroup(object):
             return False
         self.nextgroup.append(id)
         self.nextgroup += [-1] * (6 - len(self.nextgroup))
+
+    def remove_prev(self, id):
+        if id in self.prevgroup:
+            self.prevgroup.remove(id)
+            self.prevgroup.append(-1)
+
+    def remove_next(self, id):
+        if id in self.nextgroup:
+            self.nextgroup.remove(id)
+            self.nextgroup.append(-1)
+
+
 class PointGroups(object):
     def __init__(self):
         self.groups = []
@@ -375,6 +387,16 @@ class PointGroups(object):
             else:
                 i += 1
 
+    def get_new_point(self):
+        return KMPPoint.new()
+
+    def get_new_group(self):
+        return PointGroup.new()
+
+    def add_new_group(self):
+        new_group = self.get_new_group()
+        new_group.id = self.new_group_id()
+        self.groups.append( new_group )
 
 
 # Section 1
@@ -471,6 +493,12 @@ class EnemyPointGroup(PointGroup):
 class EnemyPointGroups(PointGroups):
     def __init__(self):
         super().__init__()
+
+    def get_new_point(self):
+        return EnemyPoint.new()
+
+    def get_new_group(self):
+        return EnemyPointGroup.new()
 
     @classmethod
     def from_file(cls, f):
@@ -574,10 +602,7 @@ class ItemPoint(KMPPoint):
 
 class ItemPointGroup(PointGroup):
     def __init__(self):
-        self.points = []
-        self.id = 0
-        self.prevgroup = [0, -1, -1, -1, -1, -1]
-        self.nextgroup = [0, -1, -1, -1, -1, -1]
+        super().__init__()
 
     @classmethod
     def new(cls):
@@ -629,6 +654,13 @@ class ItemPointGroup(PointGroup):
 class ItemPointGroups(PointGroups):
     def __init__(self):
         super().__init__()
+
+    def get_new_point(self):
+        return ItemPoint.new()
+
+    def get_new_group(self):
+        return ItemPointGroup.new()
+
 
     @classmethod
     def from_file(cls, f):
@@ -691,7 +723,7 @@ class ItemPointGroups(PointGroups):
     
         return  itph_offset
 
-class Checkpoint(object):
+class Checkpoint(KMPPoint):
     def __init__(self, start, end, respawn=0, type=0):
         self.start = start
         self.end = end
@@ -748,21 +780,21 @@ class Checkpoint(object):
         return key
 
 class CheckpointGroup(PointGroup):
-    def __init__(self, id):
+    def __init__(self):
         super().__init__()
 
     @classmethod
     def new(cls):
-        return cls(0)
+        return cls()
 
     def copy_group(self, new_id):
         group = CheckpointGroup()
-        return super().copy_group(self, new_id, group)
+        return super().copy_group(new_id, group)
 
 
     def copy_group_after(self, new_id, point):
         group = CheckpointGroup()
-        return super().copy_group_after(self, new_id, point, group)
+        return super().copy_group_after(new_id, point, group)
 
     @classmethod
     def from_file(cls, f, all_points):
@@ -804,7 +836,13 @@ class CheckpointGroup(PointGroup):
 class CheckpointGroups(PointGroups):
     def __init__(self):
         super().__init__()
-    
+
+    def get_new_point(self):
+        return Checkpoint.new()
+
+    def get_new_group(self):
+        return CheckpointGroup.new()
+
     @classmethod
     def from_file(cls, f):
         checkpointgroups = cls()
@@ -1671,8 +1709,8 @@ class KMP(object):
         kmp.itempointgroups.groups[0].add_new_prev(0)
         kmp.itempointgroups.groups[0].add_new_next(0)
         kmp.checkpoints.groups.append(CheckpointGroup.new() )
-        kmp.enemypointgroups.groups[0].add_new_prev(0)
-        kmp.enemypointgroups.groups[0].add_new_next(0)
+        kmp.checkpoints.groups[0].add_new_prev(0)
+        kmp.checkpoints.groups[0].add_new_next(0)
         kmp.kartpoints.positions.append( KartStartPoint.new() )
         
         kmp.set_assoc()
@@ -2305,15 +2343,23 @@ class KMP(object):
                     elif checkpoint.respawn == respawn_idx:
                         checkpoint.assign_to_closest(self.respawnpoints)
 
-
     def get_index_of_respawn(self, rsp: JugemPoint):
         for i, respawn in enumerate( self.respawnpoints) :
             if rsp == respawn:
                 return i
         return -1
 
+    def get_to_deal_with(self, obj):
+        if isinstance(obj, (EnemyPointGroup, EnemyPoint, EnemyPointGroups) ):
+            return self.enemypointgroups
+        elif isinstance(obj, (ItemPointGroup, ItemPoint, ItemPointGroups) ):
+            return self.itempointgroups
+        else:
+            return self.checkpoints
+
     def remove_group(self, del_group):
-        if isinstance(del_group, EnemyPointGroup):
+        to_deal_with = self.get_to_deal_with(del_group)
+        if to_deal_with == self.enemypointgroups:
             to_deal_with = self.enemypointgroups
             
             type_4_areas= [ area for area in self.areas.areas if area.type == 4]
@@ -2326,13 +2372,6 @@ class KMP(object):
                     area.enemypointid = -1
                 elif area.enemypointid > points_includ:
                     area.enemypointid -= ( points_includ - points_before )
-        #deal with area type 4 - if you are not deleting the point, save the point so that it can be reassigned. if you would delete the point, set the area's point id to new closest
-        elif isinstance(del_group, ItemPointGroup):
-            to_deal_with = self.itempointgroups
-        elif isinstance(del_group, CheckpointGroup):
-            to_deal_with = self.checkpoints
-
-
 
         to_deal_with.groups.remove(del_group)
         

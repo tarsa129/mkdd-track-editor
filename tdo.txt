@@ -1,6 +1,13 @@
 mkwii to do list:
 
-- add arrows for directions of links in enemy/item/checkpoints
+enemy/item/checkpoint
+- add arrows for directions of links between groups
+- handle automatic routing for prev/next groups when edited manually
+- make "v" a more universal "add stuff" option
+-- if selecting point, 'v' should add points at current position
+-- if selecting a group, 'v' should add points at the end of the group
+-- if selecting a groups, 'v' should add empty groups
+- add a "remove empty groups" button, and empty groups should be deleted upon all the points being removed
 
 fix local bugs found (make sure that current qol works and is relevant to mkwii)
 compare scale to lorenzis for enemy points
@@ -17,12 +24,11 @@ when selecting areas, the camera and route should also be highlighted
 
 mkwii optimizations
 
-checkpoints: link groups together in render
 object: all those .json files
 routes: show splines
-area: highlight camera / route point when relevant. deal with area routes
-objects: do not show route if there is none
-
+area: highlight camera / route point when relevant. deal with area type 3 routes
+objects: do not show route in dataeditor if there is none
+jugem: add a "grab closest button for existing jugem" and an "add and grab closest" button
 before release: match lorenzis with colors
 error analyzer
 
