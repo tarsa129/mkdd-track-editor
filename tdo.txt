@@ -1,7 +1,7 @@
 mkwii to do list:
 
 ktpt
-- move header stuff to ktpt / ktpts at load, only move back at save
+- move header stuff to ktpts at load, only move back at save (current on ktpt)
 - display the range using render_cube
 
 enemy/item/checkpoint
@@ -9,7 +9,6 @@ enemy/item/checkpoint
 - enemy/item: get the scale rendering correct 
 - enemy/item multiselect: increase/decrease scale
 - pointgroups: add helper function for getting the absolute index of a point 
-- checkpoints: add 'c' linking for respawns
 - when a group is selected from the treeview, the arrows are not being highlighted
 
 gobj:

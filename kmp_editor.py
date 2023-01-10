@@ -2840,7 +2840,7 @@ class GenEditor(QMainWindow):
             return
         else:
             endpoint = self.level_view.selected[0]
-
+            to_deal_with = None
             if isinstance(endpoint, EnemyPoint) and isinstance(self.connect_start, EnemyPoint):
                 to_deal_with = self.level_file.enemypointgroups
             elif isinstance(endpoint, ItemPoint) and isinstance(self.connect_start, ItemPoint):
@@ -2851,6 +2851,8 @@ class GenEditor(QMainWindow):
                 self.connect_two_groups(endpoint, to_deal_with)
                 return
             
+            if isinstance(endpoint, JugemPoint) and isinstance(self.connect_start, Checkpoint):
+                self.connect_start.respawn = self.level_file.get_index_of_respawn(endpoint)
 
         self.connect_start = None
         
