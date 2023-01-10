@@ -307,12 +307,12 @@ class MoreButtons(QWidget):
 
             new_respawn = QPushButton(self)
             new_respawn.setText("Add Respawn")
-            new_respawn.clicked.connect(lambda: self.parent.button_add_from_addi_options(9) )
+            new_respawn.clicked.connect(lambda: self.parent.button_add_from_addi_options(9, False) )
             self.vbox.addWidget(new_respawn)
 
             new_respawn_assign = QPushButton(self)
             new_respawn_assign.setText("Add Respawn and Assign to Closest Checkpoints")
-            new_respawn_assign.clicked.connect(lambda: self.parent.button_add_from_addi_options(9.5) )
+            new_respawn_assign.clicked.connect(lambda: self.parent.button_add_from_addi_options(9, True) )
             self.vbox.addWidget(new_respawn_assign)
 
             auto_respawn_existing = QPushButton(self)
@@ -324,11 +324,16 @@ class MoreButtons(QWidget):
             auto_respawn_existing.setText("Auto Respawns (Assign All Where Closest)")
             auto_respawn_existing.clicked.connect(lambda: self.parent.button_add_from_addi_options(2, option.bound_to) )
             self.vbox.addWidget(auto_respawn_existing)
+
+            remove_unused = QPushButton(self)
+            remove_unused.setText("Remove Unused Respawn Points")
+            remove_unused.clicked.connect(lambda: self.parent.button_add_from_addi_options(26, option.bound_to) )
+            self.vbox.addWidget(remove_unused)
         elif isinstance(option.bound_to, JugemPoint):
             all_options = False
 
             assign_only = QPushButton(self)
-            assign_only.setText("Assign to Checkpoint Where Closest")
+            assign_only.setText("Assign to Checkpoints Where Closest")
             assign_only.clicked.connect(lambda: self.parent.button_add_from_addi_options(2, obj) )
             self.vbox.addWidget(assign_only)
 

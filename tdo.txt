@@ -48,5 +48,10 @@ error analyzer - i'll figure this out when i get to it
 starting mode topdown vs 3d - add to config file
 refactor options code to move stuff to libkmp
 add limit checks of 255 on everything
+add an option for "cleanup"
+- merge enemy groups, and removed unused groups
+- remove unused respawns
+- remove unused paths
+- remove unused cameras
 
 

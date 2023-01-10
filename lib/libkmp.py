@@ -746,7 +746,7 @@ class Checkpoint(KMPPoint):
 
     def assign_to_closest(self, respawns):
         mid = (self.start + self.end) / 2
-        distances = [ respawn.position.distance( mid  ) for respawn in respawns ]
+        distances = [ respawn.position.distance_2d( mid  ) for respawn in respawns ]
         smallest = [ i for i, x in enumerate(distances) if x == min(distances)]
         self.respawn = smallest[0]
    
@@ -799,6 +799,9 @@ class CheckpointGroup(PointGroup):
     def copy_group_after(self, new_id, point):
         group = CheckpointGroup()
         return super().copy_group_after(new_id, point, group)
+
+    def get_used_respawns(self):
+        return set( [checkpoint.respawn for checkpoint in self.points]  )
 
     @classmethod
     def from_file(cls, f, all_points):
@@ -933,7 +936,14 @@ class CheckpointGroups(PointGroups):
             to_visit.extend(actual_next)
             to_visit = [*set(to_visit)]
             to_visit.pop(0)
-    
+
+    def get_used_respawns(self):
+        used_respawns = []
+        for group in self.groups:
+            used_respawns.extend( group.get_used_respawns() )
+
+        return set(used_respawns)
+
 # Section 3
 # Routes/Paths for cameras, objects and other things
 class Route(object):
@@ -2399,6 +2409,13 @@ class KMP(object):
             if rsp == respawn:
                 return i
         return -1
+
+    def remove_unused_respawns(self):
+        unused_respawns = [i for i in list( range(1, len(self.respawnpoints) )) if i not in self.checkpoints.get_used_respawns()]
+        unused_respawns.sort()
+        unused_respawns.reverse()
+        for rsp_idx in unused_respawns:
+            self.remove_respawn( self.respawnpoints[rsp_idx]   )
 
     def get_to_deal_with(self, obj):
         if isinstance(obj, (EnemyPointGroup, EnemyPoint, EnemyPointGroups) ):

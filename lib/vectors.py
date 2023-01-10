@@ -84,6 +84,9 @@ class Vector3(object):
         #this is not true distance - changes in y are punished so that overlapping stuff doesn't affect calculations.
         return sqrt( (self.x - other.x) ** 2 + (self.y - other.y) ** 2 + (self.z - other.z) ** 2  )
 
+    def distance_2d(self, other):
+        return sqrt( (self.x - other.x) ** 2 + (self.z - other.z) ** 2  )
+
 class Vector4(Vector3):
     def __init__(self, x, y, z, w):
         Vector3.__init__(self, x, y, z)
