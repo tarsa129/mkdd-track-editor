@@ -88,7 +88,6 @@ class CheckpointGroup(PointGroup):
         index = self.parent().indexOfChild(self)
         self.setText(0, "Checkpoint Group {0}".format(index))
 
-
 class ObjectPointGroup(ObjectGroup):
     def __init__(self, parent, bound_to):
         super().__init__("Object Path", parent=parent, bound_to=bound_to)
@@ -205,6 +204,7 @@ class CameraRoutePoint(NamedItem):
         index = group.points.index(self.bound_to)
 
         self.setText(0, "Camera Point {0}".format(index))
+
 class ObjectEntry(NamedItem):
     def __init__(self, parent, name, bound_to):
         super().__init__(parent, name, bound_to)
@@ -225,7 +225,6 @@ class ObjectEntry(NamedItem):
     def __lt__(self, other):
         return self.bound_to.objectid < other.bound_to.objectid
 
-
 class KartpointEntry(NamedItem):
     def update_name(self):
         playerid = self.bound_to.playerid
@@ -234,7 +233,6 @@ class KartpointEntry(NamedItem):
         else:
             result = "ID:{0}".format(playerid)
         self.setText(0, "Kart Start Point {0}".format(result))
-
 
 class AreaEntry(NamedItem):
     def __init__(self, parent, name, bound_to):
@@ -249,7 +247,6 @@ class AreaEntry(NamedItem):
             disp_string += ", (Cam: {0})".format(self.bound_to.camera_index)
         self.setText(0, disp_string)
 
-
 class CameraEntry(NamedItem):
     def __init__(self, parent, name, bound_to, index):
         super().__init__(parent, name, bound_to, index)
@@ -263,7 +260,6 @@ class CameraEntry(NamedItem):
             text_descrip = "Camera {0}: (Type: {1})".format(self.index, self.bound_to.type)
 
         self.setText(0, text_descrip)
-
 
 class RespawnEntry(NamedItem):
     def update_name(self):
@@ -281,7 +277,6 @@ class CannonEntry(NamedItem):
                 self.setText(0, "Cannon ID: ({0})".format(self.bound_to.id))
                 break
 
-
 class MissionEntry(NamedItem):
     def update_name(self):
         for i in range(self.parent().childCount()):
@@ -295,6 +290,7 @@ class LevelDataTreeView(QTreeWidget):
     reverse = pyqtSignal(ObjectGroup)
     duplicate = pyqtSignal(ObjectGroup)
     split = pyqtSignal(PointGroup, RoutePoint)
+    remove_type = pyqtSignal(ObjectEntry)
     #split_checkpoint = pyqtSignal(CheckpointGroup, Checkpoint)
 
     def __init__(self, *args, **kwargs):
@@ -350,10 +346,10 @@ class LevelDataTreeView(QTreeWidget):
 
         elif isinstance(item, (EnemyPointGroup, ItemPointGroup, ObjectPointGroup, CameraPointGroup, CheckpointGroup)):
             context_menu = QMenu(self)
-            select_all_action = QAction("Select All", self)
+            remove_all_type = QAction("Select All", self)
             reverse_action = QAction("Reverse", self)
 
-            def emit_current_selectall():
+            def emit_remove_tupeall():
                 item = self.itemAt(pos)
                 self.select_all.emit(item)
 
@@ -361,10 +357,10 @@ class LevelDataTreeView(QTreeWidget):
                 item = self.itemAt(pos)
                 self.reverse.emit(item)
 
-            select_all_action.triggered.connect(emit_current_selectall)
+            remove_all_type.triggered.connect(emit_remove_tupeall)
             reverse_action.triggered.connect(emit_current_reverse)
 
-            context_menu.addAction(select_all_action)
+            context_menu.addAction(remove_all_type)
             context_menu.addAction(reverse_action)
 
             if isinstance(item, (EnemyPointGroup, ItemPointGroup) ):
@@ -379,6 +375,22 @@ class LevelDataTreeView(QTreeWidget):
             context_menu.exec(self.mapToGlobal(pos))
             context_menu.destroy()
             del context_menu
+        elif isinstance(item, (ObjectEntry, AreaEntry)):
+            context_menu = QMenu(self)
+            remove_all_type = QAction("Remove All of Type", self)
+
+            def emit_remove_typeall():
+                item = self.itemAt(pos)
+                self.remove_type.emit(item)
+
+            remove_all_type.triggered.connect(emit_remove_typeall)
+
+            context_menu.addAction(remove_all_type)
+
+            context_menu.exec(self.mapToGlobal(pos))
+            context_menu.destroy()
+            del context_menu
+
 
     def _add_group(self, name, customgroup=None):
         if customgroup is None:
@@ -402,8 +414,6 @@ class LevelDataTreeView(QTreeWidget):
         self.cannons.remove_children()
         self.missions.remove_children()
         
-
-
     def set_objects(self, kmpdata: KMP):
 
         # Compute the location (based on indexes) of the currently selected item, if any.
@@ -529,7 +539,6 @@ class LevelDataTreeView(QTreeWidget):
         self.cannons.bound_to = levelfile.cannonpoints
         self.missions.bound_to = levelfile.missionpoints
 
-        #print(self.cameras.bound_to.assoc)
     def _get_expansion_states(self, parent_item: QTreeWidgetItem) -> 'tuple[bool]':
         expansion_states = []
         for i in range(parent_item.childCount()):

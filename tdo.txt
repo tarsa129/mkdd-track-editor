@@ -15,7 +15,6 @@ gobj:
 - all those dang .json files
 - proper hiding of routes field
 - add "remove all of type" option as a treeview context menu
-- add "add pocha" object
 
 poti:
 - check autorouting for cameras / Objects

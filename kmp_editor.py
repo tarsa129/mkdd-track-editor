@@ -999,6 +999,7 @@ class GenEditor(QMainWindow):
         self.leveldatatreeview.reverse.connect(self.reverse_all_of_group)
         self.leveldatatreeview.duplicate.connect(self.duplicate_group_from_tree)
         self.leveldatatreeview.split.connect(self.split_group_from_tree)
+        self.leveldatatreeview.remove_type.connect(self.remove_all_of_type)
     
     
 
@@ -1028,8 +1029,6 @@ class GenEditor(QMainWindow):
         self.duplicate_group(self, group)
         #make sure that a group *can* be duplicated by checking the group's next to see if all can handle another prev, and all prev to see if they can handle another next
         
-        
-
     def duplicate_group(self, group):
         to_deal_with = self.level_file.get_to_deal_with(group) 
 
@@ -1067,6 +1066,7 @@ class GenEditor(QMainWindow):
 
         self.leveldatatreeview.set_objects(self.level_file)
         self.update_3d()
+        self.set_has_unsaved_changes(True)
 
     def select_all_of_group(self, item):
         group = item.bound_to
@@ -1082,6 +1082,21 @@ class GenEditor(QMainWindow):
             else:
                 self.level_view.selected_positions.append(point.position)
         self.update_3d()
+
+    def remove_all_of_type(self, item):
+        obj = item.bound_to
+        to_delete = []
+        if isinstance(obj, MapObject):
+            to_delete = [mapobject for mapobject in self.level_file.objects.objects if mapobject.objectid == obj.objectid]
+            for obj in to_delete:
+                self.level_file.objects.objects.remove(obj)
+        
+        self.pik_control.update_info()
+        self.level_view.do_redraw()
+        self.leveldatatreeview.set_objects(self.level_file)
+        self.set_has_unsaved_changes(True)
+
+    
 
     def action_open_rotationedit_window(self):
         if self.edit_spawn_window is None:

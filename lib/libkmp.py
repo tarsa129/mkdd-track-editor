@@ -1322,10 +1322,6 @@ class MapObjects(object):
         #print(bol2kmp)
         for object in self.objects:
             object.write(f )
-        end_sec = f.tell()
-        f.seek(count_offset)
-        f.write(pack(">H", num_written))
-        f.seek(end_sec)
 
 # Section 6
 # Kart/Starting positions
