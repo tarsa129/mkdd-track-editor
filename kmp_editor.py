@@ -1540,8 +1540,14 @@ class GenEditor(QMainWindow):
             self.object_to_be_added = [thing_to_add, obj.id, -1 ]
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
-        elif option == 2:
-            obj.assign_to_closest(self.level_file.respawnpoints)
+        elif option == 2: #regarding assigning checkpoints to routes
+            if isinstance(obj, Checkpoint):
+                obj.assign_to_closest(self.level_file.respawnpoints)
+            elif isinstance(obj, JugemPoint):
+                self.level_file.reassign_one_respawn(obj)
+            else:
+                self.level_file.reassign_respawns()
+                self.level_view.do_redraw()
         elif option == 3: #add item box
             #self.addobjectwindow_last_selected_category = 6
 
@@ -1661,13 +1667,13 @@ class GenEditor(QMainWindow):
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
             self.object_to_be_added = None
         elif option == 9: #add new respawn point
-
-
-            #self.addobjectwindow_last_selected_category = 9
-            #get next id
-            rsp = libkmp.JugemPoint.new()
-            
-            self.object_to_be_added = [rsp, None, None ]
+            rsp = libkmp.JugemPoint.new()            
+            self.object_to_be_added = [rsp, False, None ]
+            self.pik_control.button_add_object.setChecked(True)
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)    
+        elif option == 9.5:
+            rsp = libkmp.JugemPoint.new()            
+            self.object_to_be_added = [rsp, True, None ]
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)    
         elif option == 10: #merge enemy/item/route
@@ -1787,10 +1793,6 @@ class GenEditor(QMainWindow):
         self.leveldatatreeview.set_objects(self.level_file)   
 
     @catch_exception
-    def button_add_advanced(self, option, obj = None):
-        pass
-
-    @catch_exception
     def button_add_from_addi_options_multi(self, option, objs = None): 
         if option == -1 or option == -1.5:
             sum_x = 0
@@ -1840,14 +1842,7 @@ class GenEditor(QMainWindow):
             for obj in objs:
                 if isinstance(obj, MapObject) and obj.route_info is not None:
                     pass
-        if option == 2:
-            max_group = 0
-            #iterate through all checkpoints to find the "new" group
-            for checkgroup in self.level_file.checkpoints.groups:
-                for checkpoint in checkgroup.points:
-                    max_group = max(max_group, checkpoint.unk1)
-            for obj in objs:
-                obj.unk1 = max_group + 1
+
 
     def auto_route_obj(self, obj):
         #do object route
@@ -2026,7 +2021,8 @@ class GenEditor(QMainWindow):
                 self.level_file.kartpoints.positions.append(placeobject)
             elif isinstance(object, libkmp.JugemPoint):
                 self.level_file.respawnpoints.append(placeobject)
-                #find the closest enemy point
+                if group:
+                    self.level_file.reassign_one_respawn(placeobject)
                 
                
             elif isinstance(object, libkmp.Area):
@@ -2112,6 +2108,8 @@ class GenEditor(QMainWindow):
                     self.level_file.kartpoints.positions.append(placeobject)
                 elif isinstance(object, libkmp.JugemPoint):
                     self.level_file.respawnpoints.append(placeobject)
+                    if group:
+                        self.level_file.reassign_one_respawn(object)
                 elif isinstance(object, libkmp.Area):
                     added_area = True
                     self.level_file.areas.areas.append(placeobject)

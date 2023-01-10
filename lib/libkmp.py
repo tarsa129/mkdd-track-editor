@@ -304,8 +304,6 @@ class PointGroup(object):
         if id in self.nextgroup:
             self.nextgroup.remove(id)
             self.nextgroup.append(-1)
-
-
 class PointGroups(object):
     def __init__(self):
         self.groups = []
@@ -2371,6 +2369,18 @@ class KMP(object):
         for checkgroup in self.checkpoints.groups:
             for checkpoint in checkgroup.points:
                 checkpoint.assign_to_closest(self.respawnpoints)
+
+    def reassign_one_respawn(self, respawn : JugemPoint):
+        if len(self.checkpoints.groups) == 0:
+            return
+
+        rsp_id = self.get_index_of_respawn(respawn)
+
+        for checkgroup in self.checkpoints.groups:
+            for checkpoint in checkgroup.points:
+                old_assign = checkpoint.respawn
+                checkpoint.assign_to_closest(self.respawnpoints)
+                checkpoint.respawn = old_assign if checkpoint.respawn != rsp_id or old_assign == rsp_id else checkpoint.respawn
 
     def remove_respawn(self, rsp: JugemPoint):
         respawn_idx = self.get_index_of_respawn(rsp)

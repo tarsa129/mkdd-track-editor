@@ -9,14 +9,12 @@ enemy/item/checkpoint
 - add a "remove empty groups" button, and empty groups should be deleted upon all the points being removed
 - enemy/item: get the scale rendering correct 
 - enemy/item multiselect: increase/decrease scale
-- checkpoint: add "assign to closest respawn" button
-- checkpoint: refactor respawn_id so that it stores the actual respawn itself. then in data_editor, use the id
 - pointgroups: add helper function for getting the absolute index of a point 
 
 gobj:
 - all those dang .json files
 - proper hiding of routes field
-- add "remove all of type" option as a treeview custom object
+- add "remove all of type" option as a treeview context menu
 - add "add pocha" object
 
 poti:
@@ -40,10 +38,6 @@ came:
 - camera replaying (long shot)
 - properly hide fields
 
-jugem:
-- add a "grab closest button for existing jugem"
-- add a "add and grab closest" button
-
 mspt:
  - deal with mspt ids (how are they used?)
 
@@ -53,5 +47,6 @@ general:
 error analyzer - i'll figure this out when i get to it
 starting mode topdown vs 3d - add to config file
 refactor options code to move stuff to libkmp
+add limit checks of 255 on everything
 
 

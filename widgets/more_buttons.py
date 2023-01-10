@@ -82,6 +82,11 @@ class MoreButtons(QWidget):
             set_key_automatically.setText("Auto Key Checkpoints")
             set_key_automatically.clicked.connect(lambda: self.parent.button_add_from_addi_options(21, option.bound_to) )
             self.vbox.addWidget(set_key_automatically)
+
+            set_to_closest = QPushButton(self)
+            set_to_closest.setText("Assign to Closest Respawn")
+            set_to_closest.clicked.connect(lambda: self.parent.button_add_from_addi_options(2, obj) )
+            self.vbox.addWidget(set_to_closest)
             
         elif isinstance(option.bound_to, Checkpoint):
             
@@ -305,22 +310,27 @@ class MoreButtons(QWidget):
             new_respawn.clicked.connect(lambda: self.parent.button_add_from_addi_options(9) )
             self.vbox.addWidget(new_respawn)
 
+            new_respawn_assign = QPushButton(self)
+            new_respawn_assign.setText("Add Respawn and Assign to Closest Checkpoints")
+            new_respawn_assign.clicked.connect(lambda: self.parent.button_add_from_addi_options(9.5) )
+            self.vbox.addWidget(new_respawn_assign)
+
             auto_respawn_existing = QPushButton(self)
             auto_respawn_existing.setText("Auto Respawns (Create from Checkpoints)")
             auto_respawn_existing.clicked.connect(lambda: self.parent.button_add_from_addi_options(22, option.bound_to) )
             self.vbox.addWidget(auto_respawn_existing)
 
             auto_respawn_existing = QPushButton(self)
-            auto_respawn_existing.setText("Auto Respawns (Assign to Closest)")
-            auto_respawn_existing.clicked.connect(lambda: self.parent.button_add_from_addi_options(22.5, option.bound_to) )
+            auto_respawn_existing.setText("Auto Respawns (Assign All Where Closest)")
+            auto_respawn_existing.clicked.connect(lambda: self.parent.button_add_from_addi_options(2, option.bound_to) )
             self.vbox.addWidget(auto_respawn_existing)
         elif isinstance(option.bound_to, JugemPoint):
             all_options = False
 
-            new_respawn = QPushButton(self)
-            new_respawn.setText("Add Respawn")
-            new_respawn.clicked.connect(lambda: self.parent.button_add_from_addi_options(9) )
-            self.vbox.addWidget(new_respawn)
+            assign_only = QPushButton(self)
+            assign_only.setText("Assign to Checkpoint Where Closest")
+            assign_only.clicked.connect(lambda: self.parent.button_add_from_addi_options(2, obj) )
+            self.vbox.addWidget(assign_only)
 
         if all_options:
             self.add_top_level_items()
@@ -388,16 +398,6 @@ class MoreButtons(QWidget):
             assign_to_route.setText("Assign Objects to Route")
             assign_to_route.clicked.connect(lambda: self.parent.button_add_from_addi_options_multi(1, options[1]) )
             self.vbox.addWidget(assign_to_route)
-        if 2 in options:
-            make_optional = QPushButton(self)
-            make_optional.setText("Make Checkpoints Optional")
-            make_optional.clicked.connect(lambda: self.parent.button_add_from_addi_options_multi(2, options[2]) )
-            self.vbox.addWidget(make_optional)
-        if 3 in options:
-            link_enemy_points = QPushButton(self)
-            link_enemy_points.setText("Link Enemy Points Together")
-            link_enemy_points.clicked.connect(lambda: self.parent.button_add_from_addi_options_multi(3, options[3]) )
-            self.vbox.addWidget(link_enemy_points)
         #routepoints - links
         
         pass
