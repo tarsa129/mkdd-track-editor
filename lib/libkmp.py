@@ -358,7 +358,9 @@ class PointGroups(object):
             group = self.groups[i]
             print("compare the ids, they should be the same", i, group.id)
             if group.num_next() == 1 and self.groups[ group.nextgroup[0] ].num_prev() == 1:
-                
+                if 0 in group.nextgroup:
+                    i += 1 #do not merge with the start
+                    continue
                 del_group = self.groups[ group.nextgroup[0] ] 
                 
                 #print('merge ' + str(i) + " and " + str(del_group.id))
@@ -402,6 +404,37 @@ class PointGroups(object):
         new_group.id = self.new_group_id()
         self.groups.append( new_group )
 
+    def remove_group(self, del_group):
+        self.groups.remove(del_group)
+        
+        #around the deleted groups: 
+
+        for group in self.groups :
+            if group.id > del_group.id:
+                group.id -= 1
+            
+            #remove previous links to the deleted group
+            group.prevgroup = [ id for id in group.prevgroup if id != del_group.id]
+            group.nextgroup = [ id for id in group.nextgroup if id != del_group.id]
+
+            #pad back to 6 entries
+            group.prevgroup += [-1] * (6- len(group.prevgroup))
+            group.nextgroup += [-1] * (6- len(group.nextgroup))
+
+
+            #deal with others
+            group.prevgroup = [ id if id < del_group.id or id == -1 else id - 1 for id in group.prevgroup ]
+            group.nextgroup = [ id if id < del_group.id or id == -1 else id - 1 for id in group.nextgroup  ]
+
+
+        self.merge_groups()
+
+    def remove_point(self, point):
+        group_idx, group, point_idx = self.find_group_of_point(point)
+        if len(group.points) == 1:
+            self.remove_group(group)
+        else:
+            group.points.remove(point)
 
 # Section 1
 # Enemy/Item Route Code Start
@@ -503,6 +536,36 @@ class EnemyPointGroups(PointGroups):
 
     def get_new_group(self):
         return EnemyPointGroup.new()
+
+    def remove_point(self, del_point):
+        """
+        type_4_areas= [ area for area in areas if area.type == 4]
+        groupslen = [ len(group.points) for group in self.groups ]  
+        points_before = sum(groupslen[0:del_group.id])
+        points_includ = sum(groupslen[0:del_group.id + 1])
+
+        for area in type_4_areas:
+            if area.enemypointid > points_before and area.enemypointid < points_includ:
+                area.enemypointid = -1
+            elif area.enemypointid > points_includ:
+                area.enemypointid -= ( points_includ - points_before )
+        """
+        super().remove_point(del_point)
+
+    def remove_group(self, del_group):
+        """
+        type_4_areas= [ area for area in areas if area.type == 4]
+        groupslen = [ len(group.points) for group in self.groups ]  
+        points_before = sum(groupslen[0:del_group.id])
+        points_includ = sum(groupslen[0:del_group.id + 1])
+
+        for area in type_4_areas:
+            if area.enemypointid > points_before and area.enemypointid < points_includ:
+                area.enemypointid = -1
+            elif area.enemypointid > points_includ:
+                area.enemypointid -= ( points_includ - points_before )
+        """
+        super().remove_group(del_group)
 
     @classmethod
     def from_file(cls, f):
@@ -2427,43 +2490,13 @@ class KMP(object):
 
     def remove_group(self, del_group):
         to_deal_with = self.get_to_deal_with(del_group)
-        if to_deal_with == self.enemypointgroups:
-            to_deal_with = self.enemypointgroups
-            
-            type_4_areas= [ area for area in self.areas.areas if area.type == 4]
-            groupslen = [ len(group.points) for group in to_deal_with.groups ]  
-            points_before = sum(groupslen[0:del_group.id])
-            points_includ = sum(groupslen[0:del_group.id + 1])
 
-            for area in type_4_areas:
-                if area.enemypointid > points_before and area.enemypointid < points_includ:
-                    area.enemypointid = -1
-                elif area.enemypointid > points_includ:
-                    area.enemypointid -= ( points_includ - points_before )
-
-        to_deal_with.groups.remove(del_group)
+        to_deal_with.remove_group(del_group) 
         
-        #around the deleted groups: 
+    def remove_point(self, del_point):
+        to_deal_with = self.get_to_deal_with(del_point)
 
-        for group in to_deal_with.groups :
-            if group.id > del_group.id:
-                group.id -= 1
-            
-            #remove previous links to the deleted group
-            group.prevgroup = [ id for id in group.prevgroup if id != del_group.id]
-            group.nextgroup = [ id for id in group.nextgroup if id != del_group.id]
-
-            #pad back to 6 entries
-            group.prevgroup += [-1] * (6- len(group.prevgroup))
-            group.nextgroup += [-1] * (6- len(group.nextgroup))
-
-
-            #deal with others
-            group.prevgroup = [ id if id < del_group.id or id == -1 else id - 1 for id in group.prevgroup ]
-            group.nextgroup = [ id if id < del_group.id or id == -1 else id - 1 for id in group.nextgroup  ]
-
-
-        to_deal_with.merge_groups()
+        to_deal_with.remove_point(del_point) 
 
 with open("lib/mkwiiobjects.json", "r") as f:
     tmp = json.load(f)

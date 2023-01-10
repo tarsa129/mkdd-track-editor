@@ -2360,11 +2360,13 @@ class GenEditor(QMainWindow):
         #tobedeleted = []
         for obj in self.level_view.selected:
             if isinstance(obj, libkmp.EnemyPoint):
+                self.level_file.enemypointgroups.remove_point(obj)
+                """"
                 for group in self.level_file.enemypointgroups.groups:
                     if obj in group.points:
                         group.points.remove(obj)
                         break
-
+                """
             if isinstance(obj, libkmp.ItemPoint):
                 for group in self.level_file.itempointgroups.groups:
                     if obj in group.points:
@@ -2395,7 +2397,7 @@ class GenEditor(QMainWindow):
                 self.level_file.remove_respawn(obj)
                 #self.level_file.respawnpoints.remove(obj)
             elif isinstance(obj, libkmp.Area):
-                if obj.camera_index != -1 and obj.camera_index < len(self.level_file.areas.areas):
+                if obj.camera_index != -1 and obj.camera_index < len(self.level_file.cameras):
                     self.level_file.cameras[obj.camera_index].used_by.remove(obj)
                 
             
