@@ -40,10 +40,15 @@ class ObjectGroupObjects(ObjectGroup):
         self.sortChildren(0, 0)
 
 class ObjectGroupCameras(ObjectGroup):
+
     def set_name(self):  
         
         if self.bound_to is not None:
             self.setText(0, "Cameras, Start Camera: {0}".format( self.bound_to.startcam) )
+
+    def update_name(self):
+        self.set_name()
+
 
 class PointGroup( ObjectGroup):
     def __init__(self, name, parent=None, bound_to=None):
@@ -92,8 +97,6 @@ class ObjectPointGroup(ObjectGroup):
     def update_name(self):
         index = self.parent().indexOfChild(self)
         self.setText(0, "Object Path {0}".format(index))
-
-
 
 class CameraPointGroup(ObjectGroup):
     def __init__(self, parent, bound_to):
@@ -184,7 +187,6 @@ class Checkpoint(RoutePoint):
         index = group.points.index(self.bound_to)
 
         self.setText(0, "Checkpoint {0} (pos={1})".format(index+offset, index))
-
 
 class ObjectRoutePoint(NamedItem):
     def update_name(self):
@@ -521,6 +523,7 @@ class LevelDataTreeView(QTreeWidget):
         self.kartpoints.bound_to = levelfile.kartpoints
         self.areas.bound_to = levelfile.areas
         self.cameras.bound_to = levelfile.cameras
+        levelfile.cameras.widget = self.cameras
         self.cameras.set_name()
         self.respawnpoints.bound_to = levelfile.respawnpoints
         self.cannons.bound_to = levelfile.cannonpoints

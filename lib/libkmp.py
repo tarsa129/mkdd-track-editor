@@ -1336,6 +1336,9 @@ class KartStartPoint(object):
         self.rotation = Rotation.default()
         self.playerid = 0xFF
 
+        self.pole_position = 0
+        self.start_squeeze = 0
+
 
     @classmethod
     def new(cls):
@@ -1517,6 +1520,7 @@ class Cameras(list):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.startcam = -1
+        self.bound_to = None
 
     @classmethod
     def from_file(cls, f, count):
@@ -2009,8 +2013,12 @@ class KMP(object):
         f.read(2)
         f.read(2)
         kmp.lap_count = read_uint8(f)
-        kmp.pole_position = read_uint8(f)
-        kmp.start_squeeze = read_uint8(f)
+        if len(kmp.kartpoints.positions) > 0:
+            kmp.kartpoints.positions[0].pole_position = read_uint8(f)
+            kmp.kartpoints.positions[0].start_squeeze = read_uint8(f)
+        else:
+            kmp.pole_position = read_uint8(f)
+            kmp.start_squeeze = read_uint8(f)
         kmp.lens_flare = read_uint8(f)
         read_uint8(f)
         kmp.flare_color = ColorRGB.from_file(f)
@@ -2253,7 +2261,12 @@ class KMP(object):
          offsets.append(offset) #offset 15 for STGI
          f.write(b"STGI")
          f.write(pack(">HH", 1, 0 ) )
-         f.write(pack(">BBBB", self.lap_count, self.pole_position, self.start_squeeze, self.lens_flare))
+         f.write(pack(">B", self.lap_count))
+         if len(self.kartpoints.positions) > 0:
+            f.write(pack(">BB", self.kartpoints.positions[0].pole_position, self.kartpoints.positions[0].start_squeeze) )
+         else:
+            f.write(pack(">BB", self.pole_position, self.start_squeeze) )
+         f.write(pack(">B", self.lens_flare))
          f.write(pack(">BBBBB", 0, self.flare_color.r, self.flare_color.b, self.flare_color.b, self.flare_alpha ) )
          f.write(pack(">b", 0 ) )
 

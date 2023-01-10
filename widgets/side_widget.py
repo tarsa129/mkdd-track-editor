@@ -5,7 +5,7 @@ import PyQt5.QtWidgets as QtWidgets
 import PyQt5.QtCore as QtCore
 from PyQt5.QtCore import QSize, pyqtSignal, QPoint, QRect
 from PyQt5.QtCore import Qt
-from widgets.data_editor import choose_data_editor, ObjectEdit, CameraEdit, AreaEdit
+from widgets.data_editor import choose_data_editor, ObjectEdit, CameraEdit, AreaEdit, CamerasEdit
 from widgets.more_buttons import MoreButtons
 
 class PikminSideWidget(QWidget):
@@ -175,7 +175,6 @@ class PikminSideWidget(QWidget):
                 self.object_data_edit.emit_route_update.connect(lambda obj, old, new: self.parent.update_route_used_by(obj, old, new) )
             elif isinstance(self.object_data_edit, AreaEdit):
                 self.object_data_edit.emit_camera_update.connect(lambda obj, old, new: self.parent.update_camera_used_by(obj, old, new) )
-
 
         self.objectlist = []
         self.comment_label.setText("")

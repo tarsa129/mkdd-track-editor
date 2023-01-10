@@ -474,10 +474,12 @@ class DataEditor(QWidget):
             if self.bound_to.widget is None:
                 return
             self.bound_to.widget.update_name()
-            self.bound_to.widget.parent().sort()
+            if hasattr(self.bound_to.widget, "parent") and self.bound_to.widget.parent() is not None:
+                self.bound_to.widget.parent().sort()
             self.bound_to.widget.setSelected(True)
         if isinstance(self.bound_to, MapObject):
             self.bound_to.set_route_info()
+
 
 def create_setter_list(lineedit, bound_to, attribute, index):
     def input_edited():
@@ -740,8 +742,7 @@ class KMPEdit(DataEditor):
 
         self.speed_modifier = self.add_decimal_input("Speed Modifier", "speed_modifier", -inf, +inf)
                                         
-        self.pole_position = self.add_dropdown_input("Pole Position", "pole_position", POLE_POSITIONS )
-        self.start_squeeze = self.add_dropdown_input("Start Distance", "start_squeeze", START_SQUEEZE )
+        
 
         self.lens_flare = self.add_checkbox("Enable Lens Flare", "lens_flare",
                                             off_value=0, on_value=1)
@@ -760,8 +761,6 @@ class KMPEdit(DataEditor):
         obj: KMP = self.bound_to
         #self.roll.setText(str(obj.roll))
         self.lap_count.setText(str(obj.lap_count))
-        self.pole_position.setCurrentIndex(obj.pole_position)
-        self.start_squeeze.setCurrentIndex(obj.start_squeeze)
         self.lens_flare.setChecked(obj.lens_flare != 0)
         self.flare_color[0].setText(str(obj.flare_color.r))
         self.flare_color[1].setText(str(obj.flare_color.g))
@@ -956,7 +955,8 @@ class KartStartPointEdit(DataEditor):
         
         self.playerid = self.add_integer_input("Player ID", "playerid",
                                                MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-
+        self.pole_position = self.add_dropdown_input("Pole Position", "pole_position", POLE_POSITIONS )
+        self.start_squeeze = self.add_dropdown_input("Start Distance", "start_squeeze", START_SQUEEZE )
 
     def update_data(self):
         obj: KartStartPoint = self.bound_to
@@ -966,6 +966,9 @@ class KartStartPointEdit(DataEditor):
 
         self.update_rotation(*self.rotation)
         self.playerid.setText(str(obj.playerid))
+
+        self.pole_position.setCurrentIndex(obj.pole_position)
+        self.start_squeeze.setCurrentIndex(obj.start_squeeze)
 
 
 class AreaEdit(DataEditor):
@@ -1064,13 +1067,23 @@ class AreaEdit(DataEditor):
         self.update_name()
 
 class CamerasEdit(DataEditor):
-    #emit_route_update = pyqtSignal("PyQt_PyObject", "int", "int")
+    emit_starting_update = pyqtSignal("PyQt_PyObject", "int")
     def setup_widgets(self):
         self.startcam = self.add_integer_input("Starting Camera", "startcam", 0, 255)
+
+        self.startcam.editingFinished.connect(self.update_starting_cam)
     def update_data(self):
         obj: Cameras = self.bound_to
-        print("udpate camers data")
         self.startcam.setText( str(obj.startcam) )
+
+    def update_starting_cam(self):
+        self.emit_starting_update.emit(self.bound_to, int(self.startcam.text()) )
+        self.bound_to.startcam = int(self.startcam.text())
+        self.update_name()
+
+    def update_name(self):
+        super().update_name()
+
 
 class CameraEdit(DataEditor):
     emit_route_update = pyqtSignal("PyQt_PyObject", "int", "int")
@@ -1145,11 +1158,6 @@ class CameraEdit(DataEditor):
 
         self.nextcam.setText(str(obj.nextcam))
 
-        
-
-
-
-
     def update_route_used(self):
         #print('update route used', self.bound_to.route)
         #emit signal with old and new route numbers, for easier changing
@@ -1179,8 +1187,6 @@ class RespawnPointEdit(DataEditor):
         self.update_rotation(*self.rotation)
         self.range.setText(str(obj.range))
 
-
-
 class CannonPointEdit(DataEditor):
     def setup_widgets(self):
         self.position = self.add_multiple_decimal_input("Position", "position", ["x", "y", "z"],
@@ -1198,7 +1204,6 @@ class CannonPointEdit(DataEditor):
         self.update_rotation(*self.rotation)
         self.cannon_id.setText(str(obj.id))
         self.shooteffect.setCurrentIndex( obj.shoot_effect )
-
 
 class MissionPointEdit(DataEditor):
     def setup_widgets(self):

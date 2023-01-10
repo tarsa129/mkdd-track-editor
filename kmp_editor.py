@@ -1469,7 +1469,6 @@ class GenEditor(QMainWindow):
         #print("ohai")
         if self.add_object_window is not None:
             self.object_to_be_added = self.add_object_window.get_content()
-            print(self.object_to_be_added)
             if self.object_to_be_added is None:
                 return
 
@@ -2026,6 +2025,10 @@ class GenEditor(QMainWindow):
                 
             elif isinstance(object, libkmp.KartStartPoint):
                 self.level_file.kartpoints.positions.append(placeobject)
+                if len(self.level_file.kartpoints.positions) == 1:
+                    #copy over the thing
+                    placeobject.pole_position = self.level_file.pole_position
+                    placeobject.start_squeeze = self.level_file.start_squeeze
             elif isinstance(object, libkmp.JugemPoint):
                 self.level_file.respawnpoints.append(placeobject)
                 if group:
@@ -2456,7 +2459,7 @@ class GenEditor(QMainWindow):
             self.level_file.cameras[old].used_by.remove(obj)
         if new != -1:
             self.level_file.cameras[new].used_by.append(obj)
-        
+
     def on_cut_action_triggered(self):
         self.on_copy_action_triggered()
         self.action_delete_objects()
