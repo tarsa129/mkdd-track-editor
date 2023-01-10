@@ -1143,6 +1143,8 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         glVertex3f(prevpoint.position.x, -prevpoint.position.z, prevpoint.position.y)
                         glVertex3f(point.position.x, -point.position.z, point.position.y)
                         glEnd()
+
+                        self.models.draw_arrow_head(prevpoint.position, point.position)
                     
                         if selected_groups[i] or selected_groups[group]:
                             glLineWidth(1.0)
@@ -1233,15 +1235,17 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         glColor3f(*used_colors[group])
 
                         if selected_groups[i] or selected_groups[group]:
-                            glLineWidth(3.0)
+                            glLineWidth(8.0)
 
                         glBegin(GL_LINES)
                         glVertex3f(prevpoint.position.x, -prevpoint.position.z, prevpoint.position.y)
                         glVertex3f(point.position.x, -point.position.z, point.position.y)
                         glEnd()
+
+                        self.models.draw_arrow_head(prevpoint.position, point.position)
                     
                         if selected_groups[i] or selected_groups[group]:
-                            glLineWidth(1.0)
+                            glLineWidth(4.0)
 
                             all_groups = self.level_file.enemypointgroups.groups
                 used_colors = [None] * len(all_groups) #stores the ingoing colors
@@ -1337,14 +1341,14 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                                 glVertex3f(pos2.x, -pos2.z, pos2.y)
                                 glEnd()
                             point_index += 1
-                glColor3f(*colors[i % 4])
                 glLineWidth(1.0)
 
             glPushMatrix()
             
-            #draw the arrow
+            #draw the arrow head between successive checkpoints
             if vismenu.checkpoints.is_visible():
-                for group in self.level_file.checkpoints.groups:
+                for i, group in enumerate(self.level_file.checkpoints.groups):
+                    glColor3f(*colors[i % 4])
                     prev = None
                     for checkpoint in group.points:
                         if prev is None:
@@ -1358,6 +1362,26 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                             self.models.draw_arrow_head(mid1, mid2)
                             #lines.append((mid1, mid2))
                             prev = checkpoint
+
+            #draw the arrow body between sucessive checkpoints
+            glBegin(GL_LINES)
+            if vismenu.checkpoints.is_visible():
+                for i, group in enumerate( self.level_file.checkpoints.groups ) :
+                    glColor3f(*colors[i % 4])
+                    prev = None
+                    for checkpoint in group.points:
+                        if prev is None:
+                            prev = checkpoint
+                        else:
+                            mid1 = (prev.start+prev.end)/2.0
+                            mid2 = (checkpoint.start+checkpoint.end)/2.0
+                            #mid1 = prev.mid
+                            #mid2 = checkpoint.mid
+                            glVertex3f(mid1.x, -mid1.z, mid1.y)
+                            glVertex3f(mid2.x, -mid2.z, mid2.y)
+                            prev = checkpoint
+            glEnd()
+
 
             #draw arrows between groups
             if vismenu.checkpoints.is_visible():
@@ -1401,39 +1425,19 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         glVertex3f(point.start.x, -point.start.z, point.start.y)
                         glEnd()
 
+                        self.models.draw_arrow_head(prevpoint.start, point.start)
+
                         glBegin(GL_LINES)
                         glVertex3f(prevpoint.end.x, -prevpoint.end.z, prevpoint.end.y)
                         glVertex3f(point.end.x, -point.end.z, point.end.y)
                         glEnd()
-                    
+
+                        self.models.draw_arrow_head(prevpoint.end, point.end)
                     
                         if selected_groups[i] or selected_groups[group]:
                             glLineWidth(1.0)
-
-
-            
-
-
             glPopMatrix()
-            glBegin(GL_LINES)
-            """for linestart, lineend in lines:
-                glVertex3f(linestart.x, -linestart.z, linestart.y)
-                glVertex3f(lineend.x, -lineend.z, lineend.y)"""
-            if vismenu.checkpoints.is_visible():
-                for group in self.level_file.checkpoints.groups:
-                    prev = None
-                    for checkpoint in group.points:
-                        if prev is None:
-                            prev = checkpoint
-                        else:
-                            mid1 = (prev.start+prev.end)/2.0
-                            mid2 = (checkpoint.start+checkpoint.end)/2.0
-                            #mid1 = prev.mid
-                            #mid2 = checkpoint.mid
-                            glVertex3f(mid1.x, -mid1.z, mid1.y)
-                            glVertex3f(mid2.x, -mid2.z, mid2.y)
-                            prev = checkpoint
-            glEnd()
+
 
             #go between the groups
 

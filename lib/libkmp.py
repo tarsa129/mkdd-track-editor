@@ -2183,13 +2183,10 @@ class KMP(object):
         
         return routes, cameras
 
-    def auto_qol_all(self):
-        # clear checkpoints
+    def create_checkpoints_from_enemy(self):
         for checkgroup in self.checkpoints.groups:
             checkgroup.points.clear()
         self.checkpoints.groups.clear()
-        
-        self.enemypointgroups.assign_prev_next()
         
         #create checkpoints from enemy points
         for i, group in enumerate( self.enemypointgroups.groups ):
@@ -2231,9 +2228,13 @@ class KMP(object):
                     new_checkpoint.end = Vector3(*second_point)
                     new_cp_group.points.append( new_checkpoint)
 
+    def auto_qol_all(self):
+        # clear checkpoints
+        
+        self.create_checkpoints_from_enemy()
         self.remove_unused_cameras()
         self.remove_unused_routes()
-        self.copy_enemy_to_item()
+        #self.copy_enemy_to_item()
     
     def reset_routes(self, start_at = 0):
         for route_index in range(start_at, len(self.routes) ):

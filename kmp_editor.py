@@ -1540,6 +1540,8 @@ class GenEditor(QMainWindow):
             self.object_to_be_added = [thing_to_add, obj.id, -1 ]
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
+        elif option == 2:
+            obj.assign_to_closest(self.level_file.respawnpoints)
         elif option == 3: #add item box
             #self.addobjectwindow_last_selected_category = 6
 
