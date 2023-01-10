@@ -7,7 +7,7 @@ from lib.vectors import Vector3
 from PyQt5.QtCore import pyqtSignal
 from lib.libkmp import (EnemyPoint, EnemyPointGroup, EnemyPointGroups, ItemPoint, ItemPointGroup, ItemPointGroups, CheckpointGroups, CheckpointGroup, Checkpoint, Route, RoutePoint, Area, Areas,
                         MapObject, KartStartPoint, Camera, KMP, JugemPoint, MapObjects, MapObject,
-                         OBJECTNAMES, ObjectContainer, KartStartPoints, PointGroups, PointGroup)
+                         OBJECTNAMES, ObjectContainer, KartStartPoints, PointGroups, PointGroup, KMPPoint)
 from widgets.tree_view import KMPHeader, EnemyRoutePoint
 #will create buttons based on the current selection
 #when nothing selected - add anything
@@ -27,93 +27,66 @@ class MoreButtons(QWidget):
         self.clear_buttons()
         all_options = False
 
-                
-        if option is None: #nothing selected and top level stuff
+        
+        if option is None or isinstance(option, KMPHeader): #nothing selected and top level stuff
             return
+
+        obj = option.bound_to
+        if isinstance(obj, (KMPPoint, PointGroup, PointGroups)):
+            point_type = "Enemy"
+            if isinstance(obj, (ItemPoint, ItemPointGroup, ItemPointGroups) ):
+                point_type = "Item"
+            if isinstance(obj, (Checkpoint, CheckpointGroup, CheckpointGroups) ):
+                point_type = "Checkpoint"
         
-        elif isinstance(option, KMPHeader):
+            if isinstance(obj, PointGroups):
+                new_enemy_group = QPushButton(self)
+                new_enemy_group.setText("Add " + point_type + " Group")
+                new_enemy_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(0, option.bound_to) )
+                self.vbox.addWidget(new_enemy_group)
+
+                merge_paths = QPushButton(self)
+                merge_paths.setText("Merge " + point_type + " Paths")
+                merge_paths.clicked.connect(lambda: self.parent.button_add_from_addi_options(10, option.bound_to) )
+                self.vbox.addWidget(merge_paths)
+
+                action_text = "Copy To Item Groups" if isinstance(option.bound_to, EnemyPointGroups) else "Copy From Enemy Groups"
+                copy_from_item = QPushButton(self)
+                copy_from_item.setText(action_text)
+                copy_from_item.clicked.connect(lambda: self.parent.button_add_from_addi_options(24) )
+                self.vbox.addWidget(copy_from_item)
+            elif isinstance(obj, PointGroup):
+                new_enemy_group = QPushButton(self)
+                new_enemy_group.setText("Add " + point_type + " Group")
+                new_enemy_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(0, option.bound_to) )
+                self.vbox.addWidget(new_enemy_group)
+
+                new_enemy_point = QPushButton(self)
+                new_enemy_point.setText("Add " + point_type + " Points To End Of Group")
+                new_enemy_point.clicked.connect(lambda: self.parent.button_add_from_addi_options(1, option.bound_to) )
+                self.vbox.addWidget(new_enemy_point)
+            elif isinstance(obj, KMPPoint):
+                all_options = False
+                new_enemy_point = QPushButton(self)
+                new_enemy_point.setText("Add " + point_type + " Points Here")
+                new_enemy_point.clicked.connect(lambda: self.parent.button_add_from_addi_options(11, option.bound_to) )
+                self.vbox.addWidget(new_enemy_point)
+
+
+
+        if isinstance(option.bound_to, CheckpointGroups):
             all_options = False
-            pass
-
-        elif isinstance(option.bound_to, (EnemyPointGroups, ItemPointGroups)): #enemy point group select
-
-            
-
-            point_type = "Enemy" if isinstance(option.bound_to, EnemyPointGroups) else "Item"
-            new_enemy_group = QPushButton(self)
-            new_enemy_group.setText("Add " + point_type + " Group")
-            new_enemy_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(0, option.bound_to) )
-            self.vbox.addWidget(new_enemy_group)
-
-            merge_paths = QPushButton(self)
-            merge_paths.setText("Merge " + point_type + " Paths")
-            merge_paths.clicked.connect(lambda: self.parent.button_add_from_addi_options(10, option.bound_to) )
-            self.vbox.addWidget(merge_paths)
-
-            action_text = "Copy To Item Groups" if isinstance(option.bound_to, EnemyPointGroups) else "Copy From Enemy Groups"
-            copy_from_item = QPushButton(self)
-            copy_from_item.setText(action_text)
-            copy_from_item.clicked.connect(lambda: self.parent.button_add_from_addi_options(24) )
-            self.vbox.addWidget(copy_from_item)
-
-        
-        elif isinstance(option.bound_to, (EnemyPointGroup, ItemPointGroup)): #enemy point group select
-            all_options = False
-
-            point_type = "Enemy" if isinstance(option.bound_to, EnemyPointGroup) else "Item"
-
-            new_enemy_group = QPushButton(self)
-            new_enemy_group.setText("Add " + point_type + " Group")
-            new_enemy_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(0, option.bound_to) )
-            self.vbox.addWidget(new_enemy_group)
-
-            new_enemy_point = QPushButton(self)
-            new_enemy_point.setText("Add " + point_type + " Points To End Of Group")
-            new_enemy_point.clicked.connect(lambda: self.parent.button_add_from_addi_options(1, option.bound_to) )
-            self.vbox.addWidget(new_enemy_point)
-        
-        elif isinstance(option.bound_to, (EnemyPoint, ItemPoint) ):
-
-            point_type = "Enemy" if isinstance(option.bound_to, EnemyPoint) else "Item"
-
-            all_options = False
-            new_enemy_point = QPushButton(self)
-            new_enemy_point.setText("Add " + point_type + " Points Here")
-            new_enemy_point.clicked.connect(lambda: self.parent.button_add_from_addi_options(11, option.bound_to) )
-            self.vbox.addWidget(new_enemy_point)
-
-        elif isinstance(option.bound_to, CheckpointGroups):
-            all_options = False
-            
-            new_check_group = QPushButton(self)
-            new_check_group.setText("Add Checkpoint Group")
-            new_check_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(0, option.bound_to) )
-            self.vbox.addWidget(new_check_group)
 
             set_key_automatically = QPushButton(self)
             set_key_automatically.setText("Auto Key Checkpoints")
             set_key_automatically.clicked.connect(lambda: self.parent.button_add_from_addi_options(21, option.bound_to) )
             self.vbox.addWidget(set_key_automatically)
             
-        elif isinstance(option.bound_to, CheckpointGroup) :
-            all_options = False
-            new_check_group = QPushButton(self)
-            new_check_group.setText("Add Checkpoint Group")
-            new_check_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(0, option.bound_to) )
-            self.vbox.addWidget(new_check_group)
-            
-            new_check_end = QPushButton(self)
-            new_check_end.setText("Add Checkpoint to Group End")
-            new_check_end.clicked.connect(lambda: self.parent.button_add_from_addi_options(13, option.bound_to) )
-            self.vbox.addWidget(new_check_end)
         elif isinstance(option.bound_to, Checkpoint):
+            
             all_options = False
-            new_check_here = QPushButton(self)
-            new_check_here.setText("Add Checkpoint Here")
-            new_check_here.clicked.connect(lambda: self.parent.button_add_from_addi_options(14, option.bound_to) )
-            self.vbox.addWidget(new_check_here)
-           
-        
+            pass
+            
         elif isinstance(option.bound_to, Route):     
             new_route_point = QPushButton(self)
             new_route_point.setText("Add Route Points To End")  

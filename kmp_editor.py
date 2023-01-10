@@ -1540,8 +1540,6 @@ class GenEditor(QMainWindow):
             self.object_to_be_added = [thing_to_add, obj.id, -1 ]
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
-        elif option == 2:   #add new checkpoint group
-            self.level_file.checkpoints.add_new_group()
         elif option == 3: #add item box
             #self.addobjectwindow_last_selected_category = 6
 
@@ -1715,26 +1713,6 @@ class GenEditor(QMainWindow):
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
             
             self.object_to_be_added = None
-        elif option == 13: #add new checkpoint to end
-            self.object_to_be_added = [libkmp.Checkpoint.new(), obj.id, -1 ]
-            #self.object_to_be_added[0].group = obj.id
-            #actively adding objects
-            self.pik_control.button_add_object.setChecked(True)
-            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
-        elif option == 14: #add new checkpoint here
-            group_id = -1
-            pos_in_grp = -1 
-            idx = 0
-            for group_idx, group in enumerate(self.level_file.checkpoints.groups):
-                for point_idx, point in enumerate(group.points):
-                    if point is obj:
-                        group_id = group_idx
-                        pos_in_grp = point_idx
-                        break
-            
-            self.object_to_be_added = [libkmp.Checkpoint.new(), group_id, pos_in_grp + 1 ]
-            self.pik_control.button_add_object.setChecked(True)
-            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
         elif option == 15: #add new route point here
             group_id = -1
             pos_in_grp = -1 

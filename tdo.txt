@@ -8,7 +8,6 @@ enemy/item/checkpoint
 - add arrows for directions of links between groups
 - handle automatic routing for prev/next groups when edited manually
 - add a "remove empty groups" button, and empty groups should be deleted upon all the points being removed
-- refactor more_buttons and button_add_from_addi_option to clean up the buttons
 - enemy/item: get the scale rendering correct 
 - enemy/item multiselect: increase/decrease scale
 - checkpoint: add "assign to closest respawn" button

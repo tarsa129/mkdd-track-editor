@@ -201,9 +201,6 @@ class MapViewer(QWidget):
 
         self.move_startpos = []
 
-    def set_collision(self, verts, faces):
-        self.collision = Collision(verts, faces)
-
     def set_mouse_mode(self, mode):
         assert mode in (MOUSE_MODE_NONE, MOUSE_MODE_ADDWP, MOUSE_MODE_CONNECTWP, MOUSE_MODE_MOVEWP)
 
