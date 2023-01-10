@@ -7,10 +7,6 @@ ktpt
 enemy/item/checkpoint
 - add arrows for directions of links between groups
 - handle automatic routing for prev/next groups when edited manually
-- make "v" a more universal "add stuff" option
--- if selecting point, 'v' should add points at current position
--- if selecting a group, 'v' should add points at the end of the group
--- if selecting a groups, 'v' should add empty groups
 - add a "remove empty groups" button, and empty groups should be deleted upon all the points being removed
 - refactor more_buttons and button_add_from_addi_option to clean up the buttons
 - enemy/item: get the scale rendering correct 
@@ -40,6 +36,7 @@ area:
 - type four: refactor enemypoint so that it stores the actual enemy point itself. then in data_editor, use the index. 
 -- ONLY have to worry about deletions, as additions will preserve the existence of the point
 - add helper functions in areas to get all areas of a specific type
+- add 'c' linking for areas 
 
 came:
 - camera replaying (long shot)

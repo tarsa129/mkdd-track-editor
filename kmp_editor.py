@@ -1364,29 +1364,32 @@ class GenEditor(QMainWindow):
         self.set_has_unsaved_changes(True)
 
     def button_open_add_item_window(self):
-
+        obj = None
+        add_something = False
         if len(self.level_view.selected) == 1:
-
             obj = self.level_view.selected[0]
-            #add points to group at current position
-            if isinstance(obj, KMPPoint):
-                to_deal_with = self.level_file.get_to_deal_with(obj)
-                start_groupind, start_group, start_pointind = to_deal_with.find_group_of_point(obj)
-
-                thing_to_add = libkmp.EnemyPoint.new() if isinstance(obj, EnemyPoint ) else ItemPoint.new()
-                self.object_to_be_added = [thing_to_add, start_groupind, start_pointind + 1  ]
-                #self.object_to_be_added[0].group = obj.id
-                #actively adding objects
-                self.pik_control.button_add_object.setChecked(True)
-                self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
-
         else:
-            accepted = self.add_object_window.exec_()
-            if accepted:
-                self.add_item_window_save()
-            else:
-                self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_NONE)
-                self.pik_control.button_add_object.setChecked(False)
+            obj = self.leveldatatreeview.currentItem().bound_to
+        #add points to group at current position
+        if isinstance(obj, KMPPoint):
+            add_something = True
+            self.button_add_from_addi_options( 11, obj)
+        elif isinstance(obj, PointGroup):
+            add_something = True
+            self.button_add_from_addi_options( 1, obj)
+        elif isinstance(obj, PointGroups):
+            add_something = True
+            self.button_add_from_addi_options( 0, obj)
+
+        if add_something:
+            return
+
+        accepted = self.add_object_window.exec_()
+        if accepted:
+            self.add_item_window_save()
+        else:
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_NONE)
+            self.pik_control.button_add_object.setChecked(False)
 
     def shortcut_open_add_item_window(self):
         self.button_open_add_item_window()
@@ -1532,11 +1535,9 @@ class GenEditor(QMainWindow):
                 new_item_group.id = self.level_file.itempointgroups.new_group_id()
                 self.level_file.itempointgroups.groups.append( new_item_group )"""
         elif option == 1: #adding an enemy point to a group, the group is obj
-            #self.addobjectwindow_last_selected_category = 2
-            thing_to_add = libkmp.EnemyPoint.new() if isinstance(obj, (EnemyPoint, EnemyPointGroup) ) else ItemPoint.new()
+            to_deal_with = self.level_file.get_to_deal_with(obj)
+            thing_to_add = to_deal_with.get_new_point()
             self.object_to_be_added = [thing_to_add, obj.id, -1 ]
-            #self.object_to_be_added[0].group = obj.id
-            #actively adding objects
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
         elif option == 2:   #add new checkpoint group
@@ -1604,9 +1605,9 @@ class GenEditor(QMainWindow):
             id = 0
             idx = 0
 
-            to_look_through = self.level_file.routes if obj.type == 1 else self.level_file.cameraroutes
+            to_deal_with = self.level_file.routes if obj.type == 1 else self.level_file.cameraroutes
 
-            for route in to_look_through:
+            for route in to_deal_with:
                 if route is obj:
                     id = idx
                     break
@@ -1669,33 +1670,17 @@ class GenEditor(QMainWindow):
             self.object_to_be_added = [rsp, None, None ]
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)    
-        elif option == 10:
-
-            obj.merge_groups()
-        
-        
+        elif option == 10: #merge enemy/item/route
+            obj.merge_groups()       
         elif option == 11: #new enemy point here
             #find its position in the enemy point group
-            pos = -1
-            idx = 0
+            to_deal_with = self.level_file.get_to_deal_with(obj)
+            start_groupind, start_group, start_pointind = to_deal_with.find_group_of_point(obj)
 
-            to_look_through = self.level_file.enemypointgroups.groups if isinstance(obj, EnemyPoint) else self.level_file.itempointgroups.groups
-
-            #yeah so, there is no way we can set all the points? so just like, look through all points i suppose
-            group_idx = 0
-            for i, group in enumerate(to_look_through):
-                idx = 0
-                for point in group.points:
-                    if point is obj:
-                        pos = idx
-                        group_idx = i
-                        break
-                    idx += 1
-
-            thing_to_add = libkmp.EnemyPoint.new() if isinstance(obj, EnemyPoint) else libkmp.ItemPoint.new()
-        
-            self.object_to_be_added = [thing_to_add, group_idx, pos + 1 ]
-
+            thing_to_add = to_deal_with.get_new_point()
+            self.object_to_be_added = [thing_to_add, start_groupind, start_pointind + 1  ]
+            #self.object_to_be_added[0].group = obj.id
+            #actively adding objects
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
         elif option == 12: #area camera route add
@@ -1755,11 +1740,11 @@ class GenEditor(QMainWindow):
             pos_in_grp = -1 
             idx = 0
 
-            to_look_through = self.level_file.routes
+            to_deal_with = self.level_file.routes
             if obj.partof.type == 1:
-                to_look_through = self.level_file.cameraroutes
+                to_deal_with = self.level_file.cameraroutes
 
-            for group_idx, group in enumerate(to_look_through):
+            for group_idx, group in enumerate(to_deal_with):
                 for point_idx, point in enumerate(group.points):
                     if point is obj:
                         group_id = group_idx
@@ -1780,8 +1765,6 @@ class GenEditor(QMainWindow):
                 self.leveldatatreeview.objects.bound_to = self.level_file.objects
                 for object in self.level_file.objects.objects:
                     self.auto_route_obj(object)
-        elif option == 18:
-            pass
         elif option == 19: #snap to route single
             if obj.has_route() and obj.route != -1 and obj.route < len(self.level_file.routes):
                 pointone_pos = self.level_file.routes[obj.route].points[0].position
@@ -1802,19 +1785,16 @@ class GenEditor(QMainWindow):
                             angle = atan2(pointtwo_pos.x - pointone_pos.x, pointtwo_pos.z - pointone_pos.z) * (180.0/3.14159);
                             camera.rotation = Rotation.from_euler( Vector3(0, angle + 90, 0)  ) 
 
-            self.level_view.do_redraw()
-          
+            self.level_view.do_redraw()         
         elif option == 21: #key checkpoints
             self.level_file.checkpoints.set_key_cps()
             self.level_view.do_redraw()
         elif option == 22: #respawns
             self.level_file.create_respawns()
             self.level_view.do_redraw()
-            #find angle from two points and autorotate
         elif option == 22.5: #reassign respawns
             self.level_file.reassign_respawns()
             self.level_view.do_redraw()
-            #find angle from two points and autorotate
         elif option == 23:
             self.level_file.remove_unused_routes()
             self.level_view.do_redraw()
