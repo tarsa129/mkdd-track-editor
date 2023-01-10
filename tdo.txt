@@ -6,10 +6,11 @@ ktpt
 
 enemy/item/checkpoint
 - handle automatic routing for prev/next groups when edited manually
-- add a "remove empty groups" button, and empty groups should be deleted upon all the points being removed
 - enemy/item: get the scale rendering correct 
 - enemy/item multiselect: increase/decrease scale
 - pointgroups: add helper function for getting the absolute index of a point 
+- checkpoints: add 'c' linking for respawns
+- when a group is selected from the treeview, the arrows are not being highlighted
 
 gobj:
 - all those dang .json files

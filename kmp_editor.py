@@ -1369,17 +1369,23 @@ class GenEditor(QMainWindow):
         if len(self.level_view.selected) == 1:
             obj = self.level_view.selected[0]
         else:
-            obj = self.leveldatatreeview.currentItem().bound_to
-        #add points to group at current position
-        if isinstance(obj, KMPPoint):
-            add_something = True
-            self.button_add_from_addi_options( 11, obj)
-        elif isinstance(obj, PointGroup):
-            add_something = True
-            self.button_add_from_addi_options( 1, obj)
-        elif isinstance(obj, PointGroups):
-            add_something = True
-            self.button_add_from_addi_options( 0, obj)
+            if hasattr(self.leveldatatreeview.currentItem(), 'bound_to'):
+                obj = self.leveldatatreeview.currentItem().bound_to
+        if obj is not None:
+            #add points to group at current position
+            if isinstance(obj, KMPPoint):
+                add_something = True
+                self.button_add_from_addi_options( 11, obj)
+            elif isinstance(obj, PointGroup):
+                add_something = True
+                self.button_add_from_addi_options( 1, obj)
+
+            elif isinstance(obj, PointGroups):
+                add_something = True
+
+                if len(obj.groups) != 1 or len(obj.groups[0].points) != 0:
+                    self.button_add_from_addi_options( 0, obj)               
+                self.button_add_from_addi_options( 1, obj.groups[-1]  )
 
         if add_something:
             return
@@ -1777,7 +1783,10 @@ class GenEditor(QMainWindow):
             self.level_file.reassign_respawns()
             self.level_view.do_redraw()
         elif option == 23: #removed unused routes
-            self.level_file.remove_unused_routes()
+            if isinstance(obj, PointGroups):
+                obj.remove_unused_groups()
+            else:
+                self.level_file.remove_unused_routes()
             self.level_view.do_redraw()
         elif option == 24: #copy enemy to item
             self.level_file.copy_enemy_to_item()
@@ -1786,6 +1795,8 @@ class GenEditor(QMainWindow):
             self.level_view.do_redraw()
         elif option == 26: #remove unused respawns:
             self.level_file.remove_unused_respawns()
+        elif option == 26:
+            self.level_file.remove_un
         self.leveldatatreeview.set_objects(self.level_file)   
 
     @catch_exception
@@ -2361,19 +2372,8 @@ class GenEditor(QMainWindow):
         for obj in self.level_view.selected:
             if isinstance(obj, libkmp.EnemyPoint):
                 self.level_file.enemypointgroups.remove_point(obj)
-                """"
-                for group in self.level_file.enemypointgroups.groups:
-                    if obj in group.points:
-                        group.points.remove(obj)
-                        break
-                """
             if isinstance(obj, libkmp.ItemPoint):
-                for group in self.level_file.itempointgroups.groups:
-                    if obj in group.points:
-                        group.points.remove(obj)
-                        break
-
-
+                self.level_file.itempointgroups.remove_point(obj)
             elif isinstance(obj, libkmp.RoutePoint):
                 for route in self.level_file.routes:
                     if obj in route.points:
@@ -2381,10 +2381,7 @@ class GenEditor(QMainWindow):
                         break
 
             elif isinstance(obj, libkmp.Checkpoint):
-                for group in self.level_file.checkpoints.groups:
-                    if obj in group.points:
-                        group.points.remove(obj)
-                        break
+                self.level_file.checkpoints.remove_point(obj)
 
             elif isinstance(obj, libkmp.MapObject):
                 if obj.route != -1 and obj.route < len(self.level_file.routes):
@@ -2407,12 +2404,7 @@ class GenEditor(QMainWindow):
                     self.level_file.routes[obj.route].used_by.remove(obj)
             
                 self.level_file.cameras.remove(obj)
-            elif isinstance(obj, libkmp.CheckpointGroup):
-                #self.level_file.checkpoints.groups.remove(obj)
-                self.level_file.remove_group(obj)
-            elif isinstance(obj, (libkmp.EnemyPointGroup, libkmp.ItemPointGroup) ):
-                #self.level_file.enemypointgroups.groups.remove(obj)
-
+            elif isinstance(obj, PointGroup ):
                 self.level_file.remove_group(obj)
             
             elif isinstance(obj, libkmp.Route):
@@ -2800,7 +2792,7 @@ class GenEditor(QMainWindow):
                  
 
     def action_connectedto_final(self):
-        if not self.ready_to_connect:
+        if not self.ready_to_connect or self.connect_start is None:
             return
         self.ready_to_connect = False
 
@@ -2808,8 +2800,11 @@ class GenEditor(QMainWindow):
         if len(self.level_view.selected) == 0:
             to_deal_with = self.level_file.get_to_deal_with(self.connect_start)
             
-            obj = self.connect_start
+
             start_groupind, start_group, start_pointind = to_deal_with.find_group_of_point(self.connect_start)
+            if start_group is None:
+                print("start group is none, this shouldn't happen", self.connect_start.position)
+                return
             if start_group.num_next() == 6:
                 return
 
@@ -2868,17 +2863,19 @@ class GenEditor(QMainWindow):
         end_groupind, end_group, end_pointind = to_deal_with.find_group_of_point(endpoint)
         
         start_groupind, start_group, start_pointind = to_deal_with.find_group_of_point(self.connect_start)
-
+        print( end_groupind, end_group, end_pointind )
+        print( start_groupind, start_group, start_pointind  )
         #make sure that start_group is good to add another
         if start_group.num_next() == 6:
             return
 
-        #if drawing from and endpoint to a startpoint of the next group
+        #if drawing from an endpoint to a startpoint of the next group
         if (start_pointind + 1 == len(start_group.points) and end_pointind == 0):
+           
             if end_group.num_prev() < 6:
                 start_group.add_new_next( end_groupind  )
                 end_group.add_new_prev(start_groupind)
-
+            if end_groupind != start_groupind:
                 start_group.remove_next(start_group.id)
                 start_group.remove_prev(start_group.id)
             
@@ -2905,8 +2902,6 @@ class GenEditor(QMainWindow):
         if len(self.level_view.selected) == 1 and isinstance( self.level_view.selected[0], (MapObject, Area, Camera)):
             self.obj_to_copy = self.level_view.selected[0]
             self.copy_current_obj()
-
-
 
     def copy_current_obj(self):
         if self.obj_to_copy is not None:

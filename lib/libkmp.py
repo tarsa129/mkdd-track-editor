@@ -356,7 +356,7 @@ class PointGroups(object):
                 return
 
             group = self.groups[i]
-            print("compare the ids, they should be the same", i, group.id)
+            #print("compare the ids, they should be the same", i, group.id)
             if group.num_next() == 1 and self.groups[ group.nextgroup[0] ].num_prev() == 1:
                 if 0 in group.nextgroup:
                     i += 1 #do not merge with the start
@@ -404,7 +404,11 @@ class PointGroups(object):
         new_group.id = self.new_group_id()
         self.groups.append( new_group )
 
-    def remove_group(self, del_group):
+        if len(self.groups) == 1:
+            new_group.add_new_next(0)
+            new_group.add_new_prev(0)
+
+    def remove_group(self, del_group, merge = True):
         self.groups.remove(del_group)
         
         #around the deleted groups: 
@@ -426,8 +430,12 @@ class PointGroups(object):
             group.prevgroup = [ id if id < del_group.id or id == -1 else id - 1 for id in group.prevgroup ]
             group.nextgroup = [ id if id < del_group.id or id == -1 else id - 1 for id in group.nextgroup  ]
 
+        if merge:
+            self.merge_groups()
 
-        self.merge_groups()
+        if len(self.groups) == 1:
+            self.groups[0].add_new_next(0)
+            self.groups[0].add_new_prev(0)
 
     def remove_point(self, point):
         group_idx, group, point_idx = self.find_group_of_point(point)
@@ -435,6 +443,35 @@ class PointGroups(object):
             self.remove_group(group)
         else:
             group.points.remove(point)
+
+    def remove_unused_groups(self):
+        #remove empty
+        to_delete = [ group for group in self.groups if len(group.points) == 0 ]
+        for group in to_delete:
+            self.remove_group(group)
+
+        #remove those that do not follow the main path
+        to_visit = [0]
+        visited = []
+
+        while len(to_visit) > 0:
+
+            idx = to_visit[0]
+            if idx in visited:
+                to_visit.pop(0)
+            visited.append(idx)
+           
+            to_visit.extend( [id for id in self.groups[idx].nextgroup if id != -1 and id not in visited] ) 
+              
+            
+
+        unused_groups = [self.groups[i] for i in list( range(1, len(self.groups) )) if i not in visited]
+        num_points = [len(group.points) for group in unused_groups]
+        for group in unused_groups:
+            if group in self.groups:
+                #do not merge until the end
+                self.remove_group( group, False   )
+        self.merge_groups()
 
 # Section 1
 # Enemy/Item Route Code Start
@@ -552,7 +589,7 @@ class EnemyPointGroups(PointGroups):
         """
         super().remove_point(del_point)
 
-    def remove_group(self, del_group):
+    def remove_group(self, del_group, merge = True):
         """
         type_4_areas= [ area for area in areas if area.type == 4]
         groupslen = [ len(group.points) for group in self.groups ]  
@@ -565,7 +602,7 @@ class EnemyPointGroups(PointGroups):
             elif area.enemypointid > points_includ:
                 area.enemypointid -= ( points_includ - points_before )
         """
-        super().remove_group(del_group)
+        super().remove_group(del_group, merge = True)
 
     @classmethod
     def from_file(cls, f):

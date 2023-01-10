@@ -50,6 +50,11 @@ class MoreButtons(QWidget):
                 merge_paths.clicked.connect(lambda: self.parent.button_add_from_addi_options(10, option.bound_to) )
                 self.vbox.addWidget(merge_paths)
 
+                remove_empty = QPushButton(self)
+                remove_empty.setText("Remove Empty and Disconnected " + point_type + " Paths")
+                remove_empty.clicked.connect(lambda: self.parent.button_add_from_addi_options(23, option.bound_to) )
+                self.vbox.addWidget(remove_empty)
+
 
             elif isinstance(obj, PointGroup):
                 new_enemy_group = QPushButton(self)
