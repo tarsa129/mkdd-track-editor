@@ -144,7 +144,7 @@ class ObjectModels(object):
         self.wireframe_cylinder.render()
         glPopMatrix()
 
-    def draw_wireframe_cube(self, position, rotation, scale):
+    def draw_wireframe_cube(self, position, rotation, scale, kartstart = False):
         glPushMatrix()
         glTranslatef(position.x, -position.z, position.y)
         #glTranslatef(position.x, position.y, position.z)
@@ -153,6 +153,10 @@ class ObjectModels(object):
 
         do_rotation(rotation)
         glTranslatef(0, 0, scale.y/2)
+
+        if kartstart:
+            glTranslatef(-scale.z / 2, 0, 0)
+
         glScalef(scale.z, scale.x, scale.y)
         self.wireframe_cube.render()
         glPopMatrix()

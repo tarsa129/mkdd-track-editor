@@ -1452,6 +1452,11 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     self.models.render_generic_position_rotation_colored("startpoints",
                                                                 object.position, object.rotation,
                                                                 object in select_optimize)
+                    if object in select_optimize:
+                        z_scale = 4800 if self.level_file.kartpoints.start_squeeze else 5300
+                        self.models.draw_wireframe_cube( object.position, 
+                                                         object.rotation,
+                                                         Vector3( 2000, 50, z_scale   ), kartstart = True)
             if vismenu.areas.is_visible():
                 for object in self.level_file.areas.areas:
                     self.models.render_generic_position_rotation_colored("areas",

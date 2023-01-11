@@ -1,7 +1,6 @@
 mkwii to do list:
 
 ktpt
-- display the range using render_cube
 - better handling of ids
 
 enemy/item/checkpoint
