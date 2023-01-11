@@ -1,10 +1,9 @@
 mkwii to do list:
 
 ktpt
-- better handling of ids
+- render circles for battle mode
 
 enemy/item/checkpoint
-- enemy/item multiselect: increase/decrease scale
 - pointgroups: add helper function for getting the absolute index of a point 
 - when a group is selected from the treeview, the arrows are not being highlighted
 

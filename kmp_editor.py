@@ -1839,9 +1839,8 @@ class GenEditor(QMainWindow):
                         object.position.x = mean_x
                     else:
                         object.position.z = mean_x
-            self.level_view.do_redraw()
     
-        if option == 0:
+        elif option == 0:
             added_item_boxes = []
             diff_vector = objs[1].position - objs[0].position
             diff_angle = Vector3( *objs[1].rotation.get_euler()) - Vector3( *objs[0].rotation.get_euler())
@@ -1854,19 +1853,26 @@ class GenEditor(QMainWindow):
                 self.level_file.objects.objects.append(default_item_box)
                 added_item_boxes.append(default_item_box)
         
-        
-            self.level_view.do_redraw()
+            self.leveldatatreeview.set_objects(self.level_file)
             return added_item_boxes
-        if option == 0.5:
+        elif option == 0.5:
             to_ground = self.button_add_from_addi_options_multi(0, objs)
             for obj in to_ground:
                 self.action_ground_spec_object(obj)
             return
-        if option == 1: #currently unused
+        elif option == 1: #currently unused
             for obj in objs:
                 if isinstance(obj, MapObject) and obj.route_info is not None:
                     pass
+        elif option == 2: #decrease scale
+            for obj in objs:
+                obj.scale = max(0, obj.scale - 5)
+        elif option == 2.5: #increase scale
+            for obj in objs:
+                obj.scale += 5
 
+        self.update_3d()
+        self.set_has_unsaved_changes(True)      
 
     def auto_route_obj(self, obj):
         #do object route

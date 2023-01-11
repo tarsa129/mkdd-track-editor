@@ -393,7 +393,6 @@ class MoreButtons(QWidget):
         self.vbox.addWidget(align_on_z)
         
         if 0 in options:
-            
             item_box_fill = QPushButton(self)
             item_box_fill.setText("Add Item Boxes Between")
             item_box_fill.clicked.connect(lambda: self.parent.button_add_from_addi_options_multi(0, options[0]) )
@@ -408,57 +407,51 @@ class MoreButtons(QWidget):
             assign_to_route.setText("Assign Objects to Route")
             assign_to_route.clicked.connect(lambda: self.parent.button_add_from_addi_options_multi(1, options[1]) )
             self.vbox.addWidget(assign_to_route)
-        #routepoints - links
-        
-        pass
+        if 3 in options:
+            decrease_scale = QPushButton(self)
+            decrease_scale.setText("Decrease Scale by 5")
+            decrease_scale.clicked.connect(lambda: self.parent.button_add_from_addi_options_multi(2, options[3]) )
+            self.vbox.addWidget(decrease_scale)
+
+            increase_scale = QPushButton(self)
+            increase_scale.setText("Increase Scale by 5")
+            increase_scale.clicked.connect(lambda: self.parent.button_add_from_addi_options_multi(2.5, options[3]) )
+            self.vbox.addWidget(increase_scale)
         
     def check_options(self, objs):
         #item box check for fill in
         options = {}
-        item_boxes = self.check_objects(objs, [MapObject], 101)
+        item_boxes = self.check_objects(objs, (MapObject), "objectid", 101)
         if len(item_boxes) == 2:
             options[0] = item_boxes
         #routed_objects = self.check_objects(objs, [MapObject, Camera])
         #if len(self.check_objects(objs, [Route])) == 1 and len(routed_objects) > 0: 
         #    options[1] = routed_objects
-        checkpoints = self.check_objects(objs, [Checkpoint])
+        checkpoints = self.check_objects(objs, (Checkpoint))
         if len(checkpoints) > 0 :
             options[2] = checkpoints
-        enemy_routes = self.check_objects(objs, [EnemyPoint])
-        #print("any enemy points in selection?", len(enemy_routes))
-        if len(enemy_routes) > 0:
-            ending_points = []
-            #print('looking for enemy points')
-            for point_group in self.parent.level_file.enemypointgroups.groups:
-                if len(point_group.points) > 0 and point_group.points[0] in enemy_routes:
-                    ending_points.append(point_group.points[0])
-                
-                if len(point_group.points) > 1 and point_group.points[-1] in enemy_routes:
-                    ending_points.append(point_group.points[-1])
-            if len(enemy_routes) > 1:
-                options[3] = ending_points
+
+        enemy_points = self.check_objects(objs, (EnemyPoint))
+        if len(enemy_points) > 0:
+            options[3] = enemy_points
+
+        item_points = self.check_objects(objs, (ItemPoint))
+        if len(item_points) > 0:
+            options[4] = item_points
 
 
         return options
         
-    def check_objects(self, objs, obj_types, option = None):
+    def check_objects(self, objs, obj_types, option_name = None, option = None):
         valid_objs = []
         for obj in objs:
-            valid_type = self.check_obj_types(obj, obj_types)
-            if valid_type is not None:
-                if option is not None:
-                    if valid_type == MapObject:
-                        if obj.objectid == option:
-                            valid_objs.append(obj)
-                else:
+            valid_type = isinstance(obj, obj_types)
+            if valid_type: 
+                if option_name is not None and hasattr(obj, option_name) and getattr(obj, option_name) == option:
+                    valid_objs.append(obj)
+                elif option_name is None:
                     valid_objs.append(obj)
         return valid_objs
-    
-    def check_obj_types(self, obj, obj_types):
-        for obj_type in obj_types:
-            if isinstance(obj, obj_type):   
-                return obj_type
-        return None
     
     def clear_buttons(self):
         for i in reversed(range(self.vbox.count())): 
