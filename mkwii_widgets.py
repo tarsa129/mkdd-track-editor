@@ -1067,7 +1067,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                             group_selected = True
                             selected_groups[i] = True
                             glColor3f(0.3, 0.3, 0.3)
-                            self.models.draw_sphere(point.position, point.scale * 10)
+                            self.models.draw_sphere(point.position, point.scale * 50)
 
                         if point_index in enemypoints_to_highlight:
                             glColor3f(1.0, 1.0, 0.0)
@@ -1104,7 +1104,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     if group_selected:
                         glLineWidth(1.0)
 
-                
+                #draw connectiosn between groups
                 for i, group in enumerate( all_groups ):
                     if len(group.points) == 0:
                         continue
@@ -1132,7 +1132,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                             used_colors[group] = color_components
                             
 
-                    
+                    #draw arrows
                     for group, point in nextpoints:
                         glColor3f(*used_colors[group])
 
@@ -1170,7 +1170,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         if point in select_optimize:
                             group_selected = True
                             glColor3f(0.3, 0.3, 0.3)
-                            self.models.draw_sphere(point.position, point.scale)
+                            self.models.draw_sphere(point.position, point.scale * 50)
 
                         if point_index in enemypoints_to_highlight:
                             glColor3f(1.0, 1.0, 0.0)
