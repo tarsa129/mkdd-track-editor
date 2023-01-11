@@ -1090,7 +1090,10 @@ class GenEditor(QMainWindow):
             to_delete = [mapobject for mapobject in self.level_file.objects.objects if mapobject.objectid == obj.objectid]
             for obj in to_delete:
                 self.level_file.objects.objects.remove(obj)
-        
+        elif isinstance(obj, Area):
+            to_delete = [area for area in self.level_file.areas.areas if area.type == obj.type]
+            for obj in to_delete:
+                self.level_file.areas.areas.remove(obj)
         self.pik_control.update_info()
         self.level_view.do_redraw()
         self.leveldatatreeview.set_objects(self.level_file)
@@ -2351,11 +2354,6 @@ class GenEditor(QMainWindow):
                     position.x = middle.x + length * sin(angle)
                     position.z = middle.z + length * cos(angle)
 
-        """
-        if len(self.pikmin_gen_view.selected) == 1:
-            obj = self.pikmin_gen_view.selected[0]
-            self.pik_control.set_info(obj, obj.position, obj.rotation)
-        """
         #self.pikmin_gen_view.update()
         self.level_view.do_redraw()
         self.set_has_unsaved_changes(True)
@@ -2735,7 +2733,9 @@ class GenEditor(QMainWindow):
                 if self.leveldatatreeview.cameras.isSelected():
                     self.pik_control.set_info(self.leveldatatreeview.cameras.bound_to, self.update_3d)
                     self.pik_control.update_info()
-                    
+                if self.leveldatatreeview.kartpoints.isSelected():
+                    self.pik_control.set_info(self.leveldatatreeview.kartpoints.bound_to, self.update_3d)
+                    self.pik_control.update_info()
                 else:
                     self.pik_control.reset_info("{0} objects selected".format(len(self.level_view.selected)))
                     self.pik_control.set_objectlist(selected)

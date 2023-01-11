@@ -5,7 +5,7 @@ from PyQt5.QtWidgets import QSizePolicy, QWidget, QHBoxLayout, QVBoxLayout, QLab
 from PyQt5.QtGui import QIntValidator, QDoubleValidator, QValidator, QColor
 from math import inf
 from lib.libkmp import (EnemyPoint, EnemyPointGroup, CheckpointGroup, Checkpoint, Route, RoutePoint, ItemPoint, ItemPointGroup,
-                        MapObject, KartStartPoint, Area, Camera, Cameras, KMP, JugemPoint, MapObject,
+                        MapObject, KartStartPoint, KartStartPoints, Area, Camera, Cameras, KMP, JugemPoint, MapObject,
                         CannonPoint, MissionPoint, OBJECTNAMES, REVERSEOBJECTNAMES,
                          Rotation)
 from lib.vectors import Vector3
@@ -544,6 +544,8 @@ def choose_data_editor(obj):
         return KMPEdit
     elif isinstance(obj, KartStartPoint):
         return KartStartPointEdit
+    elif isinstance(obj, KartStartPoints):
+        return KartStartPointsEdit
     elif isinstance(obj, Area):
         return AreaEdit
     
@@ -946,7 +948,28 @@ class ObjectEdit(DataEditor):
         
         #update the name, may be needed
         self.update_name()
-       
+
+class KartStartPointsEdit(DataEditor):
+    def setup_widgets(self):
+        self.pole_position = self.add_dropdown_input("Pole Position", "pole_position", POLE_POSITIONS )
+        self.start_squeeze = self.add_dropdown_input("Start Distance", "start_squeeze", START_SQUEEZE )
+
+        self.pole_position.currentIndexChanged.connect(self.update_starting_info)
+        self.start_squeeze.currentIndexChanged.connect(self.update_starting_info)
+    def update_data(self):
+        obj: KartStartPoints = self.bound_to
+        self.pole_position.setCurrentIndex( min(1, obj.pole_position) )
+        self.start_squeeze.setCurrentIndex( min(1, obj.start_squeeze) )
+
+    def update_starting_info(self):
+        self.bound_to.pole_position = self.pole_position.currentIndex()
+        self.bound_to.start_squeeze = self.start_squeeze.currentIndex()
+        
+        self.update_name()
+
+    def update_name(self):
+        super().update_name()
+
 class KartStartPointEdit(DataEditor):
     def setup_widgets(self):
         self.position = self.add_multiple_decimal_input("Position", "position", ["x", "y", "z"],
@@ -955,8 +978,7 @@ class KartStartPointEdit(DataEditor):
         
         self.playerid = self.add_integer_input("Player ID", "playerid",
                                                MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        self.pole_position = self.add_dropdown_input("Pole Position", "pole_position", POLE_POSITIONS )
-        self.start_squeeze = self.add_dropdown_input("Start Distance", "start_squeeze", START_SQUEEZE )
+        
 
     def update_data(self):
         obj: KartStartPoint = self.bound_to
@@ -966,10 +988,6 @@ class KartStartPointEdit(DataEditor):
 
         self.update_rotation(*self.rotation)
         self.playerid.setText(str(obj.playerid))
-
-        self.pole_position.setCurrentIndex(obj.pole_position)
-        self.start_squeeze.setCurrentIndex(obj.start_squeeze)
-
 
 class AreaEdit(DataEditor):
     emit_camera_update = pyqtSignal("PyQt_PyObject", "int", "int")
@@ -1067,7 +1085,6 @@ class AreaEdit(DataEditor):
         self.update_name()
 
 class CamerasEdit(DataEditor):
-    emit_starting_update = pyqtSignal("PyQt_PyObject", "int")
     def setup_widgets(self):
         self.startcam = self.add_integer_input("Starting Camera", "startcam", 0, 255)
 
@@ -1077,13 +1094,11 @@ class CamerasEdit(DataEditor):
         self.startcam.setText( str(obj.startcam) )
 
     def update_starting_cam(self):
-        self.emit_starting_update.emit(self.bound_to, int(self.startcam.text()) )
         self.bound_to.startcam = int(self.startcam.text())
         self.update_name()
 
     def update_name(self):
         super().update_name()
-
 
 class CameraEdit(DataEditor):
     emit_route_update = pyqtSignal("PyQt_PyObject", "int", "int")

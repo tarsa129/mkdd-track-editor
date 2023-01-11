@@ -1,8 +1,8 @@
 mkwii to do list:
 
 ktpt
-- move header stuff to ktpts at load, only move back at save (current on ktpt)
 - display the range using render_cube
+- better handling of ids
 
 enemy/item/checkpoint
 - handle automatic routing for prev/next groups when edited manually

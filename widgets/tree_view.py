@@ -49,7 +49,18 @@ class ObjectGroupCameras(ObjectGroup):
     def update_name(self):
         self.set_name()
 
+class ObjectGroupKartPoints(ObjectGroup):
+    def set_name(self):  
+        
+        if self.bound_to is not None:
+            display_string = "Kart Start Points: "
+            display_string += "Left, " if self.bound_to.pole_position == 0 else "Right, "
+            display_string += "Normal" if self.bound_to.start_squeeze == 0 else "Narrow"
 
+            self.setText(0, display_string)
+
+    def update_name(self):
+        self.set_name()
 class PointGroup( ObjectGroup):
     def __init__(self, name, parent=None, bound_to=None):
         super().__init__(name, parent, bound_to)
@@ -290,7 +301,7 @@ class LevelDataTreeView(QTreeWidget):
     reverse = pyqtSignal(ObjectGroup)
     duplicate = pyqtSignal(ObjectGroup)
     split = pyqtSignal(PointGroup, RoutePoint)
-    remove_type = pyqtSignal(ObjectEntry)
+    remove_type = pyqtSignal(NamedItem)
     #split_checkpoint = pyqtSignal(CheckpointGroup, Checkpoint)
 
     def __init__(self, *args, **kwargs):
@@ -304,7 +315,7 @@ class LevelDataTreeView(QTreeWidget):
         self.kmpheader = KMPHeader()
         self.addTopLevelItem(self.kmpheader)
         
-        self.kartpoints = self._add_group("Kart Start Points")
+        self.kartpoints = self._add_group("Kart Start Points", ObjectGroupKartPoints)
         self.enemyroutes = self._add_group("Enemy Paths")
         self.itemroutes = self._add_group("Item Groups")
 
@@ -531,6 +542,8 @@ class LevelDataTreeView(QTreeWidget):
         self.cameraroutes.bound_to = levelfile.cameraroutes
         self.objects.bound_to = levelfile.objects
         self.kartpoints.bound_to = levelfile.kartpoints
+        levelfile.kartpoints.widget = self.kartpoints
+        self.kartpoints.set_name()
         self.areas.bound_to = levelfile.areas
         self.cameras.bound_to = levelfile.cameras
         levelfile.cameras.widget = self.cameras
