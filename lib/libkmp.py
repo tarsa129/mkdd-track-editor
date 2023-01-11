@@ -1388,7 +1388,7 @@ class KartStartPoints(object):
 # Section 7
 # Areas
 class Area(object):
-
+    level_file = None
     can_copy = True
     def __init__(self, position):
         self.shape = 0
@@ -2032,6 +2032,8 @@ class KMP(object):
         kmp.set_aux_values()
 
         kmp.set_assoc()
+
+        Area.level_file = kmp
 
         return kmp
                

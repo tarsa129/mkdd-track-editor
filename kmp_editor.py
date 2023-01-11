@@ -2856,17 +2856,18 @@ class GenEditor(QMainWindow):
         else:
             endpoint = self.level_view.selected[0]
             to_deal_with = None
-            if isinstance(endpoint, EnemyPoint) and isinstance(self.connect_start, EnemyPoint):
-                to_deal_with = self.level_file.enemypointgroups
-            elif isinstance(endpoint, ItemPoint) and isinstance(self.connect_start, ItemPoint):
-                to_deal_with = self.level_file.itempointgroups
-            elif isinstance(endpoint, Checkpoint) and isinstance(self.connect_start, Checkpoint):
-                to_deal_with = self.level_file.checkpoints
-            if to_deal_with is not None:
-                self.connect_two_groups(endpoint, to_deal_with)
-                return
+            if isinstance(endpoint, KMPPoint) and isinstance(self.connect_start, KMPPoint):
+                if isinstance(endpoint, EnemyPoint) and isinstance(self.connect_start, EnemyPoint):
+                    to_deal_with = self.level_file.enemypointgroups
+                elif isinstance(endpoint, ItemPoint) and isinstance(self.connect_start, ItemPoint):
+                    to_deal_with = self.level_file.itempointgroups
+                elif isinstance(endpoint, Checkpoint) and isinstance(self.connect_start, Checkpoint):
+                    to_deal_with = self.level_file.checkpoints
+
+                if to_deal_with is not None:
+                    self.connect_two_groups(endpoint, to_deal_with)
             
-            if isinstance(endpoint, JugemPoint) and isinstance(self.connect_start, Checkpoint):
+            elif isinstance(endpoint, JugemPoint) and isinstance(self.connect_start, Checkpoint):
                 self.connect_start.respawn = self.level_file.get_index_of_respawn(endpoint)
 
         self.connect_start = None
@@ -2876,15 +2877,15 @@ class GenEditor(QMainWindow):
         self.update_3d()
         self.set_has_unsaved_changes(True)   
 
-    def connect_two_groups(self, endpoint, to_deal_with):
+    def connect_two_groups(self, endpoint, to_deal_with : PointGroups):
         if endpoint == self.connect_start:
             return
 
         end_groupind, end_group, end_pointind = to_deal_with.find_group_of_point(endpoint)
         
         start_groupind, start_group, start_pointind = to_deal_with.find_group_of_point(self.connect_start)
-        print( end_groupind, end_group, end_pointind )
-        print( start_groupind, start_group, start_pointind  )
+        #print( end_groupind, end_group, end_pointind )
+        #print( start_groupind, start_group, start_pointind  )
         #make sure that start_group is good to add another
         if start_group.num_next() == 6:
             return
@@ -2892,12 +2893,18 @@ class GenEditor(QMainWindow):
         #if drawing from an endpoint to a startpoint of the next group
         if (start_pointind + 1 == len(start_group.points) and end_pointind == 0):
            
-            if end_group.num_prev() < 6:
-                start_group.add_new_next( end_groupind  )
-                end_group.add_new_prev(start_groupind)
-            if end_groupind != start_groupind:
-                start_group.remove_next(start_group.id)
-                start_group.remove_prev(start_group.id)
+            #if a link already exists, remove it
+            if end_groupind in start_group.nextgroup:
+                start_group.remove_next(end_groupind)
+                end_group.remove_prev(start_groupind)
+                to_deal_with.merge_groups()
+            else:
+                if end_group.num_prev() < 6:
+                    start_group.add_new_next( end_groupind  )
+                    end_group.add_new_prev(start_groupind)
+                if end_groupind != start_groupind:
+                    start_group.remove_next(start_group.id)
+                    start_group.remove_prev(start_group.id)
             
             return
 

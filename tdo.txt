@@ -14,7 +14,6 @@ enemy/item/checkpoint
 gobj:
 - all those dang .json files
 - proper hiding of routes field
-- add "remove all of type" option as a treeview context menu
 
 poti:
 - check autorouting for cameras / Objects
