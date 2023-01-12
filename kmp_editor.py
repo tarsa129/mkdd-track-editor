@@ -372,7 +372,6 @@ class GenEditor(QMainWindow):
             for item_path in self.level_file.itempointgroups.groups:
                 for item_path_point in item_path.points:
                     extend(item_path_point.position)
-
         if self.visibility_menu.objectroutes.is_visible():
             for object_route in self.level_file.routes:
                 for object_route_point in object_route.points:

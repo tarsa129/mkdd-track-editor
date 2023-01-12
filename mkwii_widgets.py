@@ -1002,9 +1002,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                 for i, route in enumerate(self.level_file.routes):
                     selected = i in routes_to_highlight
-
                     if route.used_by:
-
                         for point in route.points:
                             point_selected = point in select_optimize
                             self.models.render_generic_position_colored(point.position, point_selected, "objectpoint")
@@ -1014,7 +1012,6 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                             point_selected = point in select_optimize
                             self.models.render_generic_position_colored(point.position, point_selected, "unusedpoint")
                             selected = selected or point_selected
-
                     if selected:
                         glLineWidth(3.0)
                     glBegin(GL_LINE_STRIP)
@@ -1745,6 +1742,7 @@ class FilterViewMenu(QMenu):
     def get_entries(self):
         return (self.enemyroute,
                 self.itemroute,
+                self.objectroutes,
                 self.cameraroutes,
                 self.checkpoints,
                 self.objects,

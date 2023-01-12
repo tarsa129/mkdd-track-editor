@@ -20,10 +20,9 @@ class ObjectModels(object):
         self.generic = GenericObject()
 
         self.cube = Cube()
+        self.enemypoint = Cube(colors["EnemyRoutes"])
         self.checkpointleft = Cube(colors["CheckpointLeft"])
         self.checkpointright = Cube(colors["CheckpointRight"])
-        
-        self.enemypoint = Cube(colors["EnemyRoutes"])
         self.itempoint = Cube(colors["ItemRoutes"])
         self.objectpoint = Cube(colors["ObjectRoutes"])
         self.camerapoint = Cube(colors["CameraRoutes"])
