@@ -1053,8 +1053,6 @@ class Route(object):
         self._pointstart = 0
         self.smooth = 0
         self.cyclic = 0
-        
-        self.type = 0
 
         self.used_by = []
 
@@ -1062,13 +1060,6 @@ class Route(object):
     def new(cls):
         return cls()
     
-    @classmethod
-    def new_camera(cls):
-
-        new_route = cls()
-        new_route.type = 1
-        return new_route
-
     def copy(self):
         this_class = self.__class__
         obj = this_class.new()
@@ -1076,13 +1067,26 @@ class Route(object):
         obj._pointcount = len(obj.points)
         obj.smooth = self.smooth
         obj.cyclic = self.cyclic
-
-        obj.type = self.type
         
         return obj
         
-    def is_object(self):
-        return self.type == 0
+    def to_object(self):
+        object_route = ObjectRoute()
+        self.copy_params_to_child(object_route)
+        return object_route
+
+    def to_camera(self):
+        camera_route = CameraRoute()
+        self.copy_params_to_child(camera_route)
+        return camera_route
+
+    def copy_params_to_child(self, new_route):
+        new_route.points = self.points
+        new_route.smooth = self.smooth
+        new_route.cyclic = self.cyclic
+        new_route.used_by = self.used_by
+
+        return new_route
         
 
 
@@ -1119,6 +1123,25 @@ class Route(object):
          if len(self.points) > 0:
             self.points[-1].write(f, True)
          return len(self.points)
+
+#here for type checking - they function in the same way
+class ObjectRoute(Route):
+    def __init__(self):
+        super().__init__()
+        self.type = 0
+
+    @classmethod
+    def new(cls):
+        return cls()
+
+class CameraRoute(Route):
+    def __init__(self):
+        super().__init__()
+        self.type = 1
+
+    @classmethod
+    def new(cls):
+        return cls()
 
 # Section 4
 # Route point for use with routes from section 3
@@ -1810,8 +1833,8 @@ class KMP(object):
         self.missionpoints = ObjectContainer()
 
     def set_assoc(self):
-        self.routes.assoc = Route
-        self.cameraroutes.assoc = Route
+        self.routes.assoc = ObjectRoute
+        self.cameraroutes.assoc = CameraRoute
         self.respawnpoints.assoc = JugemPoint
         self.cannonpoints.assoc = CannonPoint
         self.missionpoints.assoc = MissionPoint
@@ -2029,7 +2052,7 @@ class KMP(object):
 
         
         
-        kmp.set_aux_values()
+        kmp.fix_file()
 
         kmp.set_assoc()
 
@@ -2037,7 +2060,7 @@ class KMP(object):
 
         return kmp
                
-    def set_aux_values(self):
+    def fix_file(self):
         #set all the used by stuff
         for object in self.objects.objects:
             object.set_route_info()
@@ -2066,18 +2089,12 @@ class KMP(object):
                     has_camera = True
             if has_camera and has_object:
                 to_split.append(route)
-            elif has_camera and not has_object:
-                route.type = 1
-            elif has_object and not has_camera:
-                route.type = 0
 
         new_route_idx = len(self.routes)
 
         for route in to_split :
             # we know that these have both objects and cameras
             new_route = route.copy()
-            route.type = 0
-            new_route.type = 1
             
             new_route.used_by = filter(lambda thing: isinstance(thing, Camera), route.used_by)
             route.used_by = filter(lambda thing: isinstance(thing, MapObject), route.used_by)
@@ -2093,9 +2110,9 @@ class KMP(object):
         for route in self.routes:
             if len(route.used_by) > 0:
                 if isinstance(route.used_by[0], Camera):
-                    camera_routes.append(route)
+                    camera_routes.append(route.to_camera())
                 elif isinstance(route.used_by[0], (MapObject, Area) ):
-                    object_routes.append(route)
+                    object_routes.append(route.to_object())
         self.routes = object_routes
         self.cameraroutes = camera_routes
 
@@ -2107,7 +2124,6 @@ class KMP(object):
             for point in route.points:
                 point.partof = route
         for i, route in enumerate(self.cameraroutes):
-            route.type = 1
             for object in route.used_by:
                 object.route = i
             for point in route.points:
@@ -2362,22 +2378,30 @@ class KMP(object):
                 object.route = route_index
     
     def remove_unused_routes(self):
+        self.remove_unused_object_routes()
+        self.remove_unused_camera_routes()
+
+    def remove_unused_object_routes(self):   
         to_remove = []
         for i, route in enumerate(self.routes):
             if len(route.used_by) == 0:
                 to_remove.append(i)
+        to_remove.sort()
         to_remove.reverse()
         for rem_index in to_remove:
             self.routes.pop(rem_index)
+        self.reset_routes()
 
+    def remove_unused_camera_routes(self):   
 
         to_remove = []
         for i, route in enumerate(self.cameraroutes):
             if len(route.used_by) == 0:
                 to_remove.append(i)
+        to_remove.sort()
         to_remove.reverse()
         for rem_index in to_remove:
-            self.routes.pop(rem_index)
+            self.cameraroutes.pop(rem_index)
         self.reset_routes()
         
     def copy_enemy_to_item(self):
@@ -2542,6 +2566,18 @@ class KMP(object):
         to_deal_with = self.get_to_deal_with(del_point)
 
         to_deal_with.remove_point(del_point) 
+
+    def get_route_container(self, obj):
+        if isinstance(obj, CameraRoute):
+            return self.cameraroutes
+        else:
+            return self.routes
+
+    def get_route_for_obj(self, obj):
+        if isinstance(obj, CameraRoute):
+            return CameraRoute()
+        else:
+            return ObjectRoute()
 
 with open("lib/mkwiiobjects.json", "r") as f:
     tmp = json.load(f)

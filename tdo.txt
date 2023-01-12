@@ -18,6 +18,7 @@ poti:
 - v options
 -- route: add to end of groups
 -- point: add point here
+- show point when highlighted from treeview
 
 area:
 - highlight camera / route point when relevant. (ALSO APPLIES TO MKDD)

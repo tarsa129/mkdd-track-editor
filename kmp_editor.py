@@ -416,11 +416,6 @@ class GenEditor(QMainWindow):
             self.tree_select_object(current[0])
 
     def tree_select_object(self, item):
-        """if self._dontselectfromtree:
-            #print("hmm")
-            #self._dontselectfromtree = False
-            return"""
-
         #print("Selected mkdd_editor:", item)
         self.level_view.selected = []
         self.level_view.selected_positions = []
@@ -1906,10 +1901,10 @@ class GenEditor(QMainWindow):
 
         if create:
             if isinstance(obj, MapObject):
-                new_route_group = libbol.ObjectRoute.new()
+                new_route_group = libkmp.ObjectRoute.new()
                
             elif isinstance(obj, Camera):
-                new_route_group = libbol.CameraRoute.new()
+                new_route_group = libkmp.CameraRoute.new()
             route_collec.append(new_route_group)
             obj.route = len(route_collec) - 1 
 
@@ -2005,12 +2000,12 @@ class GenEditor(QMainWindow):
             if isinstance(object, libkmp.EnemyPoint):
                 # For convenience, create a group if none exists yet.
                 if group == 0 and not self.level_file.enemypointgroups.groups:
-                    self.level_file.enemypointgroups.groups.append(libbol.EnemyPointGroup.new())
+                    self.level_file.enemypointgroups.groups.append(libkmp.EnemyPointGroup.new())
                 placeobject.group = group
 
                 self.level_file.enemypointgroups.groups[group].points.insert(position + self.points_added, placeobject)
                 self.points_added += 1
-            elif isinstance(object, libbol.RoutePoint):
+            elif isinstance(object, libkmp.RoutePoint):
                 route_container = self.level_file.get_route_container(object.partof)
                 if group == 0 and not route_container:
                     self.level_file.routes.append(object.partof.__class__().new())
@@ -2386,7 +2381,7 @@ class GenEditor(QMainWindow):
             if isinstance(obj, libkmp.ItemPoint):
                 self.level_file.itempointgroups.remove_point(obj)
 
-            elif isinstance(obj, libbol.RoutePoint):
+            elif isinstance(obj, libkmp.RoutePoint):
                 #route_container = self.level_file.get_route_container(obj.partof)
                 obj.partof.points.remove(obj)
                 
@@ -2559,7 +2554,7 @@ class GenEditor(QMainWindow):
                 #obj.id = self.level_file.enemypointgroups.new_group_id()
                 #self.level_file.enemypointgroups.groups.append(obj)
         
-            elif isinstance(obj, libbol.Route):
+            elif isinstance(obj, libkmp.Route):
                 obj.used_by = []
                 route_container = self.level_file.get_route_container(obj.partof)
                 route_container.append(obj)
@@ -2667,9 +2662,9 @@ class GenEditor(QMainWindow):
                         if item is not None:
                             break
 
-                elif isinstance(currentobj, libbol.RoutePoint):
+                elif isinstance(currentobj, libkmp.RoutePoint):
 
-                    to_look_through = self.leveldatatreeview.objectroutes if isinstance(currentobj.partof, libbol.ObjectRoute) else self.leveldatatreeview.cameraroutes
+                    to_look_through = self.leveldatatreeview.objectroutes if isinstance(currentobj.partof, libkmp.ObjectRoute) else self.leveldatatreeview.cameraroutes
 
 
                     for i in range(to_look_through.childCount()):

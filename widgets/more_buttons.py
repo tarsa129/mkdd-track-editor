@@ -5,8 +5,8 @@ from collections import OrderedDict
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QVBoxLayout, QPushButton
 from lib.vectors import Vector3
 from PyQt5.QtCore import pyqtSignal
-from lib.libbol import *
-from widgets.tree_view import EnemyRoutePoint
+from lib.libkmp import *
+from widgets.tree_view import KMPHeader, EnemyRoutePoint
 #will create buttons based on the current selection
 #when something selected: add to it from the end
 
