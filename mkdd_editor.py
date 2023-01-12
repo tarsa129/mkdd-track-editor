@@ -166,6 +166,8 @@ class GenEditor(QMainWindow):
         self.first_time_3dview = True
         
         self.restore_geometry()
+
+        self.undo_history.append(self.generate_undo_entry())
         
         self.obj_to_copy = None
         self.objs_to_copy = None
@@ -387,8 +389,6 @@ class GenEditor(QMainWindow):
     def on_document_potentially_changed(self, update_unsaved_changes=True):
         undo_entry = self.generate_undo_entry()
 
-        if len(self.undo_history) == 0:
-            return
         if self.undo_history[-1] != undo_entry:
             bol_changed = self.undo_history[-1].bol_hash != undo_entry.bol_hash
 
@@ -1188,6 +1188,7 @@ class GenEditor(QMainWindow):
         self.collision_area_dialog.finished.connect(on_dialog_finished)
 
     def analyze_for_mistakes(self):
+        print("help?")
         analyzer_window = ErrorAnalyzer(self.level_file, parent=self)
         analyzer_window.exec_()
         analyzer_window.deleteLater()
@@ -3501,7 +3502,6 @@ if __name__ == "__main__":
     app = Application(sys.argv)
 
     signal.signal(signal.SIGINT, lambda _signal, _frame: app.quit())
-    """
     app.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
 
     
@@ -3535,7 +3535,6 @@ if __name__ == "__main__":
         palette.setColor(QtGui.QPalette.Active, role, color)
         palette.setColor(QtGui.QPalette.Inactive, role, color)
     app.setPalette(palette)
-    """
     if platform.system() == "Windows":
         import ctypes
         myappid = 'P2GeneratorsEditor'  # arbitrary string
