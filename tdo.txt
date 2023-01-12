@@ -47,5 +47,6 @@ add an option for "cleanup"
 - remove unused paths
 - remove unused cameras
 popup for "fixes made on load"
+restore the add objects menu? idek
 
 

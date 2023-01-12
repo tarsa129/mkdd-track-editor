@@ -2374,7 +2374,7 @@ class KMP(object):
                 object.route = route_index
 
         for route_index in range(start_at, len(self.cameraroutes) ):
-            for object in self.routes[route_index].used_by:
+            for object in self.cameraroutes[route_index].used_by:
                 object.route = route_index
     
     def remove_unused_routes(self):

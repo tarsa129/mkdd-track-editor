@@ -1538,16 +1538,6 @@ class GenEditor(QMainWindow):
         if option == 0: #add an empty enemy group
             to_deal_with = self.level_file.get_to_deal_with(obj)
             to_deal_with.add_new_group()
-            """
-            if isinstance(obj, (EnemyPointGroups, EnemyPointGroup)):
-                new_enemy_group = libkmp.EnemyPointGroup()
-                new_enemy_group.id = self.level_file.enemypointgroups.new_group_id()
-                self.level_file.enemypointgroups.groups.append( new_enemy_group )
-
-            if isinstance(obj, (ItemPointGroups, ItemPointGroup)):
-                new_item_group = libkmp.ItemPointGroup()
-                new_item_group.id = self.level_file.itempointgroups.new_group_id()
-                self.level_file.itempointgroups.groups.append( new_item_group )"""
         elif option == 1: #adding an enemy point to a group, the group is obj
             to_deal_with = self.level_file.get_to_deal_with(obj)
             thing_to_add = to_deal_with.get_new_point()
@@ -1800,8 +1790,6 @@ class GenEditor(QMainWindow):
             self.level_view.do_redraw()
         elif option == 26: #remove unused respawns:
             self.level_file.remove_unused_respawns()
-        elif option == 26:
-            self.level_file.remove_un
         self.leveldatatreeview.set_objects(self.level_file)   
 
     @catch_exception
