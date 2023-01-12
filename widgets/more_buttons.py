@@ -6,16 +6,10 @@ from PyQt5.QtWidgets import QSizePolicy, QWidget, QVBoxLayout, QPushButton
 from lib.vectors import Vector3
 from lib.model_rendering import Minimap
 from PyQt5.QtCore import pyqtSignal
-from lib.libbol import (EnemyPoint, EnemyPointGroup, EnemyPointGroups, CheckpointGroups, CheckpointGroup, Checkpoint, Route, RoutePoint, Area, Areas,
-                        MapObject, KartStartPoint, Camera, BOL, JugemPoint, MapObjects, MapObject,
-                        LightParam, MGEntry, OBJECTNAMES, REVERSEOBJECTNAMES, ObjectContainer, KartStartPoints)
+from lib.libbol import *
 from widgets.tree_view import BolHeader, EnemyRoutePoint
 #will create buttons based on the current selection
-#when nothing selected - add anything
 #when something selected: add to it from the end
-
-
-
 
 class MoreButtons(QWidget):
     def __init__(self, parent, option = 0):
@@ -290,20 +284,26 @@ class MoreButtons(QWidget):
                 add_kart_point.clicked.connect(lambda: self.parent.button_add_from_addi_options(18, option.bound_to) )
                 self.vbox.addWidget(add_kart_point)
             
-        elif isinstance(option.bound_to, ObjectContainer) and option.bound_to.assoc is Route:
+        elif isinstance(option.bound_to, ObjectContainer) and option.bound_to.assoc is ObjectRoute:
             new_route_group = QPushButton(self)
             new_route_group.setText("Add Object Route")
             new_route_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(5) )
             self.vbox.addWidget(new_route_group)
 
+            remove_unsed = QPushButton(self)
+            remove_unsed.setText("Removed Unused Object Routes")
+            remove_unsed.clicked.connect(lambda: self.parent.button_add_from_addi_options(23, option.bound_to) )
+            self.vbox.addWidget(remove_unsed)
+        
+        elif isinstance(option.bound_to, ObjectContainer) and option.bound_to.assoc is CameraRoute:
             new_cameraroute_group = QPushButton(self)
             new_cameraroute_group.setText("Add Camera Route")
             new_cameraroute_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(5.5) )
             self.vbox.addWidget(new_cameraroute_group)
             
             remove_unsed = QPushButton(self)
-            remove_unsed.setText("Removed Unused Routes")
-            remove_unsed.clicked.connect(lambda: self.parent.button_add_from_addi_options(23, option.bound_to) )
+            remove_unsed.setText("Removed Unused Camera Routes")
+            remove_unsed.clicked.connect(lambda: self.parent.button_add_from_addi_options(23.5, option.bound_to) )
             self.vbox.addWidget(remove_unsed)
             
             #copy camera
