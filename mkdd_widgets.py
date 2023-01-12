@@ -744,7 +744,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
 
                 offset = len(objlist)
 
-                if vismenu.itemroutes.is_selectable():
+                if vismenu.objectroutes.is_selectable():
                     i = 0
                     for route in self.level_file.routes:
                         for obj in route.points:
@@ -1019,7 +1019,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
             #    self.models.render_object(pikminobject, pikminobject in selected)
 
 
-            if vismenu.itemroutes.is_visible():
+            if vismenu.objectroutes.is_visible():
                 routes_to_highlight = set()
 
 
@@ -1029,11 +1029,16 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
 
                 for i, route in enumerate(self.level_file.routes):
                     selected = i in routes_to_highlight
-                    for point in route.points:
-                        point_selected = point in select_optimize
-                        self.models.render_generic_position_colored(point.position, point_selected, "itempoint")
-                        selected = selected or point_selected
-
+                    if route.used_by:
+                        for point in route.points:
+                            point_selected = point in select_optimize
+                            self.models.render_generic_position_colored(point.position, point_selected, "objectpoint")
+                            selected = selected or point_selected
+                    else:
+                        for point in route.points:
+                            point_selected = point in select_optimize
+                            self.models.render_generic_position_colored(point.position, point_selected, "unusedpoint")
+                            selected = selected or point_selected
                     if selected:
                         glLineWidth(3.0)
                     glBegin(GL_LINE_STRIP)
@@ -1052,10 +1057,16 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
 
                 for i, route in enumerate(self.level_file.cameraroutes):
                     selected = i in routes_to_highlight
-                    for point in route.points:
-                        point_selected = point in select_optimize
-                        self.models.render_generic_position_colored(point.position, point_selected, "camerapoint")
-                        selected = selected or point_selected
+                    if route.used_by:
+                        for point in route.points:
+                            point_selected = point in select_optimize
+                            self.models.render_generic_position_colored(point.position, point_selected, "camerapoint")
+                            selected = selected or point_selected
+                    else:
+                        for point in route.points:
+                            point_selected = point in select_optimize
+                            self.models.render_generic_position_colored(point.position, point_selected, "unusedpoint")
+                            selected = selected or point_selected
 
                     if selected:
                         glLineWidth(3.0)
@@ -1533,7 +1544,7 @@ class FilterViewMenu(QMenu):
         self.respawnpoints = ObjectViewSelectionToggle("Respawn Points", self)
         
         self.objects = ObjectViewSelectionToggle("Objects", self)
-        self.itemroutes = ObjectViewSelectionToggle("Object Paths", self)
+        self.objectroutes = ObjectViewSelectionToggle("Object Paths", self)
         
         self.areas = ObjectViewSelectionToggle("Areas", self)
         self.cameras = ObjectViewSelectionToggle("Cameras", self)
@@ -1550,7 +1561,7 @@ class FilterViewMenu(QMenu):
 
     def get_entries(self):
         return (self.enemyroute,
-                self.itemroutes,
+                self.objectroutes,
                 self.cameraroutes,
                 self.checkpoints,
                 self.objects,

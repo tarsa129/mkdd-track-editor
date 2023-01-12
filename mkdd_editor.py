@@ -475,7 +475,7 @@ class GenEditor(QMainWindow):
             for enemy_path in self.level_file.enemypointgroups.groups:
                 for enemy_path_point in enemy_path.points:
                     extend(enemy_path_point.position)
-        if self.visibility_menu.itemroutes.is_visible():
+        if self.visibility_menu.objectroutes.is_visible():
             for object_route in self.level_file.routes:
                 for object_route_point in object_route.points:
                     extend(object_route_point.position)

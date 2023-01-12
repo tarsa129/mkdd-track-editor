@@ -19,15 +19,12 @@ class ObjectModels(object):
         self.generic_snakecrow = GenericSnakecrow()
         self.generic_swimmer = GenericSwimmer()
         self.cube = Cube()
+        self.enemypoint = Cube(colors["EnemyRoutes"])
         self.checkpointleft = Cube(colors["CheckpointLeft"])
         self.checkpointright = Cube(colors["CheckpointRight"])
-        self.objectroute = Cube(colors["ObjectRoutes"])
-        self.cameraroute = Cube(colors["CameraRoutes"])
-        self.unassignedroute = Cube(colors["UnassignedRoutes"])
-        self.sharedroute = Cube(colors["SharedRoutes"])
-        self.itempoint = Cube(colors["ItemRoutes"])
+        self.objectpoint = Cube(colors["ObjectRoutes"])
         self.camerapoint = Cube(colors["CameraRoutes"])
-        self.enemypoint = Cube(colors["EnemyRoutes"])
+        self.unusedpoint = Cube(colors["UnusedRoutes"])
         self.camera = GenericObject(colors["Camera"])
         self.areas = GenericObject(colors["Areas"])
         self.objects = GenericObject(colors["Objects"])
@@ -84,7 +81,7 @@ class ObjectModels(object):
                     filename = os.path.basename(file)
                     objectname = filename.rsplit(".", 1)[0]
                     self.models[objectname] = TexturedModel.from_obj_path(os.path.join(dirpath, file), rotate=True)
-        for cube in (self.cube, self.checkpointleft, self.checkpointright, self.itempoint, self.camerapoint, self.enemypoint,
+        for cube in (self.cube, self.checkpointleft, self.checkpointright, self.objectpoint, self.camerapoint, self.unusedpoint, self.enemypoint,
                      self.objects, self.areas, self.respawn, self.startpoints, self.camera, self.lightparam, self.lightsource):
             cube.generate_displists()
 
