@@ -15,10 +15,8 @@ poti:
 - check autorouting for cameras / Objects
 -- just make an array for camera types that connect to a route in data_editor_options and use that everywhere
 - show splines
-- v options
--- route: add to end of groups
--- point: add point here
-- show point when highlighted from treeview
+- show route when highlighted from treeview
+- make unused routes gray
 
 area:
 - highlight camera / route point when relevant. (ALSO APPLIES TO MKDD)

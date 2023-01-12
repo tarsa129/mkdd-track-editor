@@ -972,7 +972,7 @@ class GenEditor(QMainWindow):
             lambda _checked: self.button_open_add_item_window())
         self.pik_control.button_add_object.setShortcut("V")
 
-        self.pik_control.button_stop_object.pressed.connect(self.button_add_item_window_close)
+        self.pik_control.button_stop_object.pressed.connect(self.button_stop_adding)
         self.pik_control.button_stop_object.setShortcut("T")
 
         #self.pik_control.button_move_object.pressed.connect(self.button_move_objects)
@@ -1384,22 +1384,30 @@ class GenEditor(QMainWindow):
         else:
             if hasattr(self.leveldatatreeview.currentItem(), 'bound_to'):
                 obj = self.leveldatatreeview.currentItem().bound_to
+        
         if obj is not None:
+            add_something = True
             #add points to group at current position
             if isinstance(obj, KMPPoint):
-                add_something = True
                 self.button_add_from_addi_options( 11, obj)
             elif isinstance(obj, PointGroup):
-                add_something = True
-                self.button_add_from_addi_options( 1, obj)
-
+                self.button_add_from_addi_options( 1, obj )
             elif isinstance(obj, PointGroups):
-                add_something = True
-
                 if len(obj.groups) != 1 or len(obj.groups[0].points) != 0:
                     self.button_add_from_addi_options( 0, obj)               
                 self.button_add_from_addi_options( 1, obj.groups[-1]  )
-
+            elif isinstance(obj, ObjectContainer) and obj.assoc == ObjectRoute:
+                self.button_add_from_addi_options( 5 )  
+                self.button_add_from_addi_options( 6, self.level_file.routes[-1] )  
+            elif isinstance(obj, ObjectContainer) and obj.assoc == CameraRoute:
+                self.button_add_from_addi_options( 5.5 )  
+                self.button_add_from_addi_options( 6, self.level_file.cameraroutes[-1] )  
+            elif isinstance(obj, RoutePoint):
+                self.button_add_from_addi_options( 15, obj)  
+            else:
+                print('nothing caught')
+                add_something = False
+        
         if add_something:
             return
 
@@ -1474,8 +1482,6 @@ class GenEditor(QMainWindow):
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
 
-
-
     #this is what happens when you close out of the window
     @catch_exception
     def button_add_item_window_save(self):
@@ -1498,29 +1504,22 @@ class GenEditor(QMainWindow):
                     route_container = self.level_file.get_route_container(obj)
                     route_container.append(obj)
 
-
-                self.addobjectwindow_last_selected_category = self.add_object_window.category_menu.currentIndex()
                 self.object_to_be_added = None
-                self.add_object_window.destroy()
-                self.add_object_window = None
+                self.pik_control.button_add_object.setChecked(False)
+                self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_NONE)
                 self.leveldatatreeview.set_objects(self.level_file)
 
-            elif self.object_to_be_added is not None:
-                self.addobjectwindow_last_selected_category = self.add_object_window.category_menu.currentIndex()
+                self.select_tree_item_bound_to(obj)
 
-                
+            elif self.object_to_be_added is not None:
                 self.pik_control.button_add_object.setChecked(True)
-                #self.pik_control.button_move_object.setChecked(False)
                 self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
-                self.add_object_window.destroy()
-                self.add_object_window = None
+
                 #self.pikmin_gen_view.setContextMenuPolicy(Qt.DefaultContextMenu)
 
     @catch_exception
-    def button_add_item_window_close(self):
+    def button_stop_adding(self):
         self.points_added = 0
-        self.add_object_window = None
-        copy_current_obj = None
         self.pik_control.button_add_object.setChecked(False)
         self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_NONE)
         self.objects_to_be_added = None
@@ -1530,7 +1529,6 @@ class GenEditor(QMainWindow):
     @catch_exception
     def button_add_from_addi_options(self, option, obj = None):
         self.points_added = 0
-        copy_current_obj = None
         self.pik_control.button_add_object.setChecked(False)
         self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_NONE)
         self.objects_to_be_added = None
@@ -1620,7 +1618,7 @@ class GenEditor(QMainWindow):
         elif option == 5.5: #new camera route
             new_route_group = libkmp.CameraRoute.new()
             self.level_file.cameraroutes.append(new_route_group)
-        elif option == 6: #add route point
+        elif option == 6: #add route point to end of route
             #find route in routepoints
             id = 0
             idx = 0
@@ -1737,9 +1735,9 @@ class GenEditor(QMainWindow):
 
         
             route_container = self.level_file.get_route_container(obj.partof)
-            to_look_through = route_container.groups
 
-            for group_idx, group in enumerate(to_deal_with):
+
+            for group_idx, group in enumerate(route_container):
                 for point_idx, point in enumerate(group.points):
                     if point is obj:
                         group_id = group_idx
