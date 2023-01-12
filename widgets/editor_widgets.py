@@ -257,6 +257,7 @@ class ErrorAnalyzerButton(QtWidgets.QPushButton):
                            f"QPushButton:hover {{ background: {background_color}; }}")
 
     def analyze_bol(self, bol: libbol.BOL):
+        print("analyze bol")
         lines = ErrorAnalyzer.analyze_bol(bol)
         if lines:
             self.setIcon(self.warning_icon)
