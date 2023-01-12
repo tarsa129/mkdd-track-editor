@@ -2369,14 +2369,21 @@ class KMP(object):
         #self.copy_enemy_to_item()
     
     def reset_routes(self, start_at = 0):
+
+        self.reset_object_routes(start_at)
+        self.reset_camera_routes(start_at)
+
+    def reset_object_routes(self, start_at = 0):
         for route_index in range(start_at, len(self.routes) ):
             for object in self.routes[route_index].used_by:
                 object.route = route_index
-
+    
+    def reset_camera_routes(self, start_at = 0):
         for route_index in range(start_at, len(self.cameraroutes) ):
             for object in self.cameraroutes[route_index].used_by:
                 object.route = route_index
-    
+
+
     def remove_unused_routes(self):
         self.remove_unused_object_routes()
         self.remove_unused_camera_routes()
@@ -2390,7 +2397,7 @@ class KMP(object):
         to_remove.reverse()
         for rem_index in to_remove:
             self.routes.pop(rem_index)
-        self.reset_routes()
+        self.reset_object_routes()
 
     def remove_unused_camera_routes(self):   
 
@@ -2402,7 +2409,7 @@ class KMP(object):
         to_remove.reverse()
         for rem_index in to_remove:
             self.cameraroutes.pop(rem_index)
-        self.reset_routes()
+        self.reset_camera_routes()
         
     def copy_enemy_to_item(self):
         self.itempointgroups = ItemPointGroups()

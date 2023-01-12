@@ -2410,7 +2410,7 @@ class GenEditor(QMainWindow):
                 self.level_file.routes.remove(obj)
             
                 self.level_file.reset_routes( route_index )
-       
+        
         self.level_view.selected = []
         self.level_view.selected_positions = []
         self.level_view.selected_rotations = []
