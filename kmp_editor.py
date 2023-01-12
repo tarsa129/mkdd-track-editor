@@ -1736,7 +1736,6 @@ class GenEditor(QMainWindow):
         
             route_container = self.level_file.get_route_container(obj.partof)
 
-
             for group_idx, group in enumerate(route_container):
                 for point_idx, point in enumerate(group.points):
                     if point is obj:
