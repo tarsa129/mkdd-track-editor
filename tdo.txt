@@ -15,8 +15,6 @@ poti:
 -- just make an array for camera types that connect to a route in data_editor_options and use that everywhere
 - show splines
 - show route when highlighted from treeview
-- make unused routes gray
-- add 'c' linking for objects to routes
 
 area:
 - highlight camera / route point when relevant. (ALSO APPLIES TO MKDD)

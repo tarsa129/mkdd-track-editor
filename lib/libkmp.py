@@ -2575,16 +2575,23 @@ class KMP(object):
         to_deal_with.remove_point(del_point) 
 
     def get_route_container(self, obj):
-        if isinstance(obj, CameraRoute):
+        if isinstance(obj, (CameraRoute, Camera)):
             return self.cameraroutes
         else:
             return self.routes
 
     def get_route_for_obj(self, obj):
-        if isinstance(obj, CameraRoute):
+        if isinstance(obj, (CameraRoute, Camera) ):
             return CameraRoute()
         else:
             return ObjectRoute()
+
+    def get_index_of_route(self, route):
+        route_container = self.get_route_container(route)
+        for i, group in enumerate(route_container):
+            if group == route:
+                return i
+        return -1
 
 with open("lib/mkwiiobjects.json", "r") as f:
     tmp = json.load(f)

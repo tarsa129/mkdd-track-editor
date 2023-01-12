@@ -2265,7 +2265,7 @@ class GenEditor(QMainWindow):
 
         if event.key() == Qt.Key_C:
             if len(self.level_view.selected) == 1:
-                if isinstance( self.level_view.selected[0], (KMPPoint) ):
+                if isinstance( self.level_view.selected[0], (KMPPoint, MapObject, Camera, Area) ):
                     self.connect_start = self.level_view.selected[0]
                     self.level_view.connecting_mode = True
 
@@ -2794,46 +2794,62 @@ class GenEditor(QMainWindow):
             return
         self.ready_to_connect = False
 
-        #create a new group
+       
         if len(self.level_view.selected) == 0:
-            to_deal_with = self.level_file.get_to_deal_with(self.connect_start)
-            
+            #create a new enemy/item/checkpoint group
+            if isinstance(self.connect_start, KMPPoint):
 
-            start_groupind, start_group, start_pointind = to_deal_with.find_group_of_point(self.connect_start)
-            if start_group is None:
-                print("start group is none, this shouldn't happen", self.connect_start.position)
-                return
-            if start_group.num_next() == 6:
-                return
+                to_deal_with = self.level_file.get_to_deal_with(self.connect_start)
+                
 
-            
-            point_to_add = to_deal_with.get_new_point()
-            group_to_add = to_deal_with.get_new_group()
-            if start_pointind == len(start_group.points) - 1:
-                group_to_add.id = to_deal_with.new_group_id()
-                to_deal_with.groups.append(group_to_add)
-                self.object_to_be_added = [point_to_add, group_to_add.id, 0 ]
-            else:
-                self.split_group( start_group, self.connect_start )
+                start_groupind, start_group, start_pointind = to_deal_with.find_group_of_point(self.connect_start)
+                if start_group is None:
+                    print("start group is none, this shouldn't happen", self.connect_start.position)
+                    return
+                if start_group.num_next() == 6:
+                    return
 
-                group_to_add.id = to_deal_with.new_group_id()
-                to_deal_with.groups.append(group_to_add)
+                
+                point_to_add = to_deal_with.get_new_point()
+                group_to_add = to_deal_with.get_new_group()
+                if start_pointind == len(start_group.points) - 1:
+                    group_to_add.id = to_deal_with.new_group_id()
+                    to_deal_with.groups.append(group_to_add)
+                    self.object_to_be_added = [point_to_add, group_to_add.id, 0 ]
+                else:
+                    self.split_group( start_group, self.connect_start )
 
-                group_to_add.add_new_prev(start_groupind)
-                start_group.add_new_next(group_to_add.id)
+                    group_to_add.id = to_deal_with.new_group_id()
+                    to_deal_with.groups.append(group_to_add)
 
-                self.object_to_be_added = [point_to_add, group_to_add.id, 0 ]
+                    group_to_add.add_new_prev(start_groupind)
+                    start_group.add_new_next(group_to_add.id)
 
-            start_group.remove_next(start_group.id)
-            start_group.remove_prev(start_group.id)
+                    self.object_to_be_added = [point_to_add, group_to_add.id, 0 ]
 
-            self.pik_control.button_add_object.setChecked(True)
-            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
+                start_group.remove_next(start_group.id)
+                start_group.remove_prev(start_group.id)
 
+                self.pik_control.button_add_object.setChecked(True)
+                self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
+            #create a new path for the object/camera
+            elif isinstance(self.connect_start, (MapObject, Camera) ):
+                if self.connect_start.route == -1:
+                    if isinstance(self.connect_start, MapObject ):
+                        self.button_add_from_addi_options(5)
+                    elif isinstance(self.connect_start, Camera ):
+                        self.button_add_from_addi_options(5.5)
 
+                    route_container = self.level_file.get_route_container(self.connect_start)
+                    new_group = route_container[-1]
+
+                    self.connect_start.route = len(route_container) - 1
+                    new_group.used_by.append(self.connect_start)
+
+                    self.button_add_from_addi_options(6, new_group)
         elif len(self.level_view.selected) != 1:
             return
-        else:
+        else: #len(self.level_view.selected) == 1
             endpoint = self.level_view.selected[0]
             to_deal_with = None
             if isinstance(endpoint, KMPPoint) and isinstance(self.connect_start, KMPPoint):
@@ -2849,6 +2865,18 @@ class GenEditor(QMainWindow):
             
             elif isinstance(endpoint, JugemPoint) and isinstance(self.connect_start, Checkpoint):
                 self.connect_start.respawn = self.level_file.get_index_of_respawn(endpoint)
+            elif isinstance(endpoint, RoutePoint) and isinstance(self.connect_start, (MapObject, Camera)):
+                if isinstance(endpoint.partof, ObjectRoute) and isinstance(self.connect_start, MapObject):
+                    if self.connect_start.route != -1:
+                        self.level_file.routes[self.connect_start.route].used_by.remove(self.connect_start)
+                    self.connect_start.route = self.level_file.get_index_of_route(  endpoint.partof  )
+                    endpoint.partof.used_by.append(self.connect_start)
+                if isinstance(endpoint.partof, CameraRoute) and isinstance(self.connect_start, Camera):
+                    if self.connect_start.route != -1:
+                        self.level_file.cameraroutes[self.connect_start.route].used_by.remove(self.connect_start)
+                    self.connect_start.route = self.level_file.get_index_of_route(  endpoint.partof  )
+                    endpoint.partof.used_by.append(self.connect_start)
+
 
         self.connect_start = None
         

@@ -1,0 +1,3801 @@
+{{Object|1|001|1|airblock||-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in regular tracks.<br>Used in tournaments as an "invisible wall" above barriers so you cannot fly/jump over them. They are boxes of 200x200x200 units with a pivot in the bottom face.
+}}
+
+{{Object|2|002|2|Psea|<br/>Psea(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= The sea on <small>GCN</small> Peach Beach; for details see [[Object/Psea]].
+}} 
+
+{{Object|1|003|3|lensFX|<br/>lensFX|-- TA-
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Generates a lens flare object when looking at the sun; it is also highly recommended to place this object near or coincident to {{obj-ref|sun}}.
+}}
+
+{{Object|2|004|4|venice_nami|<br/>venice_nami(B)|-- -A-
+|s1= Rising speed in odd stages
+|s2= Stage 5 target height
+|s3= Stage 1 target height
+|s4= Stage 2 frame count
+|s5= Stage 3 target height
+|s6= Stage 4 frame count
+|s7= Rising speed in even stages
+|s8= &mdash;
+|info= The rising and dropping sea on Delfino Pier. It requires {{obj-ref|pocha}} if the player can interact with it, or else the game will freeze upon respawning. Slot [[Slot#battle1.2|A1.2]] enables its SFX.<br>This object goes through five stages before it ends at its final height given in setting 2. Stages 1, 3 and 5 are active until a target height is reached, stages 2 and 4 are active for a given time period.<br>The object has an ongoing additional cyclus of rising and dropping between -80 and 80 added to its current height. All target heights are relative to the placement height, the rising speed is in units per frame.
+}}
+
+{{Object|1|005|5|sound_river||R- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Generates a river sound effect. The range where the sound comes from is controlled by the route, so make use of it.<br>Only works on slots [[Slot#3.2|3.2]], [[Slot#4.2|4.2]], [[Slot#5.2|5.2]], and [[Slot#7.3|7.3]].
+}}
+
+{{Object|2|006|6|sound_water_fall||R- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Generates a waterfall sound effect. The range where the sound comes from is controlled by the route, so make use of it.<br>Only works on slots [[Slot#3.2|3.2]], [[Slot#4.2|4.2]] and [[Slot#7.3|7.3]].
+}}
+
+{{Object|1|007|7|pocha|<br/>pocha(BE)|-- TA-
+|s1= [[KCL_flag#Type_A|Group Y KCL Index]]
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Generates a water splash effect when a player touches [[KCL flag#Fall Boundary (0x10)|KCL flag 0x10]] with variants 1 (water) or 3 (icy water that also needs the {{obj-ref|0x17|ice}} object). Also works for [[KCL flag#Effect Trigger (0x1A)|KCL flag 0x1A]] with variant 2, but cannot be triggered again until the player respawns. Only the Y coordinate is used.
+}}
+
+{{Object|2|008|8|sound_lake||R- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Generates a lake sound effect. The range where the sound comes from is controlled by the route, so make use of it.<br>Only works on slots [[Slot#2.2|2.2]], [[Slot#3.1|3.1]], [[Slot#5.1|5.1]], and [[Slot#8.2|8.2]].
+}}
+
+{{Object|1|009|9|sound_big_fall||R- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Generates a louder waterfall sound effect. The range where the sound comes from is controlled by the route, so make use of it.<br>Only works on slots [[Slot#3.2|3.2]], [[Slot#4.2|4.2]] and [[Slot#7.3|7.3]].
+}}
+
+{{Object|2|00a|10|sound_sea||R- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Generates a sea sound effect. The range where the sound comes from is controlled by the route, so make use of it.<br>Only works on slots [[Slot#5.1|5.1]] and [[Slot#6.3|6.3]].
+}}
+
+{{Object|1|00b|11|sound_fountain||R- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Generates a fountain sound effect. The range where the sound comes from is controlled by the route, so make use of it.<br>Only works on slots [[Slot#2.2|2.2]], [[Slot#3.1|3.1]], [[Slot#5.1|5.1]], and [[Slot#8.2|8.2]].
+}}
+
+{{Object|2|00c|12|sound_volcano||R- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Generates a volcano sound effect. The range where the sound comes from is controlled by the route, so make use of it.<br>Only works on slot [[Slot#8.3|8.3]].
+}}
+
+{{Object|1|00d|13|sound_audience||R- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Generates an audience sound effect. The range where the sound comes from is controlled by the route, so make use of it.<br>Works on slots [[Slot#1.1|1.1]], [[Slot#1.4|1.4]], [[Slot#2.3|2.3]], [[Slot#3.1|3.1]], and [[Slot#5.4|5.4]]; slot 3.1 does not feature slot-based audience ambience.
+}}
+
+{{Object|2|00e|14|sound_big_river||R- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Generates a louder river sound effect. The range where the sound comes from is controlled by the route, so make use of it.<br>Only works on slots [[Slot#3.2|3.2]], [[Slot#4.2|4.2]], [[Slot#5.2|5.2]], and [[Slot#7.3|7.3]].
+}}
+
+{{Object|1|00f|15|sound_sand_fall||R- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.<br>Generates a sand fall sound effect. The range where the sound comes from is controlled by the route. This object must have a route.
+}}
+
+{{Object|2|010|16|sound_lift||R- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Generates a lift sound effect. The range where the sound comes from is controlled by the route, so make use of it.<br>[[KMP (File Format)#POTI|Route Setting 1]] is always 1 in all Nintendo tracks.
+}}
+
+{{Object|1|011|17|pochaYogan|<br/>pochaYogan(BE)|-- T--
+|s1= [[KCL_flag#Type_A|Group Y KCL Index]]
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Generates a lava splash effect when a player touches [[KCL flag#Fall Boundary (0x10)|KCL flag 0x10]] with variant 2. Only the Y coordinate is used.
+}}
+
+{{Object|2|012|18|entry|<br/>entry(E)|-- T-O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Generates a fire around the player when falls through a [[KCL flag#Fall Boundary (0x10)|burning air fall boundary]] flag.
+}}
+
+{{Object|1|013|19|pochaMori|<br/>pochaMori(E)|-- TA-
+|s1= [[KCL_flag#Type_A|Group Y KCL Index]]
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Generates a leaf splash effect when a player touches [[KCL flag#Effect Trigger (0x1A)|KCL flag 0x1A]] with variant 2. Only the Y coordinate is used. Only works on slots [[Slot#4.2|4.2]] and arena slot [[Slot#battle2.5|2.5]] with group Y KCL index set to 5.
+}}
+
+{{Object|2|014|20|eline_control||-- TA-
+|s1= Entry Flag:<br>0 = Do Not Enter<br>1 = Enter
+|s2= Time to Next Controller (seconds)
+|s3= Controller ID
+|s4= Next Controller ID
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= [[KMP_(File_Format)#ENPH|ENPH]] Section; if -1, use ENPH of previous controller
+|info= Enemy line controller. Multiple controllers can be chained together. The timer of the next controller in a chain begins after the end of the previous controller.<br>Controller ID 0 is reserved to indicate the end of a controller chain. Enemies can choose to not obey a controller unless the next ENPH Section is set to -1.<br>Found in slots [[Slot#1.4|1.4]], [[Slot#2.2|2.2]], [[Slot#3.4|3.4]], [[Slot#4.1|4.1]], and arena slot [[Slot#battle1.2|1.2]].
+}}
+
+{{Object|1|015|21|sound_Mii||R- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Generates a Mii crowd sound effect. The range where the sound comes from is controlled by the route, so make use of it.<br>Only works on slots [[Slot#1.1|1.1]] and [[Slot#3.1|3.1]].
+}}
+
+{{Object|2|016|22|begoman_manager||-- --O
+|s1= Manager ID (1-based)
+|s2= Number of Topmen to control
+|s3= First Topman ID to control
+|s4= Topman behavior:<br>0: *unknown*<br>1: Coward, they will ignore the player<br>2: Aggressive, they will attack the player
+|s5= Number of Topmen under control + Number of Topmen controlled by the previous manager
+|s6= *unknown*
+|s7= *unknown*
+|s8= *unknown*
+|info= Galaxy Colosseum Topmen manager; object not used in any track. Once the Topmen controlled by the first manager are defeated, the Topmen controlled by the second manager will spawn and so forth.<br>Only works on slots [[Slot#3.1|3.1]], [[Slot#4.2|4.2]], [[Slot#6.2|6.2]], [[Slot#7.1|7.1]], and Galaxy Colosseum.
+}}
+
+{{Object|1|017|23|ice|<br/>ice(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Generates ice around the player when respawned after falling in an [[KCL flag#Fall Boundary (0x10)|icy water fall boundary]] flag; the location does not matter, the ice effect is always enabled. The ice's scale and position for each vehicle is defined in [[kartPartsDispParam.bin]] and [[bikePartsDispParam.bin]].<br>This object can be used to enable tracks for slot [[Slot#6.1|6.1]], but it only has impact in combination with an icy boundary flag. In this case, it only works on slot 6.1.
+}}
+
+{{Object|2|018|24|startline2D||-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Generates a finish line at given location. This object is used in tournaments where you have to drive laps on a battle arena and some others; object not used in any track.
+}}
+
+{{Object|1|065|101|itembox|<br/>itembox(B)|-S TAO
+|s1= ''Unknown''
+|s2= [[Item_Settings_-_Item_Boxes|Item type (player)]]
+|s3= [[Item_Settings_-_Item_Boxes|Item type (enemy)]]
+|s4= Disables shadow if set
+|s5= &mdash;
+|s6= [[Item_Settings_-_Item_Boxes|Timing lottery]]
+|s7= Additional height, multiplied with unknown number (always 1?).
+|s8= ''Unknown''
+|info= Spinning box with a question mark inside it. If touched, it snaps and an item lottery begins; after the lottery, the item shown is retrieved.
+}}
+
+{{Object|2|066|102|DummyPole||-S T-O
+|s1= Wall KCL Variant
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Pole solidity across different tracks. Deleting this object will cause the pole itself to be unsolid.
+}}
+
+{{Object|1|067|103|flag|<br/>flag|-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|2|068|104|flagBlend|<br/>flagBlend|-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|1|069|105|gnd_sphere||-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.<br>Solid green sphere with an animation.
+}}
+
+{{Object|2|06a|106|gnd_trapezoid||-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.<br>Solid red trapezoid with an animation.
+}}
+
+{{Object|1|06b|107|gnd_wave1||-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.<br>Blue object that makes a wave animation.
+}}
+
+{{Object|2|06c|108|gnd_wave2||-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.<br>Yellow object that makes a wave animation.
+}}
+
+{{Object|1|06d|109|gnd_wave3||-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.<br>Orange object that makes a wave animation.
+}}
+
+{{Object|2|06e|110|gnd_wave4||-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.<br>Blue object that makes a wave animation.
+}}
+
+{{Object|1|06f|111|sun|<br/>sun(B)|-- TA-
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= The sun in the background; often used with {{obj-ref|lensFX}}.
+}}
+
+{{Object|2|070|112|woodbox|<br/>woodbox(BE)|-S T--
+|s1= &mdash;
+|s2= [[Item_Settings_-_Objects|Item to give]]
+|s3= [[Item_Settings_-_Objects|Chance to give an item]]
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= [[LE-CODE]] only: Replace the standard drop height by this value.
+|info= Wooden box. When touched, the player slows down and the box drops an item. The wooden boxes respawn after five seconds, drop from 5000 units above the origin and drop onto the first face they touch.<br>In Time Trials, it becomes an unbreakable {{obj-ref|ironbox}}.
+}}
+
+{{Object|1|071|113|KmoonZ|<br/>KmoonZ(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= The moon of Rainbow Road.
+}}
+
+{{Object|2|072|114|sunDS|<br/>sunDS(B)|R- T--
+|s1= Speed
+|s2= Delay before starting in 1/60 seconds after starting of countdown.<br>240 (F0 in hex) = Starts immediately after the "GO!"
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= The Angry Sun from <small>DS</small> Desert Hills. It changes point of view and rotation of the crown according to player's position.<br>[[KMP (File Format)#POTI|Route Setting 2]] controls the behavior depending on the value X:<br>X < 30 (1E in hex) → Stays for X/60 seconds<br>X ≥ 30 (1E in hex) → Drops a {{obj-ref|FireSnake}} staying for X/60 seconds.<br>In both cases, the dropping animation is viewed; if the route start point is set to drop, it will drop at the second "lap" of the route.<br>Only slots [[Slot#3.1|3.1]], [[Slot#4.2|4.2]], [[Slot#6.2|6.2]], and [[Slot#7.1|7.1]] support this object.
+}}
+
+{{Object|1|073|115|coin|<br/>coin(BE)|-S -A-
+|s1= Mode.<br>0 = Battle<br>1 = [[Tournament]] or [[Mission Mode]].
+|s2= Start or respawn place. See [[Coin]] for details.
+|s3= Spawn behavior. See [[Coin]] for details.
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Present within all battle arenas in Coin Runners mode and in some tournaments. When touched, it disappears and the player gets one coin.<br>Some coins do not appear at the start of the battle but show up later on. See [[Object/coin]] for details.
+}}
+
+{{Object|2|074|116|ironbox||-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.<br>It seems to be born as an object separate from {{obj-ref|woodbox}}. 
+}}
+
+{{Object|1|075|117|ItemDirect||-- ---
+|s1= 0 = Green Shell<br>1 = Red Shell<br>2 = Banana<br>3 = Mushroom<br>4 = Star
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object used in tournaments (Daisy Circuit and <small>SNES</small> Battle Course 4).<br>Can be used to place an item directly onto the track; they will not show up in Time Trials.<br>You must not place more than 11 of these in a track; otherwise, your track will freeze or hang in online play.
+}}
+
+{{Object|2|076|118|s_itembox|<br/>itembox(B)|-S TA-
+|s1= ''Unknown''
+|s2= [[Item_Settings_-_Item_Boxes|Item type (player)]]
+|s3= [[Item_Settings_-_Item_Boxes|Item type (enemy)]]
+|s4= Disables shadow if set
+|s5= &mdash;
+|s6= [[Item_Settings_-_Item_Boxes|Timing lottery]]
+|s7= Height offset with object's position, signed.
+|s8= ''Unknown''
+|info= Item box that acts similarly to a placed item. It moves in conjunction with most moving objects and is normally locked in a relative Y-position, moving along with the object's behavior. Otherwise, it typically phases through object collision altogether. <br>Some interactions might be slot specific, such as with {{obj-ref|quicksand}}. <br>When placed high without an object underneath, it falls until it reaches the ground, and when placed on a steep surface, it falls down the slope, but can sometimes cause a crash due to unknown reasons if used in this way.<br/>For more information, see the [[Moving Terrain#Using Objects|Moving Terrain]] page.
+}}
+
+{{Object|1|077|119|pile_coin|<br/>coin(BE)|-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.<br>This is the pile of coins above the players used in Battle Mode; static and without collision.
+}}
+
+{{Object|2|0c9|201|f_itembox|<br/>itembox(B)|RS T-O
+|s1= Start speed in units per 1/60 seconds; if a [[KMP (File Format)#POTI|Route Setting 1]] > 0, then a new speed value is defined
+|s2= [[Item_Settings_-_Item_Boxes|Item type (player)]]
+|s3= [[Item_Settings_-_Item_Boxes|Item type (enemy)]]
+|s4= Disables shadow if set
+|s5= Route start point
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Route controlled item box. If any [[KMP (File Format)#POTI|Route Setting 2]] = 1, the box breaks at that point.
+}}
+
+{{Object|1|0ca|202|MashBalloonGC|<br/>MashBalloonGC(B)|R- T-O
+|s1= Speed
+|s2= Max Y difference
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Air balloon as seen in <small>GCN</small> Mario Circuit. It has an assigned route but also floats from Y to Y. It turns to face the direction it is traveling in.
+}}
+
+{{Object|2|0cb|203|WLwallGC|<br/>WLwallGC(BK)|-S T--
+|s1= Time inside the pipe
+|s2= Time outside the pipe
+|s3= Speed
+|s4= Length of going
+|s5= Going out first time
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Horizontal moving Piranha Plant wall from <small>GCN</small> Waluigi Stadium. It moves like a sine function (inside → outside → inside); normally combined with {{obj-ref|WLdokanGC}}.
+}}
+
+{{Object|1|0cc|204|CarA1|<br/>CarA1(B)|RS T--
+|s1= Speed
+|s2= Acceleration
+|s3= Time of pause
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Moving car from Coconut Mall. It moves exactly like {{obj-ref|WLwallGC}} but instead left → right.
+}}
+
+{{Object|2|0cd|205|basabasa|<br/>basabasa(B)|RS T--
+|s1= Speed in units per 1/60 seconds
+|s2= Delay until start of the next group in 1/60 seconds.<br>Multiple groups can be on the way
+|s3= Number of Swoops per group
+|s4= How far they can get off the route (unknown values)
+|s5= Maximum height
+|s6= Distance between the bats in the same group
+|s7= Start delay in 1/60 seconds
+|s8= &mdash;
+|info= Swoops that follow a route. When touched, they act like a wall. They are released as groups which can be edited in any way.
+}}
+
+{{Object|1|0ce|206|HeyhoShipGBA|<br/>HeyhoShipGBA(B)|R- T--
+|s1= Speed
+|s2= How strong it moves up and down
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Shy Guy ship which shoots exploding cannonballs; cannonball object is {{obj-ref|HeyhoBallGBA}}.<br>This object is made for counterclockwise directed tracks, so if a track is clockwise directed, this object must be modified with [[BrawlBox]] in the following ways:<br>''CullMode'' from ''Materials'' must be set on ''Cull_Outside'' and the Z scale in the KMP must be -1.<br>Only slot [[Slot#6.2|6.2]] supports this object and it is necessary to allow tracks to work on this slot.
+}}
+
+{{Object|2|0cf|207|koopaBall|<br/>koopaBall(BE)|RS T--
+|s1= Unknown
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Gigantic exploding fireball; used with {{obj-ref|koopaFigure}}. It bounces on every new route point and explodes on the last one if the route cycle setting is turned on. This object always spins northward. Scale is only obeyed if the route cycle setting is turned off, although the fiery effect still does not obey scaling.
+}}
+
+{{Object|1|0d0|208|kart_truck|<br/>K_truck(B)|RS T--
+|s1= Route start point
+|s2= Speed 0 in 1/60 seconds
+|s3= Speed 1 in 1/60 seconds
+|s4= Texturing:<br>0 = MooMoo<br>1 = Fruit<br>2 = Factory
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Truck from Moonview Highway.<br>[[KMP (File Format)#POTI|Route Setting 1]] is used for blinking (1 = Left, 2 = Right).<br>[[KMP (File Format)#POTI|Route Setting 2]] selects the speed (0 or 1).
+}}
+
+{{Object|2|0d1|209|car_body|<br/>K_car_body(B)|RS T--
+|s1= Route start point
+|s2= Speed 0 in 1/60 seconds
+|s3= Speed 1 in 1/60 seconds
+|s4= Color:<br>0 = Blue<br>1 = Red<br>2 = Yellow
+|s5= ''Unknown''
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Car from Moonview Highway.<br>[[KMP (File Format)#POTI|Route Setting 1]] is used for blinking (1 = Left, 2 = Right)<br>[[KMP (File Format)#POTI|Route Setting 2]] selects the speed (0 or 1).
+}}
+
+{{Object|1|0d2|210|skyship|<br/>skyship(B)|R- T-O
+|s1= Speed
+|s2= Max Y difference
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Blimp from Luigi Circuit. It turns to face the direction it is traveling in.
+}}
+
+{{Object|2|0d3|211|w_woodbox|<br/>woodbox(BE)|RS T--
+|s1= Speed
+|s2= [[Item_Settings_-_Objects|Item to give]]
+|s3= [[Item_Settings_-_Objects|Chance to give an item]]
+|s4= ''Unknown''
+|s5= Start delay
+|s6= Time between 2 boxes
+|s7= Max amount of boxes
+|s8= &mdash;
+|info= Wooden box that follows a route.<br>[[KMP (File Format)#POTI|Route Setting 1]] sets the speed (gets added to S1). 
+}}
+
+{{Object|1|0d4|212|w_itembox|<br/>itembox(B)|RS T--
+|s1= Speed
+|s2= [[Item_Settings_-_Item_Boxes|Item type (player)]]
+|s3= [[Item_Settings_-_Item_Boxes|Item type (enemy)]]
+|s4= Disables shadow if set
+|s5= Start delay
+|s6= Time between 2 boxes
+|s7= Number of itemboxes on the route (default 5)
+|s8= &mdash;
+|info= Multiple item boxes that follow a route from a starting point to an ending point.
+}}
+
+{{Object|2|0d5|213|w_itemboxline|<br/> Block(BE)<br/> itembox(B)<br/> Press(BE)|RS T--
+|s1= Speed
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= Delay until the first block spawns (time in frames)
+|s6= Delay between block spawns (time in frames)
+|s7= Number of Blocks/Item Boxes that can exist at any one time
+|s8= &mdash;
+|info= {{obj-ref|Press}}, ''block.brres'' and {{obj-ref|itembox}} combination from Toad's Factory.<br>Each block follows a route until it reach the press and the press converts it to an item box which continues the route. Route setting 1 is the speed it slows down to (if 0 it uses the speed setting in S1).<br/>Route setting 2:<br/> 0x1: press activates when a block reaches this point<br/>0x2: determines where the item box goes
+}}
+
+{{Object|1|0d6|214|VolcanoBall1|<br/>VolcanoBall1(BE)|RS T--
+|s1= Fireball speed
+|s2= Delay before starting
+|s3= Time between 2 fireballs
+|s4= Time until the fire goes out
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Fiery rock from Grumble Volcano.<br>When created, a volcano explosion occurs and it follows the route until it touches a solid part, then it becomes a fire; slot [[Slot#3.4|3.4]] enables its SFX.
+}}
+
+{{Object|2|0d7|215|penguin_s|<br/>penguin_s(BE3D)|RS T--
+|s1= Speed
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Small penguin from <small>N64</small> Sherbet Land. It creates a symmetrical copy of itself under the ground to simulate an ice reflection.<br>[[KMP (File Format)#POTI|Route Setting 1]]: 0 = Default; 1 = Glide; 2 = Animation faster; 3 = Default.<br>[[KMP (File Format)#POTI|Route Setting 2]] describes the speed when Route Setting 1 ≠ 0, but always requires a value ≠ 0.<br>Slot [[#6.1|6.1]] enables its SFX.
+}}
+
+{{Object|1|0d8|216|penguin_m|<br/>penguin_m(BED)|RS T--
+|s1= Speed
+|s2= [[LE-CODE]] or [[cheat code]] required: <br/>Route start point.
+|s3= [[LE-CODE]] or [[cheat code]] required: <br/>If S8=1: Item to drop (same as ItemDirect).
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= [[LE-CODE]] or special cheat code required: <br/>0: normal behavior<br/>1: custom "mushroom car" behavior developed by [[kHacker35000vr]].
+|info= Medium penguin from <small>N64</small> Sherbet Land.<br>Slot [[#6.1|6.1]] enables its SFX.
+}}
+
+{{Object|2|0d9|217|penguin_l|<br/>penguin_l(BE)|R- T--
+|s1= Speed
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Large penguin from <small>N64</small> Sherbet Land.
+}}
+
+{{Object|1|0da|218|castleballoon1|<br/>castleballoon1(B)|R- T-O
+|s1= Speed
+|s2= Max Y difference
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Balloon from Mario Circuit.
+}}
+
+{{Object|2|0db|219|dossunc|<br/>dossun(BE)|rS T--
+|s1= Route speed
+|s2= Behaviour with route:<br>1 = Stomp on every route point<br>2 = Couple of Thwomps, goes left and right before going down; read the description<br>3 = Grounded Thwomp, goes left and right
+|s3= Start delay in 1/60 seconds after start of countdown.<br>240 (F0 in hex) = Starts immediately after the "GO!"
+|s4= Sleep time in 1/60 seconds after start of countdown
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Thwomp with optional route; without route, S1 and S2 must be 0.<br>If S2 = 2, a 3-point route is needed to make effect:<br>1 → Start point, [[KMP (File Format)#POTI|Route Setting 2]] = 0<br>2 → Rotation point, Route Setting 2 = 1<br>3 → Going down point, Route Setting 2 = 0.<br>The couple starts, at the second point turns of 180° and goes left and right, going down around the third point according to player's direction, then goes back to the first point.<br>To make effect, the object needs a rotation of ±90°, route points must have the same Y and Z coordinate and no other object must be near the start point.<br>In Grand Prix and VS races, the object is activated by the proximity of a main player (not a CPU) and the speed is proportional to the player's; in Time Trial speed and start delay are the same of respective settings in KMP file.<br>If S2 = 3, Route Setting 2 ("cycle") must be 1, or else the Thwomp will spin endlessly when hit by an item.
+}}
+
+{{Object|1|0dc|220|dossunc_soko||-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track. 
+}}
+
+{{Object|2|0dd|221|boble|<br/>boble(BE)|RS T--
+|s1= Speed
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Lava bubble from <small>GBA</small> Bowser Castle 3.<br>[[KMP (File Format)#POTI|Route Setting 1]] controls the speed (gets added to S1), [[KMP (File Format)#POTI|Route Setting 2]] = 1 means that the model flips horizontally.
+}}
+
+{{Object|1|0de|222|K_bomb_car|<br/>K_bomb_car(BE)|RS T--
+|s1= Route start point
+|s2= Speed 0 in 1/60 seconds
+|s3= Speed 1 in 1/60 seconds
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Bomb car from Moonview Highway.<br>[[KMP (File Format)#POTI|Route Setting 1]] is used for blinking (1 = Left, 2 = Right).<br>[[KMP (File Format)#POTI|Route Setting 2]] selects the speed (0 or 1).
+}}
+
+{{Object|2|0df|223|K_bomb_car_dummy|<br/>K_bomb_car_dummy|-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track. 
+}}
+
+{{Object|1|0e0|224|car_body_dummy|<br/>car_body_dummy|-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|2|0e1|225|kart_truck_dummy|<br/>kart_truck_dummy|-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|1|0e2|226|hanachan|<br/>hanachan(BE2D)|RS T--
+|s1= Speed
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Wiggler from Maple Treeway. It shows up on the minimap in non-racing modes. <br>[[KMP (File Format)#POTI|Route Setting 1]] sets the time in 1/60 seconds of stop in that point.<br>Define the route heights carefully. If the Wiggler has issues with the body segments, move the route to a more flat area.
+}}
+
+{{Object|2|0e3|227|seagull|<br/>seagull(B)|R- T--
+|s1= Speed
+|s2= Number of seagulls
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Seagull that follows a route. It is found in tracks with a marine setting.
+}}
+
+{{Object|1|0e4|228|moray|<br/>moray(B)|R- TA-
+|s1= Speed
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Unagi (eel) from Koopa Cape and Chain Chomp Wheel.
+}}
+
+{{Object|2|0e5|229|crab|<br/>crab(BE3D)|RS T--
+|s1= Speed in units per 1/60 seconds
+|s2= Crab view direction:<br>0 = Left<br>1 = Right
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Crab from <small>GBA</small> Shy Guy Beach.<br>[[KMP (File Format)#POTI|Route Setting 1]] sets the time in 1/60 seconds of stop in that point.
+}}
+
+{{Object|1|0e6|230|basabasa_dummy||-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|2|0e7|231|CarA2|<br/>CarA2(B)|RS T--
+|s1= Speed
+|s2= Acceleration
+|s3= Time of pause
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Moving car from Coconut Mall.
+}}
+
+{{Object|1|0e8|232|CarA3|<br/>CarA3(B)|RS T--
+|s1= Speed
+|s2= Acceleration
+|s3= Time of pause
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Moving car from Coconut Mall.
+}}
+
+{{Object|2|0e9|233|Hwanwan|<br/>wanwan(BE)|RS T--
+|s1= Speed
+|s2= Amount of item boxes carried
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Route-following Chain Chomp from <small>DS</small> Peach Gardens.<br>Hwanwan and wanwan only work together if the effect files are absent.<br>[[KMP (File Format)#POTI|Route Setting 2]] = 1 plays a rollover animation, originally used within a tournament in Rainbow Road. 
+}}
+
+{{Object|1|0ea|234|HeyhoBallGBA|<br/>HeyhoBallGBA(BE)|-S T--
+|s1= Route id from where {{obj-ref|HeyhoShipGBA}} shoots
+|s2= Time between shot and arrival in 1/60 seconds
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Cannonball landing area that explodes after three seconds, shot by {{obj-ref|HeyhoShipGBA}}; in Grand Prix and VS races, it explodes if touched.<br>The object's scale does not affect the explosion effect's dimension. Generally, CPUs do not go against this object as they try to avoid them.<br>This objects requires {{obj-ref|HeyhoShipGBA}}, and therefore, it can only be used on slot [[Slot#6.2|6.2]]. Note that no more than 59 of this object can be used.
+
+}}
+{{Object|2|0eb|235|Twanwan|<br/>Twanwan(B)|RS -A-
+|s1= Route speed
+|s2= 0 = start and wait on first route point<br>1 = start at object location and enable release action
+|s3= Amplitude
+|s4= Period length
+|s5= Start delay in 1/60 seconds
+|s6= Time until it starts following route in 1/60 seconds (s5 has priority)
+|s7= &mdash;
+|s8= &mdash;
+|info= Rolling Chain Chomp from Chain Chomp Wheel.<br>The object has two different kind of movements; one being a route and one relative to its current location based on a sine wave, whereby the wave is controlled by s3 and s4.<br>It appears on the minimap when playing on arena slot 1.4.
+}}
+
+{{Object|1|0ec|236|cruiserR|<br/>cruiser(BE)|R- T--
+|s1= Start speed
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Route-following boat from Daisy Circuit and Koopa Cape.
+}}
+
+{{Object|2|0ed|237|bird|<br/>bird(B)|R- T--
+|s1= Speed
+|s2= Number of eagles
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Route-following eagle from <small>GCN</small> DK Mountain.
+}}
+
+{{Object|1|0ee|238|sin_itembox|<br/>itembox(B)|RS T--
+|s1= Cycle time in 1/60 seconds
+|s2= &mdash;
+|s3= &mdash;
+|s4= 0 = Enable shadow<br>1 = Disable shadow
+|s5= Start delay in 1/60 seconds
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Item box following a route back and forth; speed is like a sine function.<br>[[KMP (File Format)#POTI|Route Setting 2]]: 0 = Asymetric; 1 = Symetric.
+}}
+
+{{Object|2|0ef|239|Twanwan_ue|<br/>Twanwan_ue|-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|1|0f0|240|BossHanachan|<br/>hanachan(BE2D)|-S ---
+|s1= Primary Wiggler Speed
+|s2= Time in 1/60 seconds wiggler stops before using its angry speed. Used instead of s7 if player is behind point specified in s6 when wiggler stops
+|s3= Secondary Wiggler Speed
+|s4= Point player must pass to change wiggler to speed two. The wiggler must stop to activate this speed change. Route settings 0000 0001
+|s5= Angry Wiggler Speed
+|s6= Point player must pass to allow the wiggler to become angry. Route settings 0000 0001
+|s7= Time in 1/60 seconds wiggler stops before using its angry speed. Used instead of s2 if player is past point specified in s6 when wiggler stops
+|s8= &mdash;
+|info= Big Wiggler boss used in the Wario's Gold Mine tournament; follows a route.<br>If S2 of the route point = 0002 (S1 needs to be 0000; otherwise, it will try to do different things at the same time and Wiggler's body will glitch out), it will play Wiggler's trick animation once Wiggler gets to the point. See [[BossHanachan]] for more information about its route settings.
+}}
+
+{{Object|2|0f1|241|Kdossunc||-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|1|0f2|242|BossHanachanHead||-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object used in the Wario's Gold Mine tournament to show the Wiggler's head on the minimap. It is not found in the KMP, but adding BossHanachan will automatically generate it in-game.
+}}
+
+{{Object|2|0f3|243|K_bomb_car1|<br/>K_bomb_car1|-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track. Black Bomb car used in one of the Luigi Circuit tournaments.
+}}
+
+{{Object|1|12d|301|dummy|<br/>dummy|-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|2|12e|302|dokan_sfc|<br/>dokan_sfc(B)|-S T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Pipe from Luigi Circuit and <small>SNES</small> Mario Circuit 3.
+}}
+
+{{Object|1|12f|303|castletree1|<br/>castletree1(B)|-- T-O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Unsolid swaying [[tree]] from Moo Moo Meadows and Mario Circuit.
+}}
+
+{{Object|2|130|304|castletree1c|<br/>castletree1(B)|-S T-O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Solid swaying [[tree]] from Moo Moo Meadows and Mario Circuit.
+}}
+
+{{Object|1|131|305|castletree2|<br/>castletree2(B)|-- T-O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Unsolid swaying [[tree]] from Moo Moo Meadows and Mario Circuit. The tree turns to look always to the player.
+}}
+
+{{Object|2|132|306|castleflower1|<br/>castleflower1(B)|-- T-O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Flower from Mario Circuit.
+}}
+
+{{Object|1|133|307|mariotreeGC|<br/>mariotreeGC(B)|-- T-O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Unsolid swaying [[tree]] from GCN Mario Circuit.
+}}
+
+{{Object|2|134|308|mariotreeGCc|<br/>mariotreeGC(B)|-S T-O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Solid swaying [[tree]] from GCN Mario Circuit.
+}}
+
+{{Object|1|135|309|donkytree1GC|<br/>donkytree1GC(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Unsolid [[tree]] from GCN DK Mountain.
+}}
+
+{{Object|2|136|310|donkytree2GC|<br/>donkytree2GC(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Unsolid [[tree]] from GCN DK Mountain.
+}}
+
+{{Object|1|137|311|peachtreeGC|<br/>peachtreeGC(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Unsolid swaying [[tree]] from GCN Peach Beach.
+}}
+
+{{Object|2|138|312|peachtreeGCc|<br/>peachtreeGC(B)|-S T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Solid swaying [[tree]] from GCN Peach Beach.
+}}
+
+{{Object|1|139|313|npc_mii_a|<br/>npc_mii_a|-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|2|13a|314|npc_mii_b|<br/>npc_mii_b|-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|1|13b|315|npc_mii_c|<br/>npc_mii_c|-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|2|13c|316|obakeblockSFCc|<br/>obakeblockSFC(B)|-S T--
+|s1= &mdash;
+|s2= Fall time controller in Time Trial and Online VS Race, controls the delay before starting in seconds after starting of countdown, depending on the value T:<br>T = 0 → Block doesn't fall<br>T > 0 → Block falls after T seconds<br>T = 4 → Block falls immediately after the "GO!"
+|s3= Additional delay of X/60 seconds, goes added to S2
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Falling block from SNES Ghost Valley 2. In Grand Prix and Offline VS Race falls when touched, in Time Trial and Online VS Race fall is controlled by S2 and S3. This object is solid and animated only on slot 5.3, but isn't scalable (fixed scale 1.3). In other slots it is scalable, but unsolid and doesn't fall. Blocks are solid only if X is between -30985 and 8690 and Z between -16295 and 21430; Y (height) doesn't seem to be important.
+
+For slot 5.3, the Y angle indicates the fall's direction and not the block's rotation, which remains the same. Block's side measures 250 units (325 on slot 5.3) and the center coincides with geometrical center. If many blocks are used slot 5.3 is recommended. sGV2 uses 602 blocks.
+}}
+
+{{Object|1|13d|317|WLarrowGC|<br/>WLarrowGC(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Arrow with eyes from GCN Waluigi Stadium.
+}}
+
+{{Object|2|13e|318|WLscreenGC|<br/>WLscreenGC(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= TV from GCN Waluigi Stadium. Nintendo disables it in Multiplayer mode (PFlag = 9).
+}}
+
+{{Object|1|13f|319|WLdokanGC|<br/>WLdokanGC(BK)|-S T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Big pipe from GCN Waluigi Stadium, normally combined with {{obj-ref|WLwallGC}}.
+}}
+
+{{Object|2|140|320|MarioGo64c|<br/>MarioGo64(B)|-S T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= The "GO" sign from N64 Mario Raceway.
+}}
+
+{{Object|1|141|321|PeachHunsuiGC|<br/>PeachHunsuiGC(BE)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Fountain from GCN Peach Beach.
+}}
+
+{{Object|2|142|322|kinokoT1|<br/>kinokoT1(B)|-S T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Moving bouncy mushroom decoration from Mushroom Gorge.
+}}
+
+{{Object|1|143|323|kinokoT2|<br/>kinokoT2|-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|2|144|324|pylon01|<br/>pylon01(B)|-S T--
+|s1= Color:<br>0 = Red<br>1 = Blue<br>2 = Yellow
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Street cone from Daisy Circuit. Only slots [[Slot#3.1|3.1]], [[Slot#4.2|4.2]], [[Slot#6.2|6.2]] and [[Slot#7.1|7.1]] support this object with a limit of 30. Colors can be changed in the CLR0 (maybe even added).
+}}
+
+{{Object|1|145|325|PalmTree|<br/>PalmTree(B)|-S T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Solid palm from Coconut Mall. It is the largest [[tree]] of [[Mario Kart Wii]].
+}}
+
+{{Object|2|146|326|parasol|<br/>parasol(B)|-S T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Parasol from Coconut Mall.
+}}
+
+{{Object|1|147|327|cruiser|<br/>cruiser(BE)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Boat from Daisy Circuit and Koopa Cape.
+}}
+
+{{Object|2|148|328|K_sticklift00|<br/>K_sticklift00(B)|-S T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Barrier gate from DK Summit.
+}}
+
+{{Object|1|149|329|heyho2|<br/> heyho2(B)<br/> K_chairlift00(B)|R- T--
+|s1= Which MDL0 from ''K_chairlift00.brres'' is loaded:<br>0 = K_chairlift00<br>1 = K_chairlift01
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Manager of the Shy Guy Ski Lift from DK Summit. Spawns 30 Chairlifts that travel on a route. Route setting 0 removes the Shy Guys. Route setting 1 randomly makes either 0, 1 or 2 randomly colored Shy Guys spawn on the chair. 
+}}
+
+{{Object|2|14a|330|HeyhoTreeGBAc|<br/>HeyhoTreeGBA(B)|-S T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Small solid [[tree]] from GBA Shy Guy Beach.
+}}
+
+{{Object|1|14b|331|MFaceBill|<br/>MFaceBill|-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|2|14c|332|truckChimSmk|<br/>truckChimSmk(BE)|-S T--
+|s1= Time to start smoking
+|s2= 0 = Default smoke variant, doesnt vanish when touched.<br>1 = Different smoke variant (fluffy), doesnt vanish when touched.<br>2 = 1 but vanishes when touched.<br>3 = Different smoke variant (thick), doesnt vanish when touched.<br>4 = Same as 2?.<br>5+ = No smoke but "explode" effect
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Smoke generator on Wario's Gold Mine and Maple Treeway.
+}}
+
+{{Object|1|14d|333|MiiObj01|<br/>MiiObj01(B)|-- T-O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Mii audience from Luigi Circuit.
+}}
+
+{{Object|2|14e|334|MiiObj02|<br/>MiiObj02(B)|-- T-O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Mii audience from Luigi Circuit.
+}}
+
+{{Object|1|14f|335|MiiObj03|<br/>MiiObj03(B)|-- T-O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Mii audience from Luigi Circuit.
+}}
+
+{{Object|2|150|336|gardentreeDS|<br/>gardentreeDS(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Unsolid and thin [[tree]] from DS Peach Gardens.
+}}
+
+{{Object|1|151|337|gardentreeDSc|<br/>gardentreeDS(B)|-S T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Solid and thin [[tree]] from DS Peach Gardens.
+}}
+
+{{Object|2|152|338|FlagA1|<br/>FlagA1(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Starting line flag from Wario's Gold Mine.
+}}
+
+{{Object|1|153|339|FlagA2|<br/>FlagA2(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Starting line flag from Moo Moo Meadows.
+}}
+
+{{Object|2|154|340|FlagB1|<br/>FlagB1(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= "W" flag from Wario's Gold Mine.
+}}
+
+{{Object|1|155|341|FlagB2|<br/>FlagB2(B)|-- T-O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= "L" Flag from Luigi Circuit.
+}}
+
+{{Object|2|156|342|FlagA3|<br/>FlagA3(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= "Mario Kart" flag from DS Delfino Square. Strangely, scales must follow a precise proportion: Xscale < Yscale < Zscale, or game freezes.<br>It is a bit buggy, so it is better use another "FlagA" object and import the original texture.
+}} 
+
+{{Object|1|157|343|DKtreeA64|<br/>DKtreeA64(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Unsolid [[tree]] from N64 DK's Jungle Parkway.
+}}
+
+{{Object|2|158|344|DKtreeA64c|<br/>DKtreeA64(B)|-S T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Solid [[tree]] from N64 DK's Jungle Parkway.
+}}
+
+{{Object|1|159|345|DKtreeB64|<br/>DKtreeB64(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Usolid [[tree]] from N64 DK's Jungle Parkway with a small crown.
+}}
+
+{{Object|2|15a|346|DKtreeB64c|<br/>DKtreeB64(B)|-S T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Solid [[tree]] from N64 DK's Jungle Parkway with a small crown.
+}}
+
+{{Object|1|15b|347|TownTreeDSc|<br/>TownTreeDS(B)|-S T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Solid [[tree]] from DS Delfino Square with orange leaves.
+}}
+
+{{Object|2|15c|348|Piston|<br/>Piston(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Piston machine decoration from Toad's Factory.
+}}
+
+{{Object|1|15d|349|oilSFC|<br/>oilSFC(B)|-S T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Oil puddle from SNES Mario Circuit 3.
+}}
+
+{{Object|2|15e|350|DKmarutaGCc|<br/>DKmarutaGC|-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|1|15f|351|DKropeGCc|<br/>DKropeGC|-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|2|160|352|mii_balloon|<br/>mii_balloon(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Floating balloon from Coconut Mall.
+}}
+
+{{Object|1|161|353|windmill|<br/>windmill(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Rotating windmill decoration from Moo Moo Meadows.
+}}
+
+{{Object|2|162|354|dossun|<br/>dossun(BE)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Thwomp caged in N64 Bowser's Castle growling when a player approaches; it is an unsolid decoration.
+}}
+
+{{Object|1|163|355|TownTreeDS|<br/>TownTreeDS(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Unsolid [[tree]] from DS Delfino Square with orange leaves.
+}}
+
+{{Object|2|164|356|Ksticketc|<br/>Ksticketc(B)|-S T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Toll booth gate from Moonview Highway, opens when approaching. Opens for cars and trucks only on slot 4.2.
+}}
+
+{{Object|1|165|357|monte_a|<br/>monte_a(B)|-- T--
+|s1= &mdash;
+|s2= 1 = Enable player rotation and clapping.
+|s3= Distance at which it rotates to face the player.
+|s4= Distance at which it loads the clapping chr0. If higher than setting 3, this will be ignored until that setting's distance is reached.
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Pianta alone.
+}}
+
+{{Object|2|166|358|MiiStatueM1|<br/>MiiStatueM1(B)|-- -A-
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Mario statue from Block Plaza.<br>The following subfiles are used by the environment map for Mii heads: course.bmm, course.btiEnv, course.btiMat
+}}
+
+{{Object|1|167|359|ShMiiObj01|<br/>ShMiiObj01(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Mii audience from Coconut Mall.
+}}
+
+{{Object|2|168|360|ShMiiObj02|<br/>ShMiiObj02(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Mii audience from Coconut Mall.
+}}
+
+{{Object|1|169|361|ShMiiObj03|<br/>ShMiiObj03(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Mii audience from Coconut Mall.
+}}
+
+{{Object|2|16a|362|Hanabi|<br/>Hanabi(E)|-- T--
+|s1= Frames until the firework "pops" in the intro camera sequence.
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Fireworks used in cutscene tracks. Only loads in GP Mode.
+}}
+
+{{Object|1|16b|363|miiposter|<br/>miiposter(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Mii posters from Coconut Mall.
+}}
+
+{{Object|2|16c|364|dk_miiobj00|<br/>dk_miiobj00(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Mii audience from DK Summit.
+}}
+
+{{Object|1|16d|365|light_house|<br/>light_house(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Lighthouse from Daisy Circuit.
+}}
+
+{{Object|2|16e|366|r_parasol|<br/>r_parasol(B)|-S T--
+|s1= Starting state:<br>0 = Open <br>1 = Closed
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Parasol from GBA Shy Guy Beach; it opens or closes itself when is hit.
+}}
+
+{{Object|1|16f|367|obakeblock2SFCc|<br/>obakeblockSFC(B)|-S T--
+|s1= &mdash;
+|s2= Fall time controller in Time Trial and Online VS Race, controls the delay before starting in seconds after starting of countdown, depending on the value T:<br>T = 0 → Block doesn't fall<br>T > 0 → Block falls after T seconds<br>T = 4 → Block falls immediately after the "GO!"
+|s3= Additional delay of X/60 seconds, goes added to S2
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Falling block from SNES Ghost Valley 2. In Grand Prix and Offline VS Race falls when touched, in Time Trial and Online VS Race fall is controlled by S2 and S3. This object is solid and animated only on slot 5.3, but isn't scalable (fixed scale 1.3). In other slots it is scalable, but unsolid and doesn't fall. Blocks are solid only if X is between -30985 and 8690 and Z between -16295 and 21430; Y (height) doesn't seem to be important.
+
+For slot 5.3, the Y angle indicates the fall's direction and not the block's rotation, which remains the same. Block's side measures 250 units (325 on slot 5.3) and the center coincides with geometrical center. If many blocks are used slot 5.3 is recommended. sGV2 uses 602 blocks.
+}}
+
+{{Object|2|170|368|obakeblock3SFCc|<br/>obakeblockSFC(B)|-S T--
+|s1= &mdash;
+|s2= Fall time controller in Time Trial and Online VS Race, controls the delay before starting in seconds after starting of countdown, depending on the value T:<br>T = 0 → Block doesn't fall<br>T > 0 → Block falls after T seconds<br>T = 4 → Block falls immediately after the "GO!"
+|s3= Additional delay of X/60 seconds, goes added to S2
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Falling block from SNES Ghost Valley 2. In Grand Prix and Offline VS Race falls when touched, in Time Trial and Online VS Race fall is controlled by S2 and S3. This object is solid and animated only on slot 5.3, but isn't scalable (fixed scale 1.3). In other slots it is scalable, but unsolid and doesn't fall. Blocks are solid only if X is between -30985 and 8690 and Z between -16295 and 21430; Y (height) doesn't seem to be important.
+
+For slot 5.3, the Y angle indicates the fall's direction and not the block's rotation, which remains the same. Block's side measures 250 units (325 on slot 5.3) and the center coincides with geometrical center. If many blocks are used slot 5.3 is recommended. sGV2 uses 602 blocks.
+}}
+
+{{Object|1|171|369|koopaFigure|<br/>koopaFigure(B2D)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Bowser statue from Bowser's Castle.
+}}
+
+{{Object|2|172|370|pukupuku|<br/>pukupuku(B)|-- TA-
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Cheep Cheep fish.
+}}
+
+{{Object|1|173|371|v_stand1|<br/>v_stand1|-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|2|174|372|v_stand2|<br/>v_stand2|-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|1|175|373|leaf_effect|<br/>leaf_effect(E)|-S T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Leaf effect when player drives or flies through [[tree]] leaves. Its SFX is exclusive to certain slot(s).
+}}
+
+{{Object|2|176|374|karehayama|<br/>karehayama(BE)|-S T--
+|s1= &mdash;
+|s2= [[Item_Settings_-_Objects|Item to give]]
+|s3= [[Item_Settings_-_Objects|Chance to give an item]]
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Leaf pile from Maple Treeway. Its SFX is exclusive to certain slot(s).
+}}
+
+{{Object|1|177|375|EarthRing|<br/>EarthRing(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Earth luminous ring from Rainbow Road.
+}}
+
+{{Object|2|178|376|SpaceSun|<br/>SpaceSun(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= The sun in Rainbow Road.
+}}
+
+{{Object|1|179|377|BlackHole|<br/>BlackHole|-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|2|17a|378|StarRing|<br/>StarRing(BE)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Launch Star from Rainbow Road.
+}}
+
+{{Object|1|17b|379|M_obj_kanban|<br/>M_obj_kanban(B)|-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Yellow/black fence which can be found in competitions; object not used in any track.
+}}
+
+{{Object|2|17c|380|MiiStatueL1|<br/>MiiStatueL1(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Luigi statue from Daisy Circuit.<br>The following subfiles are used by the environment map for Mii heads: course.bmm, course.btiEnv, course.btiMat
+}}
+
+{{Object|1|17d|381|MiiStatueD1|<br/>MiiStatueD1(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Daisy statue from Daisy Circuit.<br>The following subfiles are used by the environment map for Mii heads: course.bmm, course.btiEnv, course.btiMat
+}}
+
+{{Object|2|17e|382|MiiSphinxY1|<br/>MiiSphinxY1|-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Mii Sphinx without head, unsolid. Object not used in any track.
+}}
+
+{{Object|1|17f|383|MiiSphinxY2|<br/>MiiSphinxY2(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Yoshi Sphinx from Dry Dry Ruins.<br>The following subfiles are used by the environment map for Mii heads: course.bmm, course.btiEnv, course.btiMat
+}}
+
+{{Object|2|180|384|FlagA5|<br/>FlagA5(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Start line flag from Koopa Cape. It is less buggy than {{obj-ref|FlagA3}}.
+}}
+
+{{Object|1|181|385|CarB|<br/>CarB(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Unsolid car decoration from Coconut Mall.
+}}
+
+{{Object|2|182|386|FlagA4|<br/>FlagA4|-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|1|183|387|Steam|<br/>Steam(E)|-- T--
+|s1= &mdash;
+|s2=  Delay before starting in 1/60 seconds.
+|s3= Length of steam effect.
+|s4= Time between two steam effects.
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Steam effect from Toad's Factory.
+}}
+
+{{Object|2|184|388|Alarm|<br/>Alarm(E)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Alarm effect from Toad's Factory.
+}}
+
+{{Object|1|185|389|group_monte_a|<br/>group_monte_a(B)|-- T-O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Pianta audience.
+}}
+
+{{Object|2|186|390|MiiStatueL2|<br/>MiiStatueL2(B)|-- -A-
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Luigi statue from Block Plaza.<br>The following subfiles are used by the environment map for Mii heads: course.bmm, course.btiEnv, course.btiMat
+}}
+
+{{Object|1|187|391|MiiStatueD2|<br/>MiiStatueD2(B)|-- -A-
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Daisy statue from Block Plaza.<br>The following subfiles are used by the environment map for Mii heads: course.bmm, course.btiEnv, course.btiMat
+}}
+
+{{Object|2|188|392|MiiStatueP1|<br/>MiiStatueP1(B)|-- -A-
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Peach statue from Block Plaza.<br>The following subfiles are used by the environment map for Mii heads: course.bmm, course.btiEnv, course.btiMat
+}}
+
+{{Object|1|189|393|SentakuDS|<br/>SentakuDS(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Hanging clothes decoration.
+}}
+
+{{Object|2|18a|394|fks_screen_wii|<br/>fks_screen_wii(B)|-- -A-
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= TV from Funky Stadium.
+}}
+
+{{Object|1|18b|395|KoopaFigure64|<br/>KoopaFigure64(BE)|-S T--
+|s1= Units of distance from where KoopaFigure64 starts spitting fire
+|s2= Fire function and effect:<br>0 = Decoration with default effect<br>1 = Obstacle with L effect
+|s3= Spitting fire start delay in 1/60 seconds after start of countdown.<br>0 = Freeze of the game<br>240 (F0 in hex) = Starts spitting fire immediately after the "GO!"
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Bowser statue from N64 Bowser's Castle; it spits fire for 5 seconds, then doesn't nothing for 3 seconds, then spits fire again.<br>In GP and VS Race the object is activated by the proximity of a player.
+}}
+
+{{Object|2|18c|396|b_teresa|<br/>b_teresa(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Flying Boos from SNES Ghost Valley 2 controlled by [[AREA type#AREA type 0x07 (flying Boos)|AREA type 07]], using exactly one object.<br>Object's location doesn't matter, Boos are always viewed when players enter in related AREA.
+}}
+
+{{Object|1|18d|397|MiiStatueDK1|<br/>MiiStatueDK1|-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|2|18e|398|MiiKanban|<br/>MiiKanban(B)|-- T-O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Luigi face sign from Luigi Circuit.
+}}
+
+{{Object|1|18f|399|BGteresaSFC|<br/>BGteresaSFC(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Flying Boo from SNES Ghost Valley 2; optimal scale values for this object are values around 3 and 4.
+}}
+
+{{Object|2|191|401|kuribo|<br/>kuribo(B2D)|RS T-O
+|s1= Respawn time
+|s2= Speed
+|s3= Animation speed
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Goomba.
+}}
+
+{{Object|1|192|402|choropu|<br/>choropu(BE)|RS T--
+|s1= Speed
+|s2= Start delay in 1/60 seconds
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Moving Monty Mole from Moo Moo Meadows.<br>Can't be used together with {{obj-ref|choropu2}}.<br>[[KMP (File Format)#POTI|Route Setting 2]]: 0 = Burrow, 1 = Pop out. 
+}}
+
+{{Object|2|193|403|cow|<br/>cow(B5D)|RS T--
+|s1= Number of slave cows following the master cow unordered
+|s2= ''Unknown''
+|s3= Start delay of the slave cows in 1/60 seconds.<br>The master cow starts a few seconds earlier
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Master cow following a route followed by some more cows (from Moo Moo Meadows).<br>The master cow starts at the first point of the route, all other cows around the object position.
+}}
+
+{{Object|1|194|404|pakkun_f|<br/>pakkun_f(B2D)|-S T-O
+|s1= Idle time in 1/60 seconds between 2 attacks in time trial and online
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Piranha Plant from GCN Mario Circuit, normally combined with {{obj-ref|pakkun_dokan}}.
+}}
+
+{{Object|2|195|405|WLfirebarGC|<br/>WLfirebarGC(B)|-S T--
+|s1= Fireballs per arm
+|s2= Rotations X per 360 seconds.<br>Counterclockwise = X<br>Clockwise = 65536 - X
+|s3= Fireball distance
+|s4= Number or arms
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Rotating fire bars from GCN Waluigi Stadium.<br/>Can't be used together with {{obj-ref|koopaFirebar}}.
+}}
+
+{{Object|1|196|406|wanwan|<br/>wanwan(BE)|-S T--
+|s1= Length of chain in game units
+|s2= ''Unknown''
+|s3= &mdash;
+|s4= Let (X,Y) be the center of the area where the Chain Chomp snaps to (neither X nor Y are height coordinates). If X is positive, X/10 is the X-Value for the setting; if X is negative, 65536 + X/10 is the X-Value for the setting (make sure to include the negative sign when adding!).  
+|s5= Let (X,Y) be the center of the area where the Chain Chomp snaps to (neither X nor Y are height coordinates). If Y is positive, Y/10 is the Y-Value for the setting; if Y is negative, 65536 + Y/10 is the Y-Value for the setting (make sure to include the negative sign when adding!).
+|s6= Time to wander around (in 1/60 seconds); if 0, about 5 seconds is used. Add 3.5 seconds for full cycle time
+|s7= (Width of wedge in degrees-35)/2
+|s8= &mdash;
+|info= Chain Chomp. Snaps in a wedge shape that is directed to a given point.<br>Hwanwan and wanwan only work together if the effect files are absent.
+}}
+
+{{Object|2|197|407|poihana|<br/>poihana(BE2D)|-S T--
+|s1= Color.<br>Normal settings:<br>1 = Red<br>2 = Violet<br>3 = Green<br>Other settings:<br>0 = Violet<br>≥4 = Green
+|s2= Units of distance from where {{obj-ref|poihana}} starts looking for players
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Cataquack from GCN Peach Beach. It flings players into the air. In GP and VS race, it looks for players. In Time Trials, it flings only if touched. It is likely possible to add further colors by modifying the Pat0. <br>
+Only works on [[Slot#5.1|Slot 5.1]] if psea or venice_nami is present for a splash sfx.
+}}
+
+{{Object|1|198|408|DKrockGC|<br/>DKrockGC(BE)|RS T--
+|s1= Not 0: Delay of ~1.5 seconds for the second rock
+|s2= Minimal cycle time in 1/60 seconds
+|s3= Speed
+|s4= Bouncing factor
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Falling rock from GCN DK Mountain, it respawns only if its Route's header has Cycle set to 1. [[Slot#8.3|Slot 8.3]] enables its SFX.
+}}
+
+{{Object|2|199|409|sanbo|<br/>sanbo(BED)|RS T--
+|s1= Speed
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Pokey from Dry Dry Desert and DS Desert Hills.<br>[[KMP (File Format)#POTI|Route Setting 1]] sets the time in 1/60 seconds to stop at that point. Some of its SFX may be exclusive to certain slots. Requires the bones '''joint1''', '''joint2''', '''joint3''', and '''joint4''' in the [[BRRES (File Format)|BRRES]].
+}}
+
+{{Object|1|19a|410|choropu2|<br/>choropu(BE)|-S T--
+|s1= Hide time in 1/60 seconds
+|s2= Start delay in 1/60 seconds
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Monty Mole from DS Peach Gardens.<br>Can't be used together with {{obj-ref|choropu}}.
+}}
+
+{{Object|2|19b|411|TruckWagon|<br/>TruckWagon(BE)|RS T--
+|s1= Speed
+|s2= Delay before the second (groups) truck spawns (time in frames)
+|s3= Delay until the first (groups) truck spawns (time in frames)
+|s4= 0 = collision, allows for effects/animations and spawns 12 groups of trucks.<br/>1 = No collision, loads _LOD model instead and limits to 3 TruckWagons on a route.
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Truck from Wario's Gold Mine.<br>[[KMP (File Format)#POTI|Route Setting 1]] changes the speed (if 0 it uses the speed setting in S1).<br/>[[KMP (File Format)#POTI|Route Setting 2]]: 0x0: Normal behavior<br/> 0x1: Truck sways left and right harder and wont change back until the end of the route.<br/> 0x2: Truck sways left and right.
+}}
+
+{{Object|1|19c|412|heyho|<br/>heyho(B)|RS T--
+|s1= Speed
+|s2= Color.<br>Normal settings:<br>0 = Red<br>1 = Yellow<br>2 = Green
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Shy Guy obstacle from DK Summit. Additional colors can probably be added by expanding the Pat0.
+}}
+
+{{Object|2|19d|413|Press|<br/>Press(BE)|-S T--
+|s1= &mdash;
+|s2= Start delay in 1/60 seconds
+|s3= Sleep time in 1/60 seconds;<br>Special case 0 = One time shoot
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Press from Toad's Factory (over the belts).<br>The entered position is the sleeping position, so must be placed over the ground (600 is the default value); the total cycle time depends on the sleep time and the falling height.
+}}
+
+{{Object|1|19e|414|Press_soko||-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|2|19f|415|pile|<br/>pile|-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track. Chain Chomp's wooden pole seen in one of the Mario Circuit tournaments.
+}}
+
+{{Object|1|1a0|416|choropu_ground||-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|2|1a1|417|WLfireringGC|<br/>WLfirebarGC(B)|-S T--
+|s1= Number of fireballs
+|s2= Rotations X in 1/60 seconds.<br>Counterclockwise = X<br>Clockwise = 65536 - X
+|s3= Pulsation factor, shrinks and enlarges the radius.<br>Special cases:<br> S3 = 0 or S4 = 0 no pulsation;<br> S3 ≥ S4 negative pulsation
+|s4= Radius
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Rotating fire ring from GCN Waluigi Stadium. Scale settings refer to fireballs' dimensions and position coordinates to center's coordinates.
+}}
+
+{{Object|1|1a2|418|pakkun_dokan|<br/>pakkun_dokan(B)|-S T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Pipe of potted Piranha Plant, normally combined with {{obj-ref|pakkun_f}}.
+}}
+
+{{Object|2|1a3|419|begoman_spike|<br/>begoman_spike(BE)|-S --O
+|s1= ID (1-based), used in ''begoman_manager'' to control when they appear
+|s2= The radius of the 1st ring in which the topman is allowed to roam in. 
+|s3= Time in frames from the start of the race until the topman will switch from the 1st ring to the 2nd ring.
+|s4= The radius of the 2nd ring in which the topman is allowed to roam in. 
+|s5= Time in frames from the start of the race until the topman will switch from the 2nd ring to the 3rd ring.
+|s6= The radius of the 3rd ring in which the topman is allowed to roam in. 
+|s7= Time in frames from the start of the race until the topman will switch from the 3rd ring to the 4th ring.
+|s8= The radius of the 4th ring in which the topman is allowed to roam in. 
+|info= Topman from Galaxy Colosseum; object not used in any track. To appear, it (or they) must be the first object of section [[KMP#GOBJ|GOBJ]]. They appear to not obey [[KCL flag#Wall (0x0C)|wall collision]]. Note that the rings are hardcoded to have their centre at (0,0).<br>Only works on slots [[Slot#3.1|3.1]], [[Slot#4.2|4.2]], [[Slot#6.2|6.2]], [[Slot#7.1|7.1]], and Galaxy Colosseum.
+}}
+
+{{Object|1|1a4|420|FireSnake|<br/>FireSnake(BE)|-S T--
+|s1= Route id from where {{obj-ref|sunDS}} drops
+|s2= Time before vanishing in 1/60 seconds
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Grounded Podoboo from DS Desert Hills. It bounces casually around its position point.<br>It works with the object {{obj-ref|sunDS}}, so it only works on slots [[Slot#3.1|3.1]], [[Slot#4.2|4.2]], [[Slot#6.2|6.2]] and [[Slot#7.1|7.1]].
+}}
+
+{{Object|2|1a5|421|koopaFirebar|<br/> koopaFirebar(B)<br/> WLfirebarGC(B)|-S T--
+|s1= Number of fireballs per hand
+|s2= Rotations X per 1/360 seconds.<br>Counterclockwise = X<br>Clockwise = 65536 - X
+|s3= Distance between fireballs
+|s4= Number of hands
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Rotating firebar from Bowser's Castle. Specific object rotation values cause strange behavior, such as 0,90,0.<br/>Can't be used together with {{obj-ref|WLfirebarGC}}.
+}}
+
+{{Object|1|1a6|422|Epropeller|<br/>Epropeller(BE)|-S T--
+|s1= Rotations per 12 seconds if S8 = 0.
+Rotations per 12*S8 seconds if S8 > 0 (needs [[LE-CODE]] or [[Epropeller_Speed|this cheat code]])
+|s2= Direction:<br>0 = Clockwise<br>1 = Counterclockwise
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= Unused in the normal game.
+
+With [[LE-CODE]] or [[Epropeller_Speed|this cheat code]] this setting becomes a multiplicative factor applied in Setting 1.
+|info= Electric propeller from Koopa Cape.
+}}
+
+{{Object|2|1a7|423|dc_pillar_c||-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|1|1a8|424|FireSnake_v|<br/>FireSnake(BE)|-S T--
+|s1= Start delay in 1/60 seconds after starting of countdown.<br>240 (F0 in hex) = Starts immediately after the "GO!"
+|s2= The time between two firesnake spawns. <600 causes the previous snake to disappear, 600 despawns each second snake immediately.
+|s3=Units of distance from position point to landing point following the Y angulation.
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Grounded Podoboo from Grumble Volcano. It jump from its position point describing a parabola and after landing bounces casually around the arrival point for 10 seconds until it vanishes.
+}}
+
+{{Object|2|1a9|425|honeBall|<br/>honeBall(BE)|-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in regular tracks. Used in the <small>N64</small> Bowser's Castle tournament with Dry Bowser.<br>For use of this object in Mission Mode, at least one CPU must be defined. The location of the object does not matter.<br>If more than one CPU is defined, it will cause weird behavior. If more than one CPU exists in a mission with this object, only the one that is the  closest to the player will fire at them. Occasionally, some will try and fire at the same time, but this causes them to spin out repeatedly until another fireball is fired. Regardless of how many CPUs are defined in a mission with this object, or how many times this object is added, only one of the CPUs will fire at the player.
+}}
+
+{{Object|1|1aa|426|puchi_pakkun|<br/>puchi_pakkun(BD)|-S T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Small Piranha Plant from N64 Mario Raceway.
+}}
+
+{{Object|2|1ab|427|sanbo_big|<br/>sanbo(BED)|-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Giant Pokey used in the Thwomp Desert tournament, where its scale is 7 on the X, Y and Z-axes.<br>[[KMP]] KMP Cloud seems to slightly corrupt the Giant Pokey, as its sound will not be loaded and its head will not appear on the minimap.
+}}
+
+{{Object|1|1ac|428|sanbo_big.2|<br/>sanbo(BED)|-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track. Seems to be identical to sanbo_big.
+}}
+
+{{Object|2|1f5|501|kinoko_ud|<br/>kinoko(BK)|-S T--
+|s1= Texturing: nonzero values load the dark variant for the stem instead
+|s2= Amplitude of the up-down movement
+|s3= Time in 1/60s for a full up-down cycle
+|s4= Cycle shift (controls where in the cycle to start)
+|s5= Time in 1/60s to pause at the lowest point in the cycle
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Moving bouncy mushroom from Mushroom Gorge.
+}}
+
+{{Object|1|1f6|502|kinoko_bend|<br/>kinoko(BK)|-S T--
+|s1= Texturing: nonzero values load the dark variant instead
+|s2= Maximum angle
+|s3= Time in 1/60s for a full cycle
+|s4= Cycle shift (controls where in the cycle to start)
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Bouncy mushroom. The model perpetually loops an animation that resembles pulling a rubber band and letting go. It appears on the minimap as a solid circle in non-racing modes.
+}}
+
+{{Object|2|1f7|503|VolcanoRock1|<br/>VolcanoRock1(BK)|-S T--
+|s1= Model/Effect/KCL file to use (0 or 1)
+|s2= Time of one period on the Z-axis in 1/60 seconds
+|s3= Amplitude of the cosine on the Z-axis
+|s4= Offset starting Z position within the specified movement in 1/60 seconds
+|s5= Time of one period on the Y-axis in 1/60 seconds
+|s6= Amplitude of the cosine on the Y-axis
+|s7= &mdash;
+|s8= &mdash;
+|info= Floating drivable rock (at Grumble Volcano in the lava). It moves like a cosine on the Z-axis and the Y-axis.
+}}
+
+{{Object|1|1f8|504|bulldozer_left|<br/>bulldozer_left(BK)|-S T--
+|s1= &mdash;
+|s2= Movement Distance
+|s3= Movement Time
+|s4= Time before starting
+|s5= Time of standing still
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Moving bulldozer from Toad's Factory. Regardless of Y-rotation, it moves eastward from its current position.
+}}
+
+{{Object|2|1f9|505|bulldozer_right|<br/>bulldozer_right(BK)|-S T--
+|s1= &mdash;
+|s2= Movement distance
+|s3= Movement time
+|s4= Time before starting
+|s5= Time of standing still
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Moving bulldozer from Toad's Factory.
+}}
+
+{{Object|1|1fa|506|kinoko_nm|<br/>kinoko(B)|-S T--
+|s1= Texturing: nonzero values load the dark variant instead
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Green mushroom. It appears on the minimap as a solid circle in non-racing modes.
+}}
+
+{{Object|2|1fb|507|Crane|<br/>Crane(BK)|-S T--
+|s1= &mdash;
+|s2= Amplitude of the motion (in game units)
+|s3= Period of the motion (in 1/60s)
+|s4= Time before starting
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Crane platform Toad's Factory. Slot [[Slot#1.4|1.4]] enables its SFX.
+}}
+
+{{Object|1|1fc|508|VolcanoPiece|<br/>VolcanoPiece1(BK)|-S T--
+|s1= Model/KCL reference
+|s2= Time until it shakes in seconds at 150cc and mirror mode (already starts 4 seconds before in-game timer)
+|s3= Time it shakes in seconds at 150cc and mirror mode
+|s4= Time until it shakes in seconds at 100cc (already starts 4 seconds before in-game timer)
+|s5= Time it shakes in seconds at 100cc
+|s6= Time until it shakes in seconds at 50cc and battle (already starts 4 seconds before in-game timer)
+|s7= Time it shakes in seconds at 50cc and battle
+|s8= Time in frames between shaking and falling (always 30 frames on GV)
+|info= Floating, shaking and sinking driveable rock from Grumble Volcano.<br>Slot [[Slot#3.4|3.4]] enables its SFX<br>The normal KCL file is always active, KCL b activates when the rock starts shaking and falls with the rock, KCL c activates when the rock starts to fall (It stays in place while the rock falls)
+}}
+
+{{Object|2|1fd|509|FlamePole|<br/>FlamePole(BEK)|-S T--
+|s1= Cycle time in 1/60 seconds + 9 seconds
+|s2= Start delay in 1/60 seconds
+|s3= Size factor
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Ground fire geyser from Bowser's Castle.
+}}
+
+{{Object|1|1fe|510|TwistedWay|<br/>TwistedWay(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Moving section from Bowser's Castle. Cannot be rotated or scaled.
+}}
+
+{{Object|2|1ff|511|TownBridgeDSc|<br/>TownBridgeDS(BK)|-S T--
+|s1= Angle α of inclination in degrees, with 0°≤α<45°; if α ≥ 45° causes beauty flaws and stops the bridge at 45°
+|s2= Time in 1/60 seconds used to lift and lower
+|s3= Time in 1/60 seconds of stop after lift
+|s4= Time in 1/60 seconds of stop after lowering
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Drawbridge from DS Delfino Square; the bridge in DS Delfino Square is created using two of these objects face to face. Regardless of Y-rotation, the object will always rotate on the Z-axis of the stage when the bridge is being lifted or lowered.
+}}
+
+{{Object|1|200|512|DKship64|<br/> DKship64(BE)<br/> group_enemy_a(B)<br/> group_enemy_b(B)|RS T--
+|s1= Speed
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Ferry-boat and audience from N64 DK's Jungle Parkway.
+}}
+
+{{Object|2|201|513|kinoko_kuki||-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track. It is the stem of both green and bouncy mushrooms.
+}}
+
+{{Object|1|202|514|DKturibashiGCc|<br/>DKturibashiGC(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Wooden, Swaying bridge from GCN DK Mountain. The object collision is not affected by rotation or scale, so all rotation values need to be 0 and scale 1 in order to work properly.
+}}
+
+{{Object|2|203|515|FlamePoleEff|<br/>FlamePoleEff|-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|1|204|516|aurora|<br/>aurora(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Moving section from Rainbow Road. Cannot be rotated or scaled.
+}}
+
+{{Object|2|205|517|venice_saku|<br/>venice_saku(BK)|-S -A-
+|s1= Time  until it goes up (in frames)
+|s2= How far up it goes
+|s3= Speed that it moves up
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Fence gate from Delfino Pier. Slot [[Slot#battle1.2|A1.2]] enables its SFX. Using multiple of this object appears to cause all of them to rise simultaneously.
+}}
+
+{{Object|1|206|518|casino_roulette|<br/>casino_roulette(BK)|-S -A-
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= The rotating parts of Chain Chomp Wheel; when used with [[KCL flag#Moving Road (0x1D)|KCL flag 0x1D]], the road slowly rotates around the object counterclockwise.<br/>X, Y and Z positions and rotations need to be 0 and scales need to be 1 in order to work properly. Additionally, the file must have a [[SRT0| texture animation]] named "dushBoard" (without quotations), or else the game will crash.<br/> Arena [[slot]] 1.4 enables functionality that causes players to additionally rotate the direction they are facing on both the object by itself and on KCL flag 0x1D.<br/> For more information, see the [[Moving Terrain#Rotating Road (KCL 0x1D)|Moving Terrain]] page.
+}}
+
+{{Object|2|207|519|BossField01_OBJ1|<br/>BossField01_OBJ1|-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|1|208|520|dc_pillar|<br/>dc_pillar(BEK)|-S T--
+|s1= Time before falling in 1/60 seconds in 150cc and mirror mode
+|s2= Final angle in degrees<br>(0° = vertical, 90° = horizontal), normally ≥ 90°
+|s3= Time before falling in 1/60 seconds in 100cc mode
+|s4= Time before falling in 1/60 seconds in 50cc mode
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Falling pillar from Dry Dry Ruins.
+}}
+
+{{Object|2|209|521|dc_sandcone|<br/>dc_sandcone(BEK)|-S T--
+|s1= Growth speed
+|s2= Final size
+|s3= Start delay before it starts to grow in 1/60 seconds (starts 4 seconds before the timer in-game)
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Pile of sand from Dry Dry Ruins.
+}}
+
+{{Object|1|20a|522|venice_hasi|<br/>venice_hasi(BEK)|-S -A-
+|s1= Time until the bridge goes up (and animation starts playing)
+|s2= Animation / Bridge opening speed (0x3 normal, 0x1 faster, 0x10 slow)
+|s3= ''Unknown''
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Bridge from Delfino Pier. Slot [[Slot#battle1.2|A1.2]] enables its SFX (includes a bell sound).<br/> Animation capped at 30 frames. S3 might be a relic of old animation length.
+}}
+
+{{Object|2|20b|523|venice_gondola|<br/> venice_gondola(BE)<br/> monte_a(B)|RS ---
+|s1= Speed
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.<br>A gondola ship that would have traversed the outside of Delfino Pier. This object can be seen briefly in the course selection screen video for Delfino Pier. The game places a Pianta waving at a fixed position on top of the object.<br>No graphic files for this object exist in the final game. This object is solid and must have a route. If the player touches the top, they will bounce forwards. In addition, the bone of its model must be named ''hune''.
+}}
+
+{{Object|1|20c|524|quicksand|<br/> quicksand(BE)<br/> dossun(BE)|-- -A-
+|s1= 0 = Use Thwomp<br>1 = Don't use Thwomp
+|s2= Sand shake wave length. 0 by default if s1 = 0
+|s3= Time until sand wave reaches the end. 0 by default if s1 = 0. Must not be 0 if s1 = 1
+|s4= Sand push and pull strength.
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Thwomp Desert controller. <br/> Arena [[slot]] 1.5 enables its SFX.<br/> {{obj-ref|s_itembox}} is affected by the push/pull factor on slots other than arena slot 1.5, causing buggy interactions. Cannot be scaled, due to hard-coded collision.
+}}
+
+{{Object|2|20d|525|bblock|<br/> bblock1(BK)<br/> MiiStatue1|-S -A-
+|s1= Model/KCL reference
+|s2= Time until it shakes in seconds at 150cc and mirror mode (already starts 4 seconds before in-game timer)
+|s3= Time it shakes in seconds at 150cc and mirror mode
+|s4= Time until it shakes in seconds at 100cc (already starts 4 seconds before in-game timer)
+|s5= Time it shakes in seconds at 100cc
+|s6= Time until it shakes in seconds at 50cc and battle (already starts 4 seconds before in-game timer)
+|s7= Time it shakes in seconds at 50cc and battle
+|s8= Time in frames between shaking and falling
+|info= Block parts from Block Plaza, with statues. The normal KCL file is active until block starts shaking, KCL b activates when the block starts shaking and falls with the block.<br> Slot [[Slot#battle1.1|A1.1]] uses 150cc timing settings unlike other battle slots.
+}}
+
+{{Object|1|20e|526|ami|<br/>ami(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Bouncing bridge from Maple Treeway. The collision's rotation and scaling are hard-coded, so it is recommended to keep the object's rotation at 0,180,0 and scale at 1,1,1.
+}}
+
+{{Object|2|20f|527|M_obj_jump|<br/>M_obj_jump (BK)|-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Trick ramp used on backwards competitions; object not used in any track.
+}}
+
+{{Object|1|210|528|starGate|<br/>starGate|-S ---
+|s1= Number (ordered)
+|s2= Trigger
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Gates used in some competitions; object not used in any track.
+}}
+
+{{Object|2|211|529|RM_ring1|<br/>RM_ring1(BK)|RS --O
+|s1= Ring ID;<br>1 = Outer ring<br>2 = ring in the middle<br>3 = Inner ring
+|s2= Time after course start when the ring starts shaking (seconds) (s2=0 means the ring will never fall)
+|s3= Time that ring shakes (seconds)
+|s4= Delay after ring shakes before falling down (1/60 seconds)
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Driveable ring zones from Galaxy Colosseum; object not used in any track.
+}}
+
+{{Object|1|212|530|FlamePole_v|<br/>FlamePole_v(BE)|-S T--
+|s1= Total cycle length, affects time between rising and dropping only.
+|s2= Start delay in 1/60 seconds; it starts 3 seconds before the "GO!" 
+|s3= The dropping height of the pillar / 384
+|s4= Idling time - 200 (1/60 seconds)
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Fire geyser without a base. It rises like a parabolic curve for 1 second, stays up for s1 - s4 - 490 frames, drops in a linear line for 3 seconds and waits for the time specified in s4 before restarting. Before rising, the geyser has an additional state of 50 frames whereby it is enabled but not rising yet, for this reason it is recommended to not put geysers above track section.
+}}
+
+{{Object|2|213|531|M_obj_s_jump|<br/>M_obj_s_jump (BK)|-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Ramp used on competitions; object not used in any track.
+}}
+
+{{Object|1|214|532|InsekiA|<br/>InsekiA(B)|-- T--
+|s1= &mdash;
+|s2= 0 = Clockwise, 1 = Counterclockwise
+|s3= Rotation speed.
+|s4= Rotation offset.
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Asteroids from Rainbow Road.
+}}
+
+{{Object|2|215|533|InsekiB|<br/>InsekiB(B)|-- T--
+|s1= &mdash;
+|s2= 0 = Clockwise, 1 = Counterclockwise
+|s3= Rotation speed.
+|s4= Rotation offset.
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Star bits from Rainbow Road.
+}}
+
+{{Object|1|216|534|FlamePole_v_big|<br/> FlamePole_v_big(E)<br/> FlamePole_v(BE)|-S T--
+|s1= If S3 = 1, time outside the lava in 1/100 s, K reference value is 500 (1F4 in hex):<br>X < K → Stays outside the lava for 5 seconds<br>X ≥ K → Stays outside the lava for X/100 seconds.
+|s2= Start delay in 1/60 seconds, it starts 3 seconds before the "GO!" if S3 = 0, if not 2 seconds before the "GO!"
+|s3= S1 activator and S2 conditioner:<br>0 = S1 Deactivated<br>1 = S1 Activated 
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Really, really big fire geyser without a base from N64 Bowser's Castle.<br>Time outside the lava is regulated by S1 if S3 = 1, if not it stays outside the lava for 5 seconds independently form the valuse of S1.
+}}
+
+{{Object|2|217|535|Mdush|<br/>Mdush(BK)|-S T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Small jump ramp from Mario Circuit.
+}}
+
+{{Object|1|218|536|HP_pipe|<br/>HP_pipe|-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|2|219|537|DemoCol|<br/>DemoCol(BK)|-S --O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Collision zone from the losing demo screen, located in a grass part from Mario Circuit; object not used in any track.
+}}
+
+{{Object|1|21a|538|M_obj_s_jump2|<br/>M_obj_s_jump2 (BK)|-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Ramp used on competitions; object not used in any track.
+}}
+
+{{Object|2|21b|539|M_obj_jump2|<br/>M_obj_jump2 (BK)|-S ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Ramp used on competitions; object not used in any track.
+}}
+
+{{Object|1|259|601|DonkyCannonGC|<br/>DonkyCannonGC(BED)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= DK cannon from GCN DK Mountain.
+}}
+
+{{Object|2|25a|602|BeltEasy|<br/>BeltEasy(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Second set of belts from Toad's Factory.<br/> For more information, see the [[Moving Terrain#Moving Road (KCL 0x15)|Moving Terrain]] page.
+}}
+
+{{Object|1|25b|603|BeltCrossing|<br/>BeltCrossing(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= First set of belts from Toad's Factory.<br/> For more information, see the [[Moving Terrain#Moving Road (KCL 0x15)|Moving Terrain]] page.
+}}
+
+{{Object|2|25c|604|BeltCurveA|<br/>BeltCurveA(B)|-- T--
+|s1= &mdash;
+|s2= Initial starting side. A value of 1 means the fast side will be on the left first, every other value means the opposite.
+|s3= Time until it switches
+|s4= Time until it switches back
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Third set of belts from Toad's Factory. Object is not scalable.<br/> For more information, see the [[Moving Terrain#Moving Road (KCL 0x15)|Moving Terrain]] page.
+}}
+
+{{Object|1|25d|605|BeltCurveB|<br/>BeltCurveB|-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|2|25e|606|escalator|<br/>escalator(BK)|-S T--
+|s1= &mdash;
+|s2= Speed 1 (units per second, signed)
+|s3= Time until it switches to Speed 2
+|s4= Speed 2 (units per second, signed)
+|s5= (Total) time until it switches to Speed 3
+|s6= Speed 3 (units per second, signed)
+|s7= &mdash;
+|s8= &mdash;
+|info= Coconut Mall escalator.<br/> For more information, see the [[Moving Terrain#Usage in Coconut Mall|Moving Terrain]] page.
+}}
+
+{{Object|1|25f|607|DonkyCannon_wii|<br/>DonkyCannon_wii(BED)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= DK cannon from DK Summit.
+}}
+
+{{Object|2|260|608|escalator_group|<br/> escalator(BK)<br/> monte_a(B)|-S T--
+|s1= &mdash;
+|s2= Speed 1 (units per second, signed)
+|s3= Time until it switches to Speed 2
+|s4= Speed 2 (units per second, signed)
+|s5= (Total) time until it switches to Speed 3
+|s6= Speed 3 (units per second, signed)
+|s7= &mdash;
+|s8= &mdash;
+|info= 2 Time Escalators from Coconut Mall. One of the two escalators uses the given speed, the other uses a multiplied speed of -1 (negative speed), so they always run in opposite directions.<br/> For more information, see the [[Moving Terrain#Usage in Coconut Mall|Moving Terrain]] page.
+}}
+
+{{Object|1|261|609|tree_cannon|<br/>tree_cannon(BED)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Cannon from Maple Treeway.
+}}
+
+{{Object|2|2bd|701|group_enemy_b|<br/>group_enemy_b(B)|-- T-O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Enemy audience.
+}}
+
+{{Object|1|2be|702|group_enemy_c|<br/>group_enemy_c(B)|-- T-O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Toads audience.
+}}
+
+{{Object|2|2bf|703|taimatsu|<br/>taimatsu(E)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Flame of the torches from N64 DK's Jungle Parkway (torches inside the cave) and Bowser Castle (on the wall).
+}}
+
+{{Object|1|2c0|704|truckChimSmkW|<br/>truckChimSmkW(BE)|-S -A-
+|s1= &mdash;
+|s2= 0 = Light<br>1 = Dark smoke and it interacts with the Player.<br>2 = Same as 1.
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Houses' smoke from Delfino Pier.
+}}
+
+{{Object|2|2c1|705|Mstand|<br/>Mstand|-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|1|2c2|706|dkmonitor|<br/>dkmonitor(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= TV screen from DK Summit.
+}}
+
+{{Object|2|2c3|707|group_enemy_a|<br/>group_enemy_a(B)|-- T-O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Enemy audience.
+}}
+
+{{Object|1|2c4|708|FlagB3|<br/>FlagB3(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Bright Shell Flag from Koopa Cape.
+}}
+
+{{Object|2|2c5|709|spot|<br/>spot(B)|-- -A-
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Spotlights from Chain Chomp Wheel.
+}}
+
+{{Object|1|2c6|710|group_enemy_d|<br/>group_enemy_d|-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|2|2c7|711|FlagB4|<br/>FlagB4(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Dark Shell Flag from Koopa Cape.
+}}
+
+{{Object|1|2c8|712|group_enemy_e|<br/>group_enemy_e(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Enemy audience from Mario Circuit.
+}}
+
+{{Object|2|2c9|713|group_monte_L|<br/>group_monte_a(B)|-- -A-
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Enemy audience from Delfino Pier.
+}}
+
+{{Object|1|2ca|714|group_enemy_f|<br/>group_enemy_f(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Enemy audience from Mario Circuit.
+}}
+
+{{Object|2|2cb|715|FallBsA|<br/>FallBsA(E)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Waterfall from Koopa Cape.
+}}
+
+{{Object|1|2cc|716|FallBsB|<br/>FallBsB(E)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Waterfall from Koopa Cape.
+}}
+
+{{Object|2|2cd|717|FallBsC|<br/>FallBsC|-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|1|2ce|718|volsmk|<br/>volsmk(E)|-- T--
+|s1= &mdash;
+|s2= Time until it starts emitting smoke in seconds at 150cc and mirror mode (already starts 4 seconds before in-game timer)
+|s3= Time it emits smoke in seconds at 150cc and mirror mode
+|s4= Time until it starts emitting smoke in seconds at 100cc (already starts 4 seconds before in-game timer)
+|s5= Time it emits smoke in seconds at 100cc
+|s6= Time until it starts emitting smoke in seconds at 50cc (already starts 4 seconds before in-game timer)
+|s7= Time it emits smoke in seconds at 50cc
+|s8= &mdash;
+|info= Smoke used by the trembling rocks from Grumble Volcano.
+}}
+
+{{Object|2|2cf|719|ridgemii00|<br/>ridgemii00(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Mii audience from Moonview Highway.
+}}
+
+{{Object|1|2d0|720|Flash_L|<br/>Flash_L(E)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Audience camera flashes on Luigi Circuit.
+}}
+
+{{Object|2|2d1|721|Flash_B|<br/>Flash_B(E)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Audience camera flashes on DK Summit.
+}}
+
+{{Object|1|2d2|722|Flash_W|<br/>Flash_W(E)|-- T--
+|s1= 0 = flashWaluigi_A<br>1 = flashWaluigi_B<br>2 = flashWaluigi_C
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Audience camera flashes on GCN Waluigi Stadium. Active whenever the player performs a trick.
+}}
+
+{{Object|2|2d3|723|Flash_M|<br/>Flash_M(E)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Audience camera flashes on N64 Mario Raceway. Active whenever the [[KCL_flag#Slot_5.4_.28N64_Mario_Raceway.29|audience ambience]] is playing.
+}}
+
+{{Object|1|2d4|724|Flash_S|<br/>Flash_S(E)|-- -A-
+|s1= 0 = flashSkate_A<br>1 = flashSkate_B
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Audience camera flashes on Funky Stadium. Active whenever the player performs a trick.
+}}
+
+{{Object|2|2d5|725|MiiSignNoko|<br/>MiiSignNoko(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Koopa face sign from Koopa Cape.
+}}
+
+{{Object|1|2d6|726|UtsuboDokan|<br/>UtsuboDokan(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Piped Unagis (eels) from Koopa Cape.
+}}
+
+{{Object|2|2d7|727|Spot64|<br/>Spot64(B)|-- -A-
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Spotlights from N64 Skyscraper.
+}}
+
+{{Object|1|2d8|728|DemoEf|<br/>DemoEf(E)|-- --O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Fireworks used in the Mario Circuit winning demo.
+}}
+
+{{Object|2|2d9|729|Fall_MH|<br/>Fall_MH(E)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Part of the waterfall effect from Moonview Highway.
+}}
+
+{{Object|1|2da|730|Fall_Y|<br/>Fall_Y(E)|-- T--
+|s1= 0 = A<br>1 = B<br>2 = C
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Breff animation of the waterfall effects from Koopa Cape and DS Yoshi Falls.
+}}
+
+{{Object|2|2db|731|DemoJugemu|<br/>DemoJugemu(BE)|-- --O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Lakitu model from the Mario Circuit winning demo.
+}}
+
+{{Object|1|2dc|732|group_enemy_a_demo|<br/>group_enemy_a_demo(B)|-- --O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Enemy audience from the Mario Circuit winning demo.
+}}
+
+{{Object|2|2dd|733|group_monte_a_demo|<br/>group_monte_a_demo(B)|-- --O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Pianta audience from the Mario Circuit winning demo.
+}}
+
+{{Object|1|2de|734|volfall|<br/>volfall|-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Object not used in any track.
+}}
+
+{{Object|2|2df|735|MiiStatueM2|<br/>MiiStatueM2(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Mario statue from DK Summit.<br>The following subfiles are used by the environment map for Mii heads: course.bmm, course.btiEnv, course.btiMat
+}}
+
+{{Object|1|2e0|736|RhMiiKanban|<br/>RhMiiKanban(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Peach face poster from Moonview Highway.
+}}
+
+{{Object|2|2e1|737|MiiStatueL3|<br/>MiiStatueL3(B)|-- T-O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Luigi statue from Luigi Circuit.<br>The following subfiles are used by the environment map for Mii heads: course.bmm, course.btiEnv, course.btiMat
+}}
+
+{{Object|1|2e2|738|MiiSignWario|<br/>MiiSignWario(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Wario Face Sign in Wario's Gold Mine.
+}}
+
+{{Object|2|2e3|739|MiiStatueBL1|<br/>MiiStatueBL1(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Baby Luigi statue from Daisy Circuit.<br>The following subfiles are used by the environment map for Mii heads: course.bmm, course.btiEnv, course.btiMat
+}}
+
+{{Object|1|2e4|740|MiiStatueBD1|<br/>MiiStatueBD1(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Baby Daisy statue from Daisy Circuit.<br>The following subfiles are used by the environment map for Mii heads: course.bmm, course.btiEnv, course.btiMat
+}}
+
+{{Object|2|2e5|741|Kamifubuki|<br/>Kamifubuki(E)|-- --O
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Confetti from Winning Scene. 
+}}
+
+{{Object|1|2e6|742|Crescent64|<br/>Crescent64(B)|-- -A-
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Crescent Moon from N64 Skyscraper.
+}}
+
+{{Object|2|2e7|743|MiiSighKino|<br/>MiiSighKino(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Toad face sign from Toad's Factory.
+}}
+
+{{Object|1|2e8|744|MiiObjD01|<br/>MiiObjD01(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Mii audience from Daisy Circuit
+}}
+
+{{Object|2|2e9|745|MiiObjD02|<br/>MiiObjD02(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Mii audience from Daisy Circuit
+}}
+
+{{Object|1|2ea|746|MiiObjD03|<br/>MiiObjD03(B)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Mii audience from Daisy Circuit
+}}
+
+{{Object|2|2eb|747|mare_a|<br/>mare_a(B)|-- T--
+|s1= &mdash;
+|s2= 1 = Enable player rotation and clapping.
+|s3= Distance at which it rotates to face the player.
+|s4= Distance at which it loads the clapping chr0. If higher than setting 3, this will be ignored until that setting's distance is reached.
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Yellow Noki from GCN Peach Peach.
+}}
+
+{{Object|1|2ec|748|mare_b|<br/>mare_b(B)|-- T--
+|s1= &mdash;
+|s2= 1 = Enable player rotation and clapping.
+|s3= Distance at which it rotates to face the player.
+|s4= Distance at which it loads the clapping chr0. If higher than setting 3, this will be ignored until that setting's distance is reached.
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Green Noki from GCN Peach Peach.
+}}
+
+{{Object|2|2ed|749|EnvKareha|<br/>EnvKareha(E)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Downward Leaf effect on screen from Maple Treeway; [[AREA type#AREA type 0x01 (EnvEffect)|AREA type 0x01]] activates this object.
+}}
+
+{{Object|1|2ee|750|EnvFire|<br/>EnvFire(E)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Lava particle effect from Bowser's Castle; [[AREA type#AREA type 0x01 (EnvEffect)|AREA type 0x01]] deactivates this object.
+}}
+
+{{Object|2|2ef|751|EnvSnow|<br/>EnvSnow(E)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Snow effect from DK Summit; [[AREA type#AREA type 0x01 (EnvEffect)|AREA type 0x01]] deactivates this object.
+}}
+
+{{Object|1|2f0|752|M_obj_start|<br/>M_obj_start|-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Start line used in competitions; object not used in any track.
+}}
+
+{{Object|2|2f1|753|EnvKarehaUp|<br/>EnvKarehaUp(E)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Upward Leaf effect on screen from Maple Treeway; [[AREA type#AREA type 0x01 (EnvEffect)|AREA type 0x01]] activates this object if the first AREA setting is set to 1. Instead of surrounding the player with the particle effect, the object's position is used to create a region in which the effect will occur. This region is loosely 10000un eastward and 10000un above the object's position.
+}}
+
+{{Object|1|2f2|754|M_obj_kanban_y|<br/>M_obj_kanban_y|-- ---
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= Yellow/black fence with an arrow on it, can be found in competitions; object not used in any track.
+}}
+
+{{Object|2|2f3|755|DKfalls|<br/>DKfalls(E)|-- T--
+|s1= &mdash;
+|s2= &mdash;
+|s3= &mdash;
+|s4= &mdash;
+|s5= &mdash;
+|s6= &mdash;
+|s7= &mdash;
+|s8= &mdash;
+|info= The waterfall splash effect found on N64 DK's Jungle Parkway.
+}}
