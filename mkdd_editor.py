@@ -2280,9 +2280,8 @@ class GenEditor(QMainWindow):
 
         
             route_container = self.level_file.get_route_container(obj.partof)
-            to_look_through = route_container.groups
 
-            for group_idx, group in enumerate(to_look_through):
+            for group_idx, group in enumerate(route_container):
                 for point_idx, point in enumerate(group.points):
                     if point is obj:
                         group_id = group_idx
