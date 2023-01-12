@@ -276,7 +276,6 @@ class SpecificAddOWindow(QMdiSubWindow):
 class ErrorAnalyzerButton(QtWidgets.QPushButton):
     def __init__(self, parent=None):
         super().__init__(parent=parent)
-
         self.success_icon = QtGui.QIcon('resources/success.svg')
         self.warning_icon = QtGui.QIcon('resources/warning.svg')
 

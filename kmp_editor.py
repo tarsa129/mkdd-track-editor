@@ -116,6 +116,8 @@ class GenEditor(QMainWindow):
         self.first_time_3dview = True
         
         self.restore_geometry()
+
+        self.undo_history.append(self.generate_undo_entry())
         
         self.obj_to_copy = None
         self.objs_to_copy = None
@@ -885,6 +887,7 @@ class GenEditor(QMainWindow):
         
 
     def analyze_for_mistakes(self):
+        print("help?")
         analyzer_window = ErrorAnalyzer(self.level_file, parent=self)
         analyzer_window.exec_()
         analyzer_window.deleteLater()
@@ -2398,19 +2401,27 @@ class GenEditor(QMainWindow):
             elif isinstance(obj, PointGroup ):
                 self.level_file.remove_group(obj)
             
-            elif isinstance(obj, libkmp.Route):
-                #set all 
+            elif isinstance(obj, libbol.Route):
+                route_container = self.level_file.get_route_container(obj)
+
                 route_index = 0
-                for i, route in enumerate(self.level_file.routes):
+                for i, route in enumerate(route_container):
                     if obj == route:
                         route_index = i
                         break
                 for object in obj.used_by:
                     object.route = -1    
-                self.level_file.routes.remove(obj)
-            
-                self.level_file.reset_routes( route_index )
-        
+                route_container.remove(obj)
+
+                if isinstance(obj, ObjectRoute):
+                    self.level_file.reset_object_routes( route_index )
+                else:
+                    self.level_file.reset_camera_routes( route_index )
+
+            elif isinstance(obj, libbol.LightParam):
+                self.level_file.lightparams.remove(obj)
+            elif isinstance(obj, libbol.MGEntry):
+                self.level_file.mgentries.remove(obj)
         self.level_view.selected = []
         self.level_view.selected_positions = []
         self.level_view.selected_rotations = []
@@ -3010,7 +3021,6 @@ if __name__ == "__main__":
     app = Application(sys.argv)
 
     signal.signal(signal.SIGINT, lambda _signal, _frame: app.quit())
-    """
     app.setStyle(QtWidgets.QStyleFactory.create("Fusion"))
 
     
@@ -3044,7 +3054,6 @@ if __name__ == "__main__":
         palette.setColor(QtGui.QPalette.Active, role, color)
         palette.setColor(QtGui.QPalette.Inactive, role, color)
     app.setPalette(palette)
-    """
     if platform.system() == "Windows":
         import ctypes
         myappid = 'P2GeneratorsEditor'  # arbitrary string
