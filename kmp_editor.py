@@ -2401,7 +2401,7 @@ class GenEditor(QMainWindow):
             elif isinstance(obj, PointGroup ):
                 self.level_file.remove_group(obj)
             
-            elif isinstance(obj, libbol.Route):
+            elif isinstance(obj, libkmp.Route):
                 route_container = self.level_file.get_route_container(obj)
 
                 route_index = 0
@@ -2417,11 +2417,6 @@ class GenEditor(QMainWindow):
                     self.level_file.reset_object_routes( route_index )
                 else:
                     self.level_file.reset_camera_routes( route_index )
-
-            elif isinstance(obj, libbol.LightParam):
-                self.level_file.lightparams.remove(obj)
-            elif isinstance(obj, libbol.MGEntry):
-                self.level_file.mgentries.remove(obj)
         self.level_view.selected = []
         self.level_view.selected_positions = []
         self.level_view.selected_rotations = []
