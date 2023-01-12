@@ -387,9 +387,6 @@ class EnemyPoint(object):
         f.write(b"\x01"*5)
         #assert f.tell() - start == self._size
 
-
-
-
 class EnemyPointGroup(object):
     def __init__(self):
         self.points = []
@@ -400,11 +397,6 @@ class EnemyPointGroup(object):
     @classmethod
     def new(cls):
         return cls()
-
-   
-
-   
-   
 
     def insert_point(self, enemypoint, index=-1):
         self.points.insert(index, enemypoint)
@@ -440,9 +432,6 @@ class EnemyPointGroup(object):
     def remove_after(self, point):
         pos = self.points.index(point)
         self.points = self.points[:pos+1]
-
-   
-   
 
 class EnemyPointGroups(object):
     def __init__(self):
@@ -606,9 +595,7 @@ class CheckpointGroup(object):
         f.write(pack(">HH", self._pointcount, self.grouplink))
         f.write(pack(">hhhh", *self.prevgroup[0:4]))
         f.write(pack(">hhhh", *self.nextgroup[0:4]))
-
-   
-   
+ 
 class Checkpoint(object):
     def __init__(self, start, end, unk1=0, unk2=0, unk3=0, unk4=0):
         self.start = start
@@ -651,8 +638,7 @@ class Checkpoint(object):
             f.write(pack(">BBBB", self.unk1, self.unk2, self.unk3, self.unk4))
         else:
             f.write(pack(">BBBB", 0, 0, 0, 4))
-   
-   
+      
 class CheckpointGroups(object):
     def __init__(self):
         self.groups = []
@@ -685,11 +671,6 @@ class CheckpointGroups(object):
             for point in group.points:
                 yield point
 
-   
-   
-   
-   
-    
 # Section 3
 # Routes/Paths for cameras, objects and other things
 class Route(object):
@@ -699,8 +680,6 @@ class Route(object):
         self._pointstart = 0
         self.unk1 = 0
         self.unk2 = 0
-        
-        self.type = 0
 
         self.used_by = []
 
@@ -712,7 +691,6 @@ class Route(object):
     def new_camera(cls):
 
         new_route = cls()
-        new_route.type = 1
         return new_route
 
     def copy(self):
@@ -722,14 +700,27 @@ class Route(object):
         obj._pointcount = len(obj.points)
         obj.unk1 = self.unk1
         obj.unk2 = self.unk2
-
-        obj.type = self.type
         
         return obj
         
-    def is_object(self):
-        return self.type == 0
-        
+    def to_object(self):
+        object_route = ObjectRoute()
+        self.copy_params_to_child(object_route)
+        return object_route
+
+    def to_camera(self):
+        camera_route = CameraRoute()
+        self.copy_params_to_child(camera_route)
+        return camera_route
+
+    def copy_params_to_child(self, new_route):
+        new_route.points = self.points
+        new_route.unk1 = self.unk1
+        new_route.unk2 = self.unk2
+        new_route.used_by = self.used_by
+
+        return new_route
+
     @classmethod
     def from_file(cls, f):
         route = cls()
@@ -744,10 +735,6 @@ class Route(object):
 
         return route
 
-  
-  
-
-
     def add_routepoints(self, points):
         for i in range(self._pointcount):
             self.points.append(points[self._pointstart+i])
@@ -757,8 +744,27 @@ class Route(object):
         f.write(pack(">IB", self.unk1, self.unk2))
         f.write(b"\x04"*7)
 
-  
-  
+#here for type checking - they function in the same way
+class ObjectRoute(Route):
+    def __init__(self):
+        super().__init__()
+        self.type = 0
+
+    @classmethod
+    def new(cls):
+        return cls()
+
+class CameraRoute(Route):
+    def __init__(self):
+        super().__init__()
+        self.type = 1
+
+    @classmethod
+    def new(cls):
+        return cls()
+
+
+
 # Section 4
 # Route point for use with routes from section 3
 class RoutePoint(object):
@@ -789,9 +795,6 @@ class RoutePoint(object):
         #assert padding == b"\x00"*16
         return point
 
- 
- 
-
     def copy(self):
         this_class = self.__class__
         obj = this_class.new()
@@ -805,8 +808,14 @@ class RoutePoint(object):
                      self.unk))
         f.write(b"\x96"*16)
 
- 
- 
+
+class ObjectPoint(RoutePoint):
+    def __init__(self, position):
+        super().__init__(self, position)
+
+class CameraPoint(RoutePoint):
+    def __init__(self, position):
+        super().__init__(self, position)
 
 # Section 5
 # Objects
@@ -996,8 +1005,6 @@ class KartStartPoint(object):
         self.rotation.write(f)
         f.write(pack(">BBH", self.poleposition, self.playerid, self.unknown))
   
-  
-
 class KartStartPoints(object):
     def __init__(self):
         self.positions = []
@@ -1438,8 +1445,8 @@ class BOL(object):
 
 
     def set_assoc(self):
-        self.routes.assoc = Route
-        self.cameraroutes.assoc = Route
+        self.routes.assoc = ObjectRoute
+        self.cameraroutes.assoc = CameraRoute
         self.cameras.assoc = Camera
         self.respawnpoints.assoc = JugemPoint
         self.lightparams.assoc = LightParam
@@ -1449,7 +1456,6 @@ class BOL(object):
     @classmethod
     def make_useful(cls):
         bol = cls()
-        bol.unk4 = 1
         bol.enemypointgroups.groups.append(EnemyPointGroup.new())
         bol.checkpoints.groups.append(CheckpointGroup.new() )
         bol.kartpoints.positions.append( KartStartPoint.new() )
@@ -1627,7 +1633,7 @@ class BOL(object):
         f.seek(sectionoffsets[MINIGAME])
         bol.mgentries = ObjectContainer.from_file(f, sectioncounts[MINIGAME], MGEntry)
 
-        bol.set_aux_values()
+        bol.fixup_file()
                     
         
         
@@ -1637,7 +1643,7 @@ class BOL(object):
 
    
         
-    def set_aux_values(self):
+    def fixup_file(self):
         #set all the used by stuff
         for object in self.objects.objects:
             object.set_route_info()
@@ -1652,6 +1658,7 @@ class BOL(object):
             if area.camera_index != -1 and area.camera_index < len(self.cameras):
                 self.cameras[area.camera_index].used_by.append(area)
         
+        #split camera and object routes
         to_split = []
         for route in self.routes:
             has_object = False
@@ -1660,22 +1667,15 @@ class BOL(object):
                 if isinstance(object, MapObject):
                     has_object = True
                 elif isinstance(object, Camera):
-                        has_camera = True
+                    has_camera = True
             if has_camera and has_object:
                 to_split.append(route)
-            elif has_camera and not has_object:
-                route.type = 1
-            elif has_object and not has_camera:
-                route.type = 0
 
         new_route_idx = len(self.routes)
 
         for route in to_split :
             # we know that these have both objects and cameras
             new_route = route.copy()
-            route.type = 0
-            new_route.type = 1
-            
             new_route.used_by = filter(lambda thing: isinstance(thing, Camera), route.used_by)
             route.used_by = filter(lambda thing: isinstance(thing, MapObject), route.used_by)
 
@@ -1690,9 +1690,9 @@ class BOL(object):
         for route in self.routes:
             if len(route.used_by) > 0:
                 if isinstance(route.used_by[0], Camera):
-                    camera_routes.append(route)
+                    camera_routes.append(route.to_camera())
                 elif isinstance(route.used_by[0], MapObject):
-                    object_routes.append(route)
+                    object_routes.append(route.to_object())
         self.routes = object_routes
         self.cameraroutes = camera_routes
 
@@ -1703,7 +1703,6 @@ class BOL(object):
             for point in route.points:
                 point.partof = route
         for i, route in enumerate(self.cameraroutes):
-            route.type = 1
             for object in route.used_by:
                 object.route = i
             for point in route.points:
@@ -1816,9 +1815,6 @@ class BOL(object):
         self.write(f)
         return f.getvalue()
 
-
-   
-
     def combine_routes(self):
         routes = ObjectContainer()
         cameras = ObjectContainer()
@@ -1836,7 +1832,6 @@ class BOL(object):
             cameras.append(new_cam)
         
         return routes, cameras
-
 
     def auto_qol_all(self):
         # clear checkpoints
@@ -1915,6 +1910,10 @@ class BOL(object):
                 object.route = route_index
     
     def remove_unused_routes(self):
+        self.remove_unused_camera_routes()
+        self.remove_unused_object_routes()
+
+    def remove_unused_object_routes(self):
         to_remove = []
         for i, route in enumerate(self.routes):
             if len(route.used_by) == 0:
@@ -1923,7 +1922,7 @@ class BOL(object):
         for rem_index in to_remove:
             self.routes.pop(rem_index)
 
-
+    def remove_unused_camera_routes(self):
         to_remove = []
         for i, route in enumerate(self.cameraroutes):
             if len(route.used_by) == 0:
@@ -1932,9 +1931,7 @@ class BOL(object):
         for rem_index in to_remove:
             self.cameraroutes.pop(rem_index)
         self.reset_routes()
-        
-    
-        
+         
     def remove_unused_cameras(self):   
         used = []
         opening_cams = []
@@ -2023,11 +2020,19 @@ class BOL(object):
         if len(self.checkpoints.groups == 0):
             return
 
-
-
-
-        
+    def get_route_container(self, obj):
+        if isinstance(obj, CameraRoute):
+            return self.cameraroutes
+        else:
+            return self.routes
     
+    def get_route_for_obj(self, obj):
+        if isinstance(obj, CameraRoute):
+            return CameraRoute()
+        else:
+            return ObjectRoute()
+    
+
 with open("lib/mkddobjects.json", "r") as f:
     tmp = json.load(f)
     OBJECTNAMES = {}
