@@ -421,7 +421,7 @@ class GenEditor(QMainWindow):
             #self._dontselectfromtree = False
             return"""
 
-        #print("Selected kmp editor:", item)
+        #print("Selected mkdd_editor:", item)
         self.level_view.selected = []
         self.level_view.selected_positions = []
         self.level_view.selected_rotations = []
@@ -1500,10 +1500,8 @@ class GenEditor(QMainWindow):
                 elif isinstance(obj, libkmp.CheckpointGroup):
                     self.level_file.checkpoints.groups.append(obj)
                 elif isinstance(obj, libkmp.Route):
-                    if obj.type == 0:
-                        self.level_file.routes.append(obj)
-                    elif obj.type == 1:
-                         self.level_file.cameraroutes.append(obj)
+                    route_container = self.level_file.get_route_container(obj)
+                    route_container.append(obj)
 
 
                 self.addobjectwindow_last_selected_category = self.add_object_window.category_menu.currentIndex()
@@ -1592,10 +1590,8 @@ class GenEditor(QMainWindow):
             self.objects_to_be_added = []
             self.object_to_be_added = None
             
-            new_route = libkmp.Route()    
-            
-            to_append_to = self.level_file.routes if isinstance(obj, libkmp.MapObject) else self.level_file.cameraroutes
-            new_route.type = 1 if isinstance(obj, libkmp.Camera) else 0
+            new_route = self.level_file.get_route_for_obj(obj)  
+            to_append_to = self.level_file.get_route_container(obj)
 
             if obj.route != -1 :
                 for point in to_append_to[obj.route].points: 
@@ -1624,19 +1620,19 @@ class GenEditor(QMainWindow):
             
             self.object_to_be_added = None
         elif option == 5: #new object route
-            new_route_group = libkmp.Route()
+            new_route_group = libkmp.ObjectRoute()
             self.level_file.routes.append(new_route_group)
         elif option == 5.5: #new camera route
-            new_route_group = libkmp.Route.new_camera()
+            new_route_group = libkmp.CameraRoute.new()
             self.level_file.cameraroutes.append(new_route_group)
         elif option == 6: #add route point
             #find route in routepoints
             id = 0
             idx = 0
 
-            to_deal_with = self.level_file.routes if obj.type == 1 else self.level_file.cameraroutes
-
-            for route in to_deal_with:
+            to_look_through = self.level_file.get_route_container(obj)
+            
+            for route in to_look_through:
                 if route is obj:
                     id = idx
                     break
@@ -1670,7 +1666,7 @@ class GenEditor(QMainWindow):
                 self.objects_to_be_added = []
                 self.object_to_be_added = None
 
-                new_route = libkmp.Route.new_camera()
+                new_route = libkmp.CameraRoute.new()
                 
                 
                 for i in range(2):
@@ -1711,7 +1707,7 @@ class GenEditor(QMainWindow):
             self.objects_to_be_added = []
             new_area = libkmp.Area.default()
             new_camera = libkmp.Camera.default()
-            new_route = libkmp.Route.new_camera()
+            new_route = libkmp.CameraRoute.new()
             
             for i in range(2):
                 point = libkmp.RoutePoint.new()
@@ -1744,9 +1740,9 @@ class GenEditor(QMainWindow):
             pos_in_grp = -1 
             idx = 0
 
-            to_deal_with = self.level_file.routes
-            if obj.partof.type == 1:
-                to_deal_with = self.level_file.cameraroutes
+        
+            route_container = self.level_file.get_route_container(obj.partof)
+            to_look_through = route_container.groups
 
             for group_idx, group in enumerate(to_deal_with):
                 for point_idx, point in enumerate(group.points):
@@ -1799,15 +1795,15 @@ class GenEditor(QMainWindow):
         elif option == 22.5: #reassign respawns
             self.level_file.reassign_respawns()
             self.level_view.do_redraw()
-        elif option == 23: #removed unused routes
-            if isinstance(obj, PointGroups):
-                obj.remove_unused_groups()
-            else:
-                self.level_file.remove_unused_routes()
+        elif option == 23:
+            self.level_file.remove_unused_object_routes()
             self.level_view.do_redraw()
+        elif option == 23.5:
+            self.level_file.remove_unused_camera_routes()
+            self.level_view.do_redraw()      
         elif option == 24: #copy enemy to item
             self.level_file.copy_enemy_to_item()
-        elif option == 25: #remove unused cameras
+        elif option == 25:
             self.level_file.remove_unused_cameras()
             self.level_view.do_redraw()
         elif option == 26: #remove unused respawns:
@@ -1882,7 +1878,7 @@ class GenEditor(QMainWindow):
             #print("route_data",  route_data )
         elif isinstance(obj, Camera):
             is_object = False
-            if obj.type == 1 or (obj.type in [2, 5, 6] and  obj.name == "mkwi"):
+            if obj.type == 0 :
                 route_data = 2
             else:
                 route_data = -1
@@ -1910,10 +1906,10 @@ class GenEditor(QMainWindow):
 
         if create:
             if isinstance(obj, MapObject):
-                new_route_group = libkmp.Route.new()
+                new_route_group = libbol.ObjectRoute.new()
                
             elif isinstance(obj, Camera):
-                new_route_group = libkmp.Route.new_camera()
+                new_route_group = libbol.CameraRoute.new()
             route_collec.append(new_route_group)
             obj.route = len(route_collec) - 1 
 
@@ -2009,22 +2005,17 @@ class GenEditor(QMainWindow):
             if isinstance(object, libkmp.EnemyPoint):
                 # For convenience, create a group if none exists yet.
                 if group == 0 and not self.level_file.enemypointgroups.groups:
-                    self.level_file.enemypointgroups.groups.append(libkmp.EnemyPointGroup.new())
+                    self.level_file.enemypointgroups.groups.append(libbol.EnemyPointGroup.new())
+                placeobject.group = group
+
                 self.level_file.enemypointgroups.groups[group].points.insert(position + self.points_added, placeobject)
                 self.points_added += 1
-            elif isinstance(object, libkmp.ItemPoint):
-                self.level_file.itempointgroups.groups[group].points.insert(position + self.points_added, placeobject)
-                self.points_added += 1
-            elif isinstance(object, libkmp.RoutePoint):
-                # For convenience, create a group if none exists yet.
-                if group == 0 and not self.level_file.routes:
-                    self.level_file.routes.append(libkmp.Route.new())
-                if object.partof.type == 0:
-                    placeobject.partof = self.level_file.routes[group]
-                    self.level_file.routes[group].points.insert(position+ self.points_added, placeobject)
-                elif object.partof.type == 1:
-                    placeobject.partof = self.level_file.cameraroutes[group]
-                    self.level_file.cameraroutes[group].points.insert(position+ self.points_added, placeobject)
+            elif isinstance(object, libbol.RoutePoint):
+                route_container = self.level_file.get_route_container(object.partof)
+                if group == 0 and not route_container:
+                    self.level_file.routes.append(object.partof.__class__().new())
+                placeobject.partof = route_container[group]
+                route_container[group].points.insert(position + self.points_added, placeobject)
                 self.points_added += 1
             elif isinstance(object, libkmp.MapObject):
                 self.level_file.objects.objects.append(placeobject)
@@ -2150,10 +2141,8 @@ class GenEditor(QMainWindow):
                 elif isinstance(object, libkmp.Camera):
                     self.level_file.cameras.append(placeobject)
                 elif isinstance(object, Route):
-                    if object.type == 0:
-                        self.level_file.routes.append(placeobject)
-                    elif object.type == 1:
-                        self.level_file.cameraroutes.append(placeobject)
+                    route_container = self.level_file.get_route_container(object)
+                    route_container.append(placeobject)
                 else:
                     raise RuntimeError("Unknown object type {0}".format(type(object)))
 
@@ -2396,11 +2385,11 @@ class GenEditor(QMainWindow):
                 self.level_file.enemypointgroups.remove_point(obj)
             if isinstance(obj, libkmp.ItemPoint):
                 self.level_file.itempointgroups.remove_point(obj)
-            elif isinstance(obj, libkmp.RoutePoint):
-                for route in self.level_file.routes:
-                    if obj in route.points:
-                        route.points.remove(obj)
-                        break
+
+            elif isinstance(obj, libbol.RoutePoint):
+                #route_container = self.level_file.get_route_container(obj.partof)
+                obj.partof.points.remove(obj)
+                
 
             elif isinstance(obj, libkmp.Checkpoint):
                 self.level_file.checkpoints.remove_point(obj)
@@ -2569,13 +2558,11 @@ class GenEditor(QMainWindow):
                 #to_deal_with = self.level_file.get_to_deal_with(obj)
                 #obj.id = self.level_file.enemypointgroups.new_group_id()
                 #self.level_file.enemypointgroups.groups.append(obj)
-
-            elif isinstance(obj, libkmp.Route):
+        
+            elif isinstance(obj, libbol.Route):
                 obj.used_by = []
-                if obj.type == 0:
-                    self.level_file.routes.append(obj)
-                else:
-                    self.level_file.cameraroutes.append(obj)
+                route_container = self.level_file.get_route_container(obj.partof)
+                route_container.append(obj)
                 for point in obj.points:
                     point.partof = obj
 
@@ -2593,7 +2580,9 @@ class GenEditor(QMainWindow):
             elif isinstance(obj, libkmp.RoutePoint):
                 if target_route is None:
                     if not self.level_file.routes:
-                        self.level_file.routes.append(libkmp.Route.new())
+                        new_route = self.level_file.get_route_for_obj(obj)
+                        route_container = self.level_file.get_route_container(new_route)
+                        route_container.append(new_route)
                     target_route = self.level_file.routes[-1]
                 
                 if target_route is not None:
@@ -2678,8 +2667,9 @@ class GenEditor(QMainWindow):
                         if item is not None:
                             break
 
-                elif isinstance(currentobj, libkmp.RoutePoint):
-                    to_look_through = self.leveldatatreeview.objectroutes if currentobj.partof.type == 0 else self.leveldatatreeview.cameraroutes
+                elif isinstance(currentobj, libbol.RoutePoint):
+
+                    to_look_through = self.leveldatatreeview.objectroutes if isinstance(currentobj.partof, libbol.ObjectRoute) else self.leveldatatreeview.cameraroutes
 
 
                     for i in range(to_look_through.childCount()):
