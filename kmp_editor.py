@@ -437,9 +437,9 @@ class GenEditor(QMainWindow):
         elif isinstance(item, tree_view.Checkpoint):
             bound_to = item.bound_to
             self.level_view.selected = [bound_to]
-            self.level_view.selected_positions = [bound_to.start, bound_to.end]
+            self.level_view.selected_positions = [bound_to.start, bound_to.end]     
         elif isinstance(item, (tree_view.EnemyPointGroup, tree_view.ItemPointGroup, tree_view.CheckpointGroup, tree_view.ObjectPointGroup, tree_view.CameraPointGroup)):
-            self.level_view.selected = [item.bound_to]
+                self.level_view.selected = [item.bound_to]
         elif isinstance(item, tree_view.KMPHeader) and self.level_file is not None:
             self.level_view.selected = [self.level_file]
 
@@ -2440,8 +2440,6 @@ class GenEditor(QMainWindow):
         if new != -1:
             self.level_file.routes[new].used_by.append(obj)
         
-        #print("old", self.level_file.routes[old].used_by, "new", self.level_file.routes[new].used_by)
-        
     def update_camera_used_by(self, obj, old, new):
         #print("update route used by", obj, old, new)
         if old == new:
@@ -2674,7 +2672,8 @@ class GenEditor(QMainWindow):
                     item = get_treeitem(self.leveldatatreeview.respawnpoints, currentobj)
                 elif isinstance(currentobj, libkmp.KartStartPoint):
                     item = get_treeitem(self.leveldatatreeview.kartpoints, currentobj)
-
+                elif isinstance(currentobj, libkmp.CannonPoint):
+                    item = get_treeitem(self.leveldatatreeview.cannonpoints, currentobj)
                 #assert item is not None
                 if item is not None:
                     #self._dontselectfromtree = True

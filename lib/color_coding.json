@@ -1,8 +1,9 @@
 {
-  "EnemyRoutes": [0.7, 0.7, 0.7, 1.0],
+  "EnemyRoutes": [1.0, 0.2, 0.2, 1.0],
   "ItemRoutes": [1.0, 0.7, 0.7, 1.0],
   "ObjectRoutes": [0.0, 0.8, 0.0, 1.0],
   "CameraRoutes": [0.8, 0.0, 0.8, 1.0],
+  "UnusedRoutes": [0.7, 0.7, 0.7, 1.0],
   "CheckpointLeft": [1.0, 0.0, 0.0, 1.0],
   "CheckpointRight": [0.1, 0.1, 0.8, 1.0],
   "SelectionColor": [1.0, 0.874, 0.153, 1.0],

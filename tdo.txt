@@ -1,15 +1,14 @@
 mkwii to do list:
 
-ktpt
-- render circles for battle mode
-
 enemy/item/checkpoint
 - pointgroups: add helper function for getting the absolute index of a point 
 - when a group is selected from the treeview, the arrows are not being highlighted
+- checkpoint: add special stuff for lap counters
+- checkpoint: make constant values for highlighted, etc
 
 gobj:
 - all those dang .json files
-- proper hiding of routes field
+-- proper hiding of routes field
 
 poti:
 - check autorouting for cameras / Objects
@@ -17,6 +16,7 @@ poti:
 - show splines
 - show route when highlighted from treeview
 - make unused routes gray
+- add 'c' linking for objects to routes
 
 area:
 - highlight camera / route point when relevant. (ALSO APPLIES TO MKDD)
