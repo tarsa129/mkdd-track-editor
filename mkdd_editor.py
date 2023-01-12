@@ -31,7 +31,7 @@ from widgets.side_widget import PikminSideWidget
 from widgets.editor_widgets import open_error_dialog, catch_exception_with_dialog
 from widgets.data_editor import load_route_info
 from mkdd_widgets import BolMapViewer, MODE_TOPDOWN
-from lib.libbol import BOL, MGEntry, MapObject, Area, Camera, Route, get_full_name, ObjectContainer, MapObjects, Rotation
+from lib.libbol import BOL, MGEntry, MapObject, Area, Camera, Route, get_full_name, ObjectContainer, MapObjects, Rotation, ObjectRoute, CameraRoute
 import lib.libbol as libbol
 from lib.rarc import Archive
 from lib.BCOllider import RacetrackCollision
@@ -2958,18 +2958,22 @@ class GenEditor(QMainWindow):
                 self.level_file.enemypointgroups.groups.remove(obj)
             
             elif isinstance(obj, libbol.Route):
-                #set all 
+                route_container = self.level_file.get_route_container(obj)
+
                 route_index = 0
-                for i, route in enumerate(self.level_file.routes):
+                for i, route in enumerate(route_container):
                     if obj == route:
                         route_index = i
                         break
                 for object in obj.used_by:
                     object.route = -1    
-                self.level_file.routes.remove(obj)
-            
-                self.level_file.reset_routes( route_index )
-            
+                route_container.remove(obj)
+
+                if isinstance(obj, ObjectRoute):
+                    self.level_file.reset_object_routes( route_index )
+                else:
+                    self.level_file.reset_camera_routes( route_index )
+
             elif isinstance(obj, libbol.LightParam):
                 self.level_file.lightparams.remove(obj)
             elif isinstance(obj, libbol.MGEntry):

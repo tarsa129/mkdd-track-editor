@@ -1901,13 +1901,20 @@ class BOL(object):
         pass
     
     def reset_routes(self, start_at = 0):
+
+        self.reset_object_routes(start_at)
+        self.reset_camera_routes(start_at)
+
+    def reset_object_routes(self, start_at = 0):
         for route_index in range(start_at, len(self.routes) ):
             for object in self.routes[route_index].used_by:
                 object.route = route_index
-
+    
+    def reset_camera_routes(self, start_at = 0):
         for route_index in range(start_at, len(self.cameraroutes) ):
             for object in self.cameraroutes[route_index].used_by:
                 object.route = route_index
+
     
     def remove_unused_routes(self):
         self.remove_unused_object_routes()
@@ -1922,7 +1929,7 @@ class BOL(object):
         to_remove.reverse()
         for rem_index in to_remove:
             self.routes.pop(rem_index)
-        self.reset_routes()
+        self.reset_object_routes()
 
     def remove_unused_camera_routes(self):
         to_remove = []
@@ -1933,7 +1940,7 @@ class BOL(object):
         to_remove.reverse()
         for rem_index in to_remove:
             self.cameraroutes.pop(rem_index)
-        self.reset_routes()
+        self.reset_camera_routes()
          
     def remove_unused_cameras(self):   
         used = []
