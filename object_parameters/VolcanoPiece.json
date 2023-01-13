@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Model/KCL reference",
+        "Time until it shakes in seconds at 150cc and mirror mode (already starts 4 seconds before in-game timer)",
+        "Time it shakes in seconds at 150cc and mirror mode",
+        "Time until it shakes in seconds at 100cc (already starts 4 seconds before in-game timer)",
+        "Time it shakes in seconds at 100cc",
+        "Time until it shakes in seconds at 50cc and battle (already starts 4 seconds before in-game timer)",
+        "Time it shakes in seconds at 50cc and battle",
+        "Time in frames between shaking and falling (always 30 frames on GV)"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".kcl files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Floating, shaking and sinking driveable rock from Grumble Volcano.<br>Slot [[Slot#3.4|3.4]] enables its SFX<br>The normal KCL file is always active, KCL b activates when the rock starts shaking and falls with the rock, KCL c activates when the rock starts to fall (It stays in place while the rock falls)"
+}

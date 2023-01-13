@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Model/Effect/KCL file to use (0 or 1)",
+        "Time of one period on the Z-axis in 1/60 seconds",
+        "Amplitude of the cosine on the Z-axis",
+        "Offset starting Z position within the specified movement in 1/60 seconds",
+        "Time of one period on the Y-axis in 1/60 seconds",
+        "Amplitude of the cosine on the Y-axis",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".kcl files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Floating drivable rock (at Grumble Volcano in the lava). It moves like a cosine on the Z-axis and the Y-axis."
+}

@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Audience camera flashes on N64 Mario Raceway. Active whenever the [[KCL_flag#Slot_5.4_.28N64_Mario_Raceway.29|audience ambience]] is playing."
+}

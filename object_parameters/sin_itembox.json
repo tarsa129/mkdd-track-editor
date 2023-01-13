@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Cycle time in 1/60 seconds",
+        "Unused",
+        "Unused",
+        "0 = Enable shadow<br>1 = Disable shadow",
+        "Start delay in 1/60 seconds",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Item box following a route back and forth; speed is like a sine function.<br>[[KMP (File Format)#POTI|Route Setting 2]]: 0 = Asymetric; 1 = Symetric."
+}

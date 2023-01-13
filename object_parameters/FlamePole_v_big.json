@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "If S3 = 1, time outside the lava in 1/100 s, K reference value is 500 (1F4 in hex):<br>X < K \u00e2\u2020\u2019 Stays outside the lava for 5 seconds<br>X \u00e2\u2030\u00a5 K \u00e2\u2020\u2019 Stays outside the lava for X/100 seconds.",
+        "Start delay in 1/60 seconds, it starts 3 seconds before the \"GO!\" if S3 = 0, if not 2 seconds before the \"GO!\"",
+        "S1 activator and S2 conditioner:<br>0 = S1 Deactivated<br>1 = S1 Activated ",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Really, really big fire geyser without a base from N64 Bowser's Castle.<br>Time outside the lava is regulated by S1 if S3 = 1, if not it stays outside the lava for 5 seconds independently form the valuse of S1."
+}

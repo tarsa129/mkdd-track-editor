@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Frames until the firework \"pops\" in the intro camera sequence.",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Fireworks used in cutscene tracks. Only loads in GP Mode."
+}

@@ -1,0 +1,25 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Generates a volcano sound effect. The range where the sound comes from is controlled by the route, so make use of it.<br>Only works on slot [[Slot#8.3|8.3]]."
+}

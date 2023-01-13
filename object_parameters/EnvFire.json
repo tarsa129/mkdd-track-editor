@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Lava particle effect from Bowser's Castle; [[AREA type#AREA type 0x01 (EnvEffect)|AREA type 0x01]] deactivates this object."
+}

@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Mode.<br>0 = Battle<br>1 = [[Tournament]] or [[Mission Mode]].",
+        "Start or respawn place. See [[Coin]] for details.",
+        "Spawn behavior. See [[Coin]] for details.",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Present within all battle arenas in Coin Runners mode and in some tournaments. When touched, it disappears and the player gets one coin.<br>Some coins do not appear at the start of the battle but show up later on. See [[Object/coin]] for details."
+}

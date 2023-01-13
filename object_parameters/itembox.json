@@ -1,14 +1,27 @@
 {
-  "Object Parameters":
-          ["Unknown",
-            "Item Type (Player)",
-            "Item Type (Enemy)",
-            "Disable Shadow",
-            "Unused",
-            "Timing Lottery",
-            "Additional Height",
-            "Unknown"],
-  "Assets": ["itembox.brres"],
-  "Default Values": [0, 0, 0, 0, null, 0, 0, 0],
-  "Route Info": null
+    "Object Parameters": [
+        "Unused",
+        "[[Item_Settings_-_Item_Boxes|Item type (player)]]",
+        "[[Item_Settings_-_Item_Boxes|Item type (enemy)]]",
+        "Disables shadow if set",
+        "Unused",
+        "[[Item_Settings_-_Item_Boxes|Timing lottery]]",
+        "Additional height, multiplied with unknown number (always 1?).",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Spinning box with a question mark inside it. If touched, it snaps and an item lottery begins; after the lottery, the item shown is retrieved."
 }

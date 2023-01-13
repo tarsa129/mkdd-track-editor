@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Route speed",
+        "Behaviour with route:<br>1 = Stomp on every route point<br>2 = Couple of Thwomps, goes left and right before going down; read the description<br>3 = Grounded Thwomp, goes left and right",
+        "Start delay in 1/60 seconds after start of countdown.<br>240 (F0 in hex) = Starts immediately after the \"GO!\"",
+        "Sleep time in 1/60 seconds after start of countdown",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Thwomp with optional route; without route, S1 and S2 must be 0.<br>If S2 = 2, a 3-point route is needed to make effect:<br>1 \u00e2\u2020\u2019 Start point, [[KMP (File Format)#POTI|Route Setting 2]] = 0<br>2 \u00e2\u2020\u2019 Rotation point, Route Setting 2 = 1<br>3 \u00e2\u2020\u2019 Going down point, Route Setting 2 = 0.<br>The couple starts, at the second point turns of 180\u00c2\u00b0 and goes left and right, going down around the third point according to player's direction, then goes back to the first point.<br>To make effect, the object needs a rotation of \u00c2\u00b190\u00c2\u00b0, route points must have the same Y and Z coordinate and no other object must be near the start point.<br>In Grand Prix and VS races, the object is activated by the proximity of a main player (not a CPU) and the speed is proportional to the player's; in Time Trial speed and start delay are the same of respective settings in KMP file.<br>If S2 = 3, Route Setting 2 (\"cycle\") must be 1, or else the Thwomp will spin endlessly when hit by an item."
+}

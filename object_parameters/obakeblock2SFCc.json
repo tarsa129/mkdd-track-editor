@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "Fall time controller in Time Trial and Online VS Race, controls the delay before starting in seconds after starting of countdown, depending on the value T:<br>T = 0 \u00e2\u2020\u2019 Block doesn't fall<br>T > 0 \u00e2\u2020\u2019 Block falls after T seconds<br>T = 4 \u00e2\u2020\u2019 Block falls immediately after the \"GO!\"",
+        "Additional delay of X/60 seconds, goes added to S2",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Falling block from SNES Ghost Valley 2. In Grand Prix and Offline VS Race falls when touched, in Time Trial and Online VS Race fall is controlled by S2 and S3. This object is solid and animated only on slot 5.3, but isn't scalable (fixed scale 1.3). In other slots it is scalable, but unsolid and doesn't fall. Blocks are solid only if X is between -30985 and 8690 and Z between -16295 and 21430; Y (height) doesn't seem to be important."
+}

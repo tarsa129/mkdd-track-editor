@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Which MDL0 from ''K_chairlift00.brres'' is loaded:<br>0 = K_chairlift00<br>1 = K_chairlift01",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Manager of the Shy Guy Ski Lift from DK Summit. Spawns 30 Chairlifts that travel on a route. Route setting 0 removes the Shy Guys. Route setting 1 randomly makes either 0, 1 or 2 randomly colored Shy Guys spawn on the chair. "
+}

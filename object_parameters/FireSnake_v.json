@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Start delay in 1/60 seconds after starting of countdown.<br>240 (F0 in hex) = Starts immediately after the \"GO!\"",
+        "The time between two firesnake spawns. <600 causes the previous snake to disappear, 600 despawns each second snake immediately.",
+        "nits of distance from position point to landing point following the Y angulation.",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Grounded Podoboo from Grumble Volcano. It jump from its position point describing a parabola and after landing bounces casually around the arrival point for 10 seconds until it vanishes."
+}

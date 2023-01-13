@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Speed",
+        "Amount of item boxes carried",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Route-following Chain Chomp from <small>DS</small> Peach Gardens.<br>Hwanwan and wanwan only work together if the effect files are absent.<br>[[KMP (File Format)#POTI|Route Setting 2]] = 1 plays a rollover animation, originally used within a tournament in Rainbow Road. "
+}

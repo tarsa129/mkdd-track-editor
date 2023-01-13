@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Time  until it goes up (in frames)",
+        "How far up it goes",
+        "Speed that it moves up",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".kcl files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Fence gate from Delfino Pier. Slot [[Slot#battle1.2|A1.2]] enables its SFX. Using multiple of this object appears to cause all of them to rise simultaneously."
+}

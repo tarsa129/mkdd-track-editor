@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Idle time in 1/60 seconds between 2 attacks in time trial and online",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".brasd files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Piranha Plant from GCN Mario Circuit, normally combined with {{obj-ref|pakkun_dokan}}."
+}

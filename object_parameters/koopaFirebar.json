@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Number of fireballs per hand",
+        "Rotations X per 1/360 seconds.<br>Counterclockwise = X<br>Clockwise = 65536 - X",
+        "Distance between fireballs",
+        "Number of hands",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Rotating firebar from Bowser's Castle. Specific object rotation values cause strange behavior, such as 0,90,0.<br/>Can't be used together with {{obj-ref|WLfirebarGC}}."
+}

@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Baby Daisy statue from Daisy Circuit.<br>The following subfiles are used by the environment map for Mii heads: course.bmm, course.btiEnv, course.btiMat"
+}

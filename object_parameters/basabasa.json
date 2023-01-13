@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Speed in units per 1/60 seconds",
+        "Delay until start of the next group in 1/60 seconds.<br>Multiple groups can be on the way",
+        "Number of Swoops per group",
+        "How far they can get off the route (unknown values)",
+        "Maximum height",
+        "Distance between the bats in the same group",
+        "Start delay in 1/60 seconds",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Swoops that follow a route. When touched, they act like a wall. They are released as groups which can be edited in any way."
+}

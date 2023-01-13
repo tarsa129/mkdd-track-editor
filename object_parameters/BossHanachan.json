@@ -1,0 +1,29 @@
+{
+    "Object Parameters": [
+        "Primary Wiggler Speed",
+        "Time in 1/60 seconds wiggler stops before using its angry speed. Used instead of s7 if player is behind point specified in s6 when wiggler stops",
+        "Secondary Wiggler Speed",
+        "Point player must pass to change wiggler to speed two. The wiggler must stop to activate this speed change. Route settings 0000 0001",
+        "Angry Wiggler Speed",
+        "Point player must pass to allow the wiggler to become angry. Route settings 0000 0001",
+        "Time in 1/60 seconds wiggler stops before using its angry speed. Used instead of s2 if player is past point specified in s6 when wiggler stops",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed",
+        ".brasd files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Big Wiggler boss used in the Wario's Gold Mine tournament; follows a route.<br>If S2 of the route point = 0002 (S1 needs to be 0000; otherwise, it will try to do different things at the same time and Wiggler's body will glitch out), it will play Wiggler's trick animation once Wiggler gets to the point. See [[BossHanachan]] for more information about its route settings."
+}

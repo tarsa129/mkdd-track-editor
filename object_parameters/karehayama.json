@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "[[Item_Settings_-_Objects|Item to give]]",
+        "[[Item_Settings_-_Objects|Chance to give an item]]",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Leaf pile from Maple Treeway. Its SFX is exclusive to certain slot(s)."
+}

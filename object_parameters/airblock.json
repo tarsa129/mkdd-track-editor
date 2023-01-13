@@ -1,0 +1,25 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Object not used in regular tracks.<br>Used in tournaments as an \"invisible wall\" above barriers so you cannot fly/jump over them. They are boxes of 200x200x200 units with a pivot in the bottom face."
+}

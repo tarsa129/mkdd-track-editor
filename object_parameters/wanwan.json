@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Length of chain in game units",
+        "Unused",
+        "Unused",
+        "Let (X,Y) be the center of the area where the Chain Chomp snaps to (neither X nor Y are height coordinates). If X is positive, X/10 is the X-Value for the setting; if X is negative, 65536 + X/10 is the X-Value for the setting (make sure to include the negative sign when adding!).  ",
+        "Let (X,Y) be the center of the area where the Chain Chomp snaps to (neither X nor Y are height coordinates). If Y is positive, Y/10 is the Y-Value for the setting; if Y is negative, 65536 + Y/10 is the Y-Value for the setting (make sure to include the negative sign when adding!).",
+        "Time to wander around (in 1/60 seconds); if 0, about 5 seconds is used. Add 3.5 seconds for full cycle time",
+        "(Width of wedge in degrees-35)/2",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Chain Chomp. Snaps in a wedge shape that is directed to a given point.<br>Hwanwan and wanwan only work together if the effect files are absent."
+}

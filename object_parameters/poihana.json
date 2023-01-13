@@ -1,0 +1,29 @@
+{
+    "Object Parameters": [
+        "Color.<br>Normal settings:<br>1 = Red<br>2 = Violet<br>3 = Green<br>Other settings:<br>0 = Violet<br>\u00e2\u2030\u00a54 = Green",
+        "Units of distance from where {{obj-ref|poihana}} starts looking for players",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed",
+        ".brasd files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Cataquack from GCN Peach Beach. It flings players into the air. In GP and VS race, it looks for players. In Time Trials, it flings only if touched. It is likely possible to add further colors by modifying the Pat0. <br>"
+}

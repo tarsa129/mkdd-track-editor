@@ -15,8 +15,7 @@ from widgets.data_editor_options import *
 #test comment
 
 def load_route_info(objectname):
-    return None
-    """
+
     try:
         with open(os.path.join("object_parameters", objectname+".json"), "r") as f:
             data = json.load(f)
@@ -28,7 +27,7 @@ def load_route_info(objectname):
     except Exception as err:
         print(err, "Make Route Info not found")
         return None
-    """
+
 def load_default_info(objectname):
     try:
         with open(os.path.join("object_parameters", objectname+".json"), "r") as f:

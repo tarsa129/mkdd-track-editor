@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Total cycle length, affects time between rising and dropping only.",
+        "Start delay in 1/60 seconds; it starts 3 seconds before the \"GO!\" ",
+        "The dropping height of the pillar / 384",
+        "Idling time - 200 (1/60 seconds)",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Fire geyser without a base. It rises like a parabolic curve for 1 second, stays up for s1 - s4 - 490 frames, drops in a linear line for 3 seconds and waits for the time specified in s4 before restarting. Before rising, the geyser has an additional state of 50 frames whereby it is enabled but not rising yet, for this reason it is recommended to not put geysers above track section."
+}

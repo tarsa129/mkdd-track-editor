@@ -1,0 +1,29 @@
+{
+    "Object Parameters": [
+        "Time before falling in 1/60 seconds in 150cc and mirror mode",
+        "Final angle in degrees<br>(0\u00c2\u00b0 = vertical, 90\u00c2\u00b0 = horizontal), normally \u00e2\u2030\u00a5 90\u00c2\u00b0",
+        "Time before falling in 1/60 seconds in 100cc mode",
+        "Time before falling in 1/60 seconds in 50cc mode",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed",
+        ".kcl files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Falling pillar from Dry Dry Ruins."
+}

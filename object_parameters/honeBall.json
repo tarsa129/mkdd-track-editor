@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Object not used in regular tracks. Used in the <small>N64</small> Bowser's Castle tournament with Dry Bowser.<br>For use of this object in Mission Mode, at least one CPU must be defined. The location of the object does not matter.<br>If more than one CPU is defined, it will cause weird behavior. If more than one CPU exists in a mission with this object, only the one that is the  closest to the player will fire at them. Occasionally, some will try and fire at the same time, but this causes them to spin out repeatedly until another fireball is fired. Regardless of how many CPUs are defined in a mission with this object, or how many times this object is added, only one of the CPUs will fire at the player."
+}

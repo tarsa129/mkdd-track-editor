@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Start speed in units per 1/60 seconds; if a [[KMP (File Format)#POTI|Route Setting 1]] > 0, then a new speed value is defined",
+        "[[Item_Settings_-_Item_Boxes|Item type (player)]]",
+        "[[Item_Settings_-_Item_Boxes|Item type (enemy)]]",
+        "Disables shadow if set",
+        "Route start point",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Route controlled item box. If any [[KMP (File Format)#POTI|Route Setting 2]] = 1, the box breaks at that point."
+}

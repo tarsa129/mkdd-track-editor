@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "Start delay in 1/60 seconds",
+        "Sleep time in 1/60 seconds;<br>Special case 0 = One time shoot",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Press from Toad's Factory (over the belts).<br>The entered position is the sleeping position, so must be placed over the ground (600 is the default value); the total cycle time depends on the sleep time and the falling height."
+}

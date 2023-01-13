@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Speed",
+        "Start delay in 1/60 seconds",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Moving Monty Mole from Moo Moo Meadows.<br>Can't be used together with {{obj-ref|choropu2}}.<br>[[KMP (File Format)#POTI|Route Setting 2]]: 0 = Burrow, 1 = Pop out. "
+}

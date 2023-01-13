@@ -1,0 +1,29 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed",
+        ".brasd files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Giant Pokey used in the Thwomp Desert tournament, where its scale is 7 on the X, Y and Z-axes.<br>[[KMP]] KMP Cloud seems to slightly corrupt the Giant Pokey, as its sound will not be loaded and its head will not appear on the minimap."
+}

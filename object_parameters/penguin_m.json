@@ -1,0 +1,29 @@
+{
+    "Object Parameters": [
+        "Speed",
+        "[[LE-CODE]] or [[cheat code]] required: <br/>Route start point.",
+        "[[LE-CODE]] or [[cheat code]] required: <br/>If S8=1: Item to drop (same as ItemDirect).",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "[[LE-CODE]] or special cheat code required: <br/>0: normal behavior<br/>1: custom \"mushroom car\" behavior developed by [[kHacker35000vr]]."
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed",
+        ".brasd files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Medium penguin from <small>N64</small> Sherbet Land.<br>Slot [[#6.1|6.1]] enables its SFX."
+}

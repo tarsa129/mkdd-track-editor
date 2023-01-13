@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Route speed",
+        "0 = start and wait on first route point<br>1 = start at object location and enable release action",
+        "Amplitude",
+        "Period length",
+        "Start delay in 1/60 seconds",
+        "Time until it starts following route in 1/60 seconds (s5 has priority)",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Rolling Chain Chomp from Chain Chomp Wheel.<br>The object has two different kind of movements; one being a route and one relative to its current location based on a sine wave, whereby the wave is controlled by s3 and s4.<br>It appears on the minimap when playing on arena slot 1.4."
+}

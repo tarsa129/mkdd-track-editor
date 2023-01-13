@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "0 = flashSkate_A<br>1 = flashSkate_B",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Audience camera flashes on Funky Stadium. Active whenever the player performs a trick."
+}

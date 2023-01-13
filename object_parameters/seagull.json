@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Speed",
+        "Number of seagulls",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Seagull that follows a route. It is found in tracks with a marine setting."
+}

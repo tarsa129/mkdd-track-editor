@@ -1,0 +1,29 @@
+{
+    "Object Parameters": [
+        "Speed",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed",
+        ".brasd files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Small penguin from <small>N64</small> Sherbet Land. It creates a symmetrical copy of itself under the ground to simulate an ice reflection.<br>[[KMP (File Format)#POTI|Route Setting 1]]: 0 = Default; 1 = Glide; 2 = Animation faster; 3 = Default.<br>[[KMP (File Format)#POTI|Route Setting 2]] describes the speed when Route Setting 1 \u00e2\u2030\u00a0 0, but always requires a value \u00e2\u2030\u00a0 0.<br>Slot [[#6.1|6.1]] enables its SFX."
+}

@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "1 = Enable player rotation and clapping.",
+        "Distance at which it rotates to face the player.",
+        "Distance at which it loads the clapping chr0. If higher than setting 3, this will be ignored until that setting's distance is reached.",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Pianta alone."
+}

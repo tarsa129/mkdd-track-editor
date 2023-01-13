@@ -1,0 +1,29 @@
+{
+    "Object Parameters": [
+        "Time until the bridge goes up (and animation starts playing)",
+        "Animation / Bridge opening speed (0x3 normal, 0x1 faster, 0x10 slow)",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed",
+        ".kcl files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Bridge from Delfino Pier. Slot [[Slot#battle1.2|A1.2]] enables its SFX (includes a bell sound).<br/> Animation capped at 30 frames. S3 might be a relic of old animation length."
+}

@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Generates ice around the player when respawned after falling in an [[KCL flag#Fall Boundary (0x10)|icy water fall boundary]] flag; the location does not matter, the ice effect is always enabled. The ice's scale and position for each vehicle is defined in [[kartPartsDispParam.bin]] and [[bikePartsDispParam.bin]].<br>This object can be used to enable tracks for slot [[Slot#6.1|6.1]], but it only has impact in combination with an icy boundary flag. In this case, it only works on slot 6.1."
+}

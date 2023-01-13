@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "ID (1-based), used in ''begoman_manager'' to control when they appear",
+        "The radius of the 1st ring in which the topman is allowed to roam in. ",
+        "Time in frames from the start of the race until the topman will switch from the 1st ring to the 2nd ring.",
+        "The radius of the 2nd ring in which the topman is allowed to roam in. ",
+        "Time in frames from the start of the race until the topman will switch from the 2nd ring to the 3rd ring.",
+        "The radius of the 3rd ring in which the topman is allowed to roam in. ",
+        "Time in frames from the start of the race until the topman will switch from the 3rd ring to the 4th ring.",
+        "The radius of the 4th ring in which the topman is allowed to roam in. "
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Topman from Galaxy Colosseum; object not used in any track. To appear, it (or they) must be the first object of section [[KMP#GOBJ|GOBJ]]. They appear to not obey [[KCL flag#Wall (0x0C)|wall collision]]. Note that the rings are hardcoded to have their centre at (0,0).<br>Only works on slots [[Slot#3.1|3.1]], [[Slot#4.2|4.2]], [[Slot#6.2|6.2]], [[Slot#7.1|7.1]], and Galaxy Colosseum."
+}

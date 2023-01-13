@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Speed",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Delay until the first block spawns (time in frames)",
+        "Delay between block spawns (time in frames)",
+        "Number of Blocks/Item Boxes that can exist at any one time",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "{{obj-ref|Press}}, ''block.brres'' and {{obj-ref|itembox}} combination from Toad's Factory.<br>Each block follows a route until it reach the press and the press converts it to an item box which continues the route. Route setting 1 is the speed it slows down to (if 0 it uses the speed setting in S1).<br/>Route setting 2:<br/> 0x1: press activates when a block reaches this point<br/>0x2: determines where the item box goes"
+}

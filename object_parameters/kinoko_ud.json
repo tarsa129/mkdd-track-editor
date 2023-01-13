@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Texturing: nonzero values load the dark variant for the stem instead",
+        "Amplitude of the up-down movement",
+        "Time in 1/60s for a full up-down cycle",
+        "Cycle shift (controls where in the cycle to start)",
+        "Time in 1/60s to pause at the lowest point in the cycle",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".kcl files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Moving bouncy mushroom from Mushroom Gorge."
+}

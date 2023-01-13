@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "[[Item_Settings_-_Item_Boxes|Item type (player)]]",
+        "[[Item_Settings_-_Item_Boxes|Item type (enemy)]]",
+        "Disables shadow if set",
+        "Unused",
+        "[[Item_Settings_-_Item_Boxes|Timing lottery]]",
+        "Height offset with object's position, signed.",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Item box that acts similarly to a placed item. It moves in conjunction with most moving objects and is normally locked in a relative Y-position, moving along with the object's behavior. Otherwise, it typically phases through object collision altogether. <br>Some interactions might be slot specific, such as with {{obj-ref|quicksand}}. <br>When placed high without an object underneath, it falls until it reaches the ground, and when placed on a steep surface, it falls down the slope, but can sometimes cause a crash due to unknown reasons if used in this way.<br/>For more information, see the [[Moving Terrain#Using Objects|Moving Terrain]] page."
+}

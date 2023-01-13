@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Not 0: Delay of ~1.5 seconds for the second rock",
+        "Minimal cycle time in 1/60 seconds",
+        "Speed",
+        "Bouncing factor",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Falling rock from GCN DK Mountain, it respawns only if its Route's header has Cycle set to 1. [[Slot#8.3|Slot 8.3]] enables its SFX."
+}

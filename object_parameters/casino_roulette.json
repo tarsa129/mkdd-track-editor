@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".kcl files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "The rotating parts of Chain Chomp Wheel; when used with [[KCL flag#Moving Road (0x1D)|KCL flag 0x1D]], the road slowly rotates around the object counterclockwise.<br/>X, Y and Z positions and rotations need to be 0 and scales need to be 1 in order to work properly. Additionally, the file must have a [[SRT0| texture animation]] named \"dushBoard\" (without quotations), or else the game will crash.<br/> Arena [[slot]] 1.4 enables functionality that causes players to additionally rotate the direction they are facing on both the object by itself and on KCL flag 0x1D.<br/> For more information, see the [[Moving Terrain#Rotating Road (KCL 0x1D)|Moving Terrain]] page."
+}

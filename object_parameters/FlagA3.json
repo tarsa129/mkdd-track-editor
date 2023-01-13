@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "\"Mario Kart\" flag from DS Delfino Square. Strangely, scales must follow a precise proportion: Xscale < Yscale < Zscale, or game freezes.<br>It is a bit buggy, so it is better use another \"FlagA\" object and import the original texture."
+}

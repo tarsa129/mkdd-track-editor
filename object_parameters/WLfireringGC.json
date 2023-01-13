@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Number of fireballs",
+        "Rotations X in 1/60 seconds.<br>Counterclockwise = X<br>Clockwise = 65536 - X",
+        "Pulsation factor, shrinks and enlarges the radius.<br>Special cases:<br> S3 = 0 or S4 = 0 no pulsation;<br> S3 \u00e2\u2030\u00a5 S4 negative pulsation",
+        "Radius",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Rotating fire ring from GCN Waluigi Stadium. Scale settings refer to fireballs' dimensions and position coordinates to center's coordinates."
+}

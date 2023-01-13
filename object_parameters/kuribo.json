@@ -1,14 +1,28 @@
 {
-  "Object Parameters":
-          ["Respawn Time",
-            "Speed",
-            "Animation Speed",
-            "Unused",
-            "Unused",
-            "Unused",
-            "Unused",
-            "Unused"],
-  "Assets": ["kuribo1.bmd", "brasd/kuribo/walkl.brasd", "brasd/kuribo/walkr.brasd"],
-  "Default Values" : [600, 40, 120, null, null, null, null, null],
-  "Route Info": 2
+    "Object Parameters": [
+        "Respawn time",
+        "Speed",
+        "Animation speed",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".brasd files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Goomba."
 }

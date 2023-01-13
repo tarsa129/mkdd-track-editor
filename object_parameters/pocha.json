@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "[[KCL_flag#Type_A|Group Y KCL Index]]",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Generates a water splash effect when a player touches [[KCL flag#Fall Boundary (0x10)|KCL flag 0x10]] with variants 1 (water) or 3 (icy water that also needs the {{obj-ref|0x17|ice}} object). Also works for [[KCL flag#Effect Trigger (0x1A)|KCL flag 0x1A]] with variant 2, but cannot be triggered again until the player respawns. Only the Y coordinate is used."
+}

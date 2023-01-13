@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Speed",
+        "[[Item_Settings_-_Item_Boxes|Item type (player)]]",
+        "[[Item_Settings_-_Item_Boxes|Item type (enemy)]]",
+        "Disables shadow if set",
+        "Start delay",
+        "Time between 2 boxes",
+        "Number of itemboxes on the route (default 5)",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Multiple item boxes that follow a route from a starting point to an ending point."
+}

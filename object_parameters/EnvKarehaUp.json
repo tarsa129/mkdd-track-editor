@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Upward Leaf effect on screen from Maple Treeway; [[AREA type#AREA type 0x01 (EnvEffect)|AREA type 0x01]] activates this object if the first AREA setting is set to 1. Instead of surrounding the player with the particle effect, the object's position is used to create a region in which the effect will occur. This region is loosely 10000un eastward and 10000un above the object's position."
+}

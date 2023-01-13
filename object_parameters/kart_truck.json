@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Route start point",
+        "Speed 0 in 1/60 seconds",
+        "Speed 1 in 1/60 seconds",
+        "Texturing:<br>0 = MooMoo<br>1 = Fruit<br>2 = Factory",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Truck from Moonview Highway.<br>[[KMP (File Format)#POTI|Route Setting 1]] is used for blinking (1 = Left, 2 = Right).<br>[[KMP (File Format)#POTI|Route Setting 2]] selects the speed (0 or 1)."
+}

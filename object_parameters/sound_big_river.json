@@ -1,0 +1,25 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Generates a louder river sound effect. The range where the sound comes from is controlled by the route, so make use of it.<br>Only works on slots [[Slot#3.2|3.2]], [[Slot#4.2|4.2]], [[Slot#5.2|5.2]], and [[Slot#7.3|7.3]]."
+}

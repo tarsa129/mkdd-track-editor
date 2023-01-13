@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "0 = Light<br>1 = Dark smoke and it interacts with the Player.<br>2 = Same as 1.",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Houses' smoke from Delfino Pier."
+}

@@ -1,0 +1,29 @@
+{
+    "Object Parameters": [
+        "Growth speed",
+        "Final size",
+        "Start delay before it starts to grow in 1/60 seconds (starts 4 seconds before the timer in-game)",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed",
+        ".kcl files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Pile of sand from Dry Dry Ruins."
+}

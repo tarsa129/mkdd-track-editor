@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "[[Item_Settings_-_Objects|Item to give]]",
+        "[[Item_Settings_-_Objects|Chance to give an item]]",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "[[LE-CODE]] only: Replace the standard drop height by this value."
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Wooden box. When touched, the player slows down and the box drops an item. The wooden boxes respawn after five seconds, drop from 5000 units above the origin and drop onto the first face they touch.<br>In Time Trials, it becomes an unbreakable {{obj-ref|ironbox}}."
+}

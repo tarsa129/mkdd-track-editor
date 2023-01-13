@@ -7,8 +7,9 @@ enemy/item/checkpoint
 - checkpoint: make constant values for highlighted, etc
 
 gobj:
-- all those dang .json files
--- proper hiding of routes field
+
+- proper hiding of routes field
+- create "generic" object (id zero), and then when id is changed, fill in settings
 
 poti:
 - check autorouting for cameras / Objects
@@ -28,9 +29,6 @@ area:
 came:
 - camera replaying (long shot)
 - properly hide fields
-
-mspt:
- - deal with mspt ids (how are they used?)
 
 before release: match lorenzis with colors
 

@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Route start point",
+        "Speed 0 in 1/60 seconds",
+        "Speed 1 in 1/60 seconds",
+        "Color:<br>0 = Blue<br>1 = Red<br>2 = Yellow",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Car from Moonview Highway.<br>[[KMP (File Format)#POTI|Route Setting 1]] is used for blinking (1 = Left, 2 = Right)<br>[[KMP (File Format)#POTI|Route Setting 2]] selects the speed (0 or 1)."
+}

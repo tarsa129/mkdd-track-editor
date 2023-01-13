@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Color:<br>0 = Red<br>1 = Blue<br>2 = Yellow",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Street cone from Daisy Circuit. Only slots [[Slot#3.1|3.1]], [[Slot#4.2|4.2]], [[Slot#6.2|6.2]] and [[Slot#7.1|7.1]] support this object with a limit of 30. Colors can be changed in the CLR0 (maybe even added)."
+}

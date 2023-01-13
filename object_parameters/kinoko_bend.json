@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Texturing: nonzero values load the dark variant instead",
+        "Maximum angle",
+        "Time in 1/60s for a full cycle",
+        "Cycle shift (controls where in the cycle to start)",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".kcl files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Bouncy mushroom. The model perpetually loops an animation that resembles pulling a rubber band and letting go. It appears on the minimap as a solid circle in non-racing modes."
+}

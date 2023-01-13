@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Time to start smoking",
+        "0 = Default smoke variant, doesnt vanish when touched.<br>1 = Different smoke variant (fluffy), doesnt vanish when touched.<br>2 = 1 but vanishes when touched.<br>3 = Different smoke variant (thick), doesnt vanish when touched.<br>4 = Same as 2?.<br>5+ = No smoke but \"explode\" effect",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Smoke generator on Wario's Gold Mine and Maple Treeway."
+}

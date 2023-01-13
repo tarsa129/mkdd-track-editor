@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Speed",
+        "How strong it moves up and down",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Shy Guy ship which shoots exploding cannonballs; cannonball object is {{obj-ref|HeyhoBallGBA}}.<br>This object is made for counterclockwise directed tracks, so if a track is clockwise directed, this object must be modified with [[BrawlBox]] in the following ways:<br>''CullMode'' from ''Materials'' must be set on ''Cull_Outside'' and the Z scale in the KMP must be -1.<br>Only slot [[Slot#6.2|6.2]] supports this object and it is necessary to allow tracks to work on this slot."
+}

@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Speed",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Object not used in any track.<br>A gondola ship that would have traversed the outside of Delfino Pier. This object can be seen briefly in the course selection screen video for Delfino Pier. The game places a Pianta waving at a fixed position on top of the object.<br>No graphic files for this object exist in the final game. This object is solid and must have a route. If the player touches the top, they will bounce forwards. In addition, the bone of its model must be named ''hune''."
+}

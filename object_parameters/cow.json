@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Number of slave cows following the master cow unordered",
+        "Unused",
+        "Start delay of the slave cows in 1/60 seconds.<br>The master cow starts a few seconds earlier",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".brasd files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Master cow following a route followed by some more cows (from Moo Moo Meadows).<br>The master cow starts at the first point of the route, all other cows around the object position."
+}

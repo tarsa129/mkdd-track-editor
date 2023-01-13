@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Speed",
+        "Color.<br>Normal settings:<br>0 = Red<br>1 = Yellow<br>2 = Green",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Shy Guy obstacle from DK Summit. Additional colors can probably be added by expanding the Pat0."
+}

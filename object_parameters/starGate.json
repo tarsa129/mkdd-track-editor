@@ -1,0 +1,25 @@
+{
+    "Object Parameters": [
+        "Number (ordered)",
+        "Trigger",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Gates used in some competitions; object not used in any track."
+}

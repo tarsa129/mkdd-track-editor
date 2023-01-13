@@ -1,0 +1,25 @@
+{
+    "Object Parameters": [
+        "Wall KCL Variant",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Pole solidity across different tracks. Deleting this object will cause the pole itself to be unsolid."
+}

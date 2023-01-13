@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Model/KCL reference",
+        "Time until it shakes in seconds at 150cc and mirror mode (already starts 4 seconds before in-game timer)",
+        "Time it shakes in seconds at 150cc and mirror mode",
+        "Time until it shakes in seconds at 100cc (already starts 4 seconds before in-game timer)",
+        "Time it shakes in seconds at 100cc",
+        "Time until it shakes in seconds at 50cc and battle (already starts 4 seconds before in-game timer)",
+        "Time it shakes in seconds at 50cc and battle",
+        "Time in frames between shaking and falling"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".kcl files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Block parts from Block Plaza, with statues. The normal KCL file is active until block starts shaking, KCL b activates when the block starts shaking and falls with the block.<br> Slot [[Slot#battle1.1|A1.1]] uses 150cc timing settings unlike other battle slots."
+}

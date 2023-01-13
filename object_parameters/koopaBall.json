@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Gigantic exploding fireball; used with {{obj-ref|koopaFigure}}. It bounces on every new route point and explodes on the last one if the route cycle setting is turned on. This object always spins northward. Scale is only obeyed if the route cycle setting is turned off, although the fiery effect still does not obey scaling."
+}

@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "Time until it starts emitting smoke in seconds at 150cc and mirror mode (already starts 4 seconds before in-game timer)",
+        "Time it emits smoke in seconds at 150cc and mirror mode",
+        "Time until it starts emitting smoke in seconds at 100cc (already starts 4 seconds before in-game timer)",
+        "Time it emits smoke in seconds at 100cc",
+        "Time until it starts emitting smoke in seconds at 50cc (already starts 4 seconds before in-game timer)",
+        "Time it emits smoke in seconds at 50cc",
+        "Unused"
+    ],
+    "Assets": [
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Smoke used by the trembling rocks from Grumble Volcano."
+}

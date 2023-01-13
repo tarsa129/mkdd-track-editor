@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Time inside the pipe",
+        "Time outside the pipe",
+        "Speed",
+        "Length of going",
+        "Going out first time",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".kcl files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Horizontal moving Piranha Plant wall from <small>GCN</small> Waluigi Stadium. It moves like a sine function (inside \u00e2\u2020\u2019 outside \u00e2\u2020\u2019 inside); normally combined with {{obj-ref|WLdokanGC}}."
+}

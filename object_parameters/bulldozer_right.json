@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "Movement distance",
+        "Movement time",
+        "Time before starting",
+        "Time of standing still",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".kcl files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Moving bulldozer from Toad's Factory."
+}

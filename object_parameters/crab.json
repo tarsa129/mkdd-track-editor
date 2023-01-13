@@ -1,0 +1,29 @@
+{
+    "Object Parameters": [
+        "Speed in units per 1/60 seconds",
+        "Crab view direction:<br>0 = Left<br>1 = Right",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed",
+        ".brasd files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Crab from <small>GBA</small> Shy Guy Beach.<br>[[KMP (File Format)#POTI|Route Setting 1]] sets the time in 1/60 seconds of stop in that point."
+}

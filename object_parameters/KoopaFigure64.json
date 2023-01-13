@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Units of distance from where KoopaFigure64 starts spitting fire",
+        "Fire function and effect:<br>0 = Decoration with default effect<br>1 = Obstacle with L effect",
+        "Spitting fire start delay in 1/60 seconds after start of countdown.<br>0 = Freeze of the game<br>240 (F0 in hex) = Starts spitting fire immediately after the \"GO!\"",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Bowser statue from N64 Bowser's Castle; it spits fire for 5 seconds, then doesn't nothing for 3 seconds, then spits fire again.<br>In GP and VS Race the object is activated by the proximity of a player."
+}

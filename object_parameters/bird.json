@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Speed",
+        "Number of eagles",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Route-following eagle from <small>GCN</small> DK Mountain."
+}

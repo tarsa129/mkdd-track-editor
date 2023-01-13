@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Starting state:<br>0 = Open <br>1 = Closed",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Parasol from GBA Shy Guy Beach; it opens or closes itself when is hit."
+}

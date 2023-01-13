@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Speed",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Lava bubble from <small>GBA</small> Bowser Castle 3.<br>[[KMP (File Format)#POTI|Route Setting 1]] controls the speed (gets added to S1), [[KMP (File Format)#POTI|Route Setting 2]] = 1 means that the model flips horizontally."
+}

@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Speed",
+        "[[Item_Settings_-_Objects|Item to give]]",
+        "[[Item_Settings_-_Objects|Chance to give an item]]",
+        "Unused",
+        "Start delay",
+        "Time between 2 boxes",
+        "Max amount of boxes",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Wooden box that follows a route.<br>[[KMP (File Format)#POTI|Route Setting 1]] sets the speed (gets added to S1). "
+}

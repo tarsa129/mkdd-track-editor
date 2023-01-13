@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Rotations per 12 seconds if S8 = 0.",
+        "Direction:<br>0 = Clockwise<br>1 = Counterclockwise",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused in the normal game."
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Electric propeller from Koopa Cape."
+}

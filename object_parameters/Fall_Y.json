@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "0 = A<br>1 = B<br>2 = C",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Breff animation of the waterfall effects from Koopa Cape and DS Yoshi Falls."
+}

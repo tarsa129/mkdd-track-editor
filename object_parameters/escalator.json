@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "Speed 1 (units per second, signed)",
+        "Time until it switches to Speed 2",
+        "Speed 2 (units per second, signed)",
+        "(Total) time until it switches to Speed 3",
+        "Speed 3 (units per second, signed)",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".kcl files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Coconut Mall escalator.<br/> For more information, see the [[Moving Terrain#Usage in Coconut Mall|Moving Terrain]] page."
+}

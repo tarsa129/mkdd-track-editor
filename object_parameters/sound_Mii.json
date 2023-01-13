@@ -1,0 +1,25 @@
+{
+    "Object Parameters": [
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Generates a Mii crowd sound effect. The range where the sound comes from is controlled by the route, so make use of it.<br>Only works on slots [[Slot#1.1|1.1]] and [[Slot#3.1|3.1]]."
+}

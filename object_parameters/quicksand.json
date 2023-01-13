@@ -1,0 +1,28 @@
+{
+    "Object Parameters": [
+        "0 = Use Thwomp<br>1 = Don't use Thwomp",
+        "Sand shake wave length. 0 by default if s1 = 0",
+        "Time until sand wave reaches the end. 0 by default if s1 = 0. Must not be 0 if s1 = 1",
+        "Sand push and pull strength.",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed",
+        ".breff/.breft files needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": null,
+    "Description": "Thwomp Desert controller. <br/> Arena [[slot]] 1.5 enables its SFX.<br/> {{obj-ref|s_itembox}} is affected by the push/pull factor on slots other than arena slot 1.5, causing buggy interactions. Cannot be scaled, due to hard-coded collision."
+}

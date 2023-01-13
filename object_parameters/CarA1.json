@@ -1,0 +1,27 @@
+{
+    "Object Parameters": [
+        "Speed",
+        "Acceleration",
+        "Time of pause",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused",
+        "Unused"
+    ],
+    "Assets": [
+        ".brres file needed"
+    ],
+    "Default Values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+    "Route Info": 2,
+    "Description": "Moving car from Coconut Mall. It moves exactly like {{obj-ref|WLwallGC}} but instead left \u00e2\u2020\u2019 right."
+}
