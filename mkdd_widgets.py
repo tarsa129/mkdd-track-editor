@@ -1029,6 +1029,10 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
 
                 for i, route in enumerate(self.level_file.routes):
                     selected = i in routes_to_highlight
+
+                    if route in self.selected:
+                        selected = True
+
                     if route.used_by:
                         for point in route.points:
                             point_selected = point in select_optimize
@@ -1057,6 +1061,10 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
 
                 for i, route in enumerate(self.level_file.cameraroutes):
                     selected = i in routes_to_highlight
+
+                    if route in self.selected:
+                        selected = True
+
                     if route.used_by:
                         for point in route.points:
                             point_selected = point in select_optimize
