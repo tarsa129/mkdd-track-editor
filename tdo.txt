@@ -1,19 +1,24 @@
+mkdd-master to do list:
+drag n drop opening
+
 mkwii to do list:
 
 enemy/item/checkpoint
-- pointgroups: add helper function for getting the absolute index of a point 
-- when a group is selected from the treeview, the arrows are not being highlighted
+- pointgroups: add helper function for getting the absolute index of a point (for area) and enemy point from an absolute index
 - checkpoint: add special stuff for lap counters
 - checkpoint: make constant values for highlighted, etc
 
 gobj:
 - proper hiding of routes field
 - when id is changed from 0, fill in default settings
-- add a separate field for ids along with the dropdown
+- add a separate lineedit for ids along with the dropdown
+- manually improve all descriptions / settings / and add default values
 
 poti:
-- show splines
-- show route when highlighted from treeview
+- show splines (talk to zatchi)
+- camera options: auto do the frames field (based on the length to the next point)
+-- on creation, auto do it (based on first connection)
+-- have an option to fill it out automatically
 
 area:
 - highlight camera / route point when relevant. (ALSO APPLIES TO MKDD)
@@ -29,7 +34,7 @@ came:
 - properly hide fields
 
 juge:
-- when adding respawn points, use the angle of the closest enemypoint
+- when adding respawn points, use the angle of the closest two enemypoints
 
 before release: match lorenzis with colors
 
@@ -43,7 +48,7 @@ add an option for "cleanup"
 - remove unused respawns
 - remove unused paths
 - remove unused cameras
-popup for "fixes made on load"
+have two load options: normal load and load with cleanup
 restore the add objects menu? idek
 
 
