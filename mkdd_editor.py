@@ -2931,7 +2931,7 @@ class GenEditor(QMainWindow):
             elif isinstance(obj, libbol.JugemPoint):
                 self.level_file.respawnpoints.remove(obj)
             elif isinstance(obj, libbol.Area):
-                if obj.camera_index != -1 and obj.camera_index < len(self.level_file.areas.areas):
+                if obj.camera_index != -1 and obj.camera_index < len(self.level_file.cameras):
                     self.level_file.cameras[obj.camera_index].used_by.remove(obj)
                 
             

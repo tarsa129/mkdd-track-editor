@@ -1196,10 +1196,12 @@ class CameraEdit(DataEditor):
 
         self.name = self.add_text_input("Camera Name", "name", 4)
 
-        self.camtype.currentIndexChanged.connect(lambda _index: self.catch_text_update())
-        #self.camtype.currentIndexChanged.connect(self.update_name)
+       
+        self.camtype.currentIndexChanged.connect(self.update_name)
         self.route.editingFinished.disconnect()
         self.route.editingFinished.connect(self.update_route_used)
+
+        self.camtype.currentTextChanged.connect(self.update_name)
 
     def update_data(self):
         obj: Camera = self.bound_to
@@ -1244,10 +1246,7 @@ class CameraEdit(DataEditor):
         
         #update the name, may be needed
         self.update_name()
-    def update_name(self):
-        if self.bound_to.widget is None:
-            return
-        self.bound_to.widget.update_name()
+
 
 
 class RespawnPointEdit(DataEditor):

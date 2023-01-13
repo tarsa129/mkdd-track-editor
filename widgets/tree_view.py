@@ -226,7 +226,7 @@ class AreaEntry(NamedItem):
         bound_to.widget = self
 
     def update_name(self):
-        disp_string = "Area (Type: {0})".format(self.bound_to.area_type)
+        disp_string = "Area (Type: {0}, {1})".format(self.bound_to.area_type, AREA_TYPES[self.bound_to.area_type])
         if self.bound_to.area_type == 1:
             disp_string += ", (Cam: {0})".format(self.bound_to.camera_index)
         elif self.bound_to.area_type == 7:
@@ -242,8 +242,6 @@ class CameraEntry(NamedItem):
     def update_name(self):
         
         if self.bound_to.camtype in [1, 4, 5]:
-            text_descrip = "Camera {0}: (Type: {1} - Route {2})".format(self.index, self.bound_to.camtype, self.bound_to.route)
-        elif self.bound_to.camtype in [2] and self.bound_to.name == "mkwi":
             text_descrip = "Camera {0}: (Type: {1} - Route {2})".format(self.index, self.bound_to.camtype, self.bound_to.route)
         else:
             text_descrip = "Camera {0}: (Type: {1})".format(self.index, self.bound_to.camtype)
