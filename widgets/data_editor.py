@@ -1131,6 +1131,8 @@ class CameraEdit(DataEditor):
         self.route.editingFinished.disconnect()
         self.route.editingFinished.connect(self.update_route_used)
 
+        self.type.currentTextChanged.connect(self.update_name)
+
     def update_data(self):
         obj: Camera = self.bound_to
         self.position[0].setText(str(round(obj.position.x, 3)))

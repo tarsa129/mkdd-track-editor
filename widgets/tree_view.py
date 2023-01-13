@@ -252,8 +252,7 @@ class AreaEntry(NamedItem):
 
     def update_name(self):
         area_type_string = AREA_TYPES[self.bound_to.type]
-        disp_string = "Area (Type: {0} - ".format(self.bound_to.type)
-        disp_string += area_type_string + ")"
+        disp_string = "Area (Type: {0}, {1})".format(self.bound_to.type, area_type_string)
         if self.bound_to.type == 0:
             disp_string += ", (Cam: {0})".format(self.bound_to.camera_index)
         self.setText(0, disp_string)
