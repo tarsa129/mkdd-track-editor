@@ -995,13 +995,15 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
             if vismenu.objectroutes.is_visible():
                 routes_to_highlight = set()
 
-
                 for obj in self.level_file.objects.objects:
                     if obj.route >= 0 and obj in select_optimize:
                         routes_to_highlight.add(obj.route)
 
                 for i, route in enumerate(self.level_file.routes):
                     selected = i in routes_to_highlight
+                    if route in self.selected:
+                        selected = True
+
                     if route.used_by:
                         for point in route.points:
                             point_selected = point in select_optimize
@@ -1012,8 +1014,10 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                             point_selected = point in select_optimize
                             self.models.render_generic_position_colored(point.position, point_selected, "unusedpoint")
                             selected = selected or point_selected
+
                     if selected:
                         glLineWidth(3.0)
+                    
                     glBegin(GL_LINE_STRIP)
                     glColor3f(0.0, 0.0, 0.0)
                     for point in route.points:
@@ -1030,6 +1034,10 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                 for i, route in enumerate(self.level_file.cameraroutes):
                     selected = i in routes_to_highlight
+
+                    if route in self.selected:
+                        selected = True
+
                     if route.used_by:
                         for point in route.points:
                             point_selected = point in select_optimize
