@@ -32,9 +32,11 @@ area:
 came:
 - camera replaying (long shot)
 - properly hide fields
+- have camera type string in treeview 
 
 juge:
 - when adding respawn points, use the angle of the closest two enemypoints
+- edit treeview to remove the parenthesis
 
 before release: match lorenzis with colors
 
