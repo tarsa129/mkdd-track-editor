@@ -104,8 +104,8 @@ class Rotation(object):
         rot.mtx[2][0:3] = matrix[2]
         rot.mtx[3][0] = rot.mtx[3][1] = rot.mtx[3][2] = 0.0
         rot.mtx[3][3] = 1.0
-        
-        
+
+
         return rot
 
     def rotate_around_x(self, degrees):
@@ -200,40 +200,40 @@ class Rotation(object):
                      int(round(up.y * 10000)),
                      int(round(up.z * 10000))
                      ))
-    
+
     def get_euler(self):
-        rot_matrix = [  
+        rot_matrix = [
                         [ self.mtx[0][0], self.mtx[1][0], self.mtx[2][0] ],
                         [ self.mtx[0][1], self.mtx[1][1], self.mtx[2][1] ],
                         [ self.mtx[0][2], self.mtx[1][2], self.mtx[2][2] ]
-                        
+
                         ]
         #print(rot_matrix)
         r = R.from_matrix( rot_matrix )
         #r = R.from_rotvec( [[self.mtx[0][0], self.mtx[0][2]  , -self.mtx[0][1]] ] )
-        vec =  [int(x) for x in r.as_euler('xyz', degrees = True)] 
+        vec =  [int(x) for x in r.as_euler('xyz', degrees = True)]
         #print(vec)
         vec[1], vec[2] = vec[2], -1 * vec[1]
         vec[1] = vec[1] + 90
         #print(vec)
 
-        
+
         return vec
-    
-    
+
+
 
     @classmethod
     def from_euler(cls, degs):
         degs.y = degs.y - 90
         degs.y, degs.z = degs.z * -1, degs.y
-        
+
         r = R.from_euler('xyz', [degs.x, degs.y, degs.z], degrees=True)
         vecs = r.as_matrix()
         vecs = vecs.transpose()
-   
-        
+
+
         return Rotation.from_matrix(vecs)
-        
+
 
     def copy(self):
         return deepcopy(self)
@@ -243,7 +243,7 @@ class ObjectContainer(list):
         super().__init__(*args, **kwargs)
         self.assoc = None
 
-    @classmethod 
+    @classmethod
     def from_empty(cls):
         container = cls()
         return container
@@ -376,7 +376,7 @@ class EnemyPoint(object):
         point.nomushroomzone = self.nomushroomzone
 
         return point
- 
+
 
     def write(self, f):
 
@@ -458,8 +458,8 @@ class EnemyPointGroups(object):
 
         return enemypointgroups
 
-    
-    
+
+
     def points(self):
         for group in self.groups:
             for point in group.points:
@@ -493,39 +493,39 @@ class EnemyPointGroups(object):
 
         return max_link+1
     def assign_prev_next(self):
-        linked_points = [ [[], []] for x in range(0, len(self.groups) ) ] 
-    
+        linked_points = [ [[], []] for x in range(0, len(self.groups) ) ]
+
         for idx, group in enumerate( self.groups ):
             start_point = group.points[0]
             end_point = group.points[-1]
-            
+
             if start_point.link == -1 or end_point.link == -1:
                 raise Exception ("Enemy groups are not fully linked correctly")
-            
-            
+
+
             linked_points[start_point.link][1].append(idx)
             #print("group " + str(idx) + " is a prev in link " + str(start_point.link)  )
             linked_points[end_point.link][0].append(idx)
             #print("group " + str(idx) + " is a next in link " + str(end_point.link)  )
 
-                    
+
         for idx, links in enumerate(linked_points):
             #print(links)
             #links is a list with [0] being the previous groups and [1] being the next groups
-            for ix, group in enumerate(links[0]): 
-                next_arr = links[1].copy()             
+            for ix, group in enumerate(links[0]):
+                next_arr = links[1].copy()
                 while len(next_arr) < 6:
                     next_arr.append(-1)
                 self.groups[group].next = next_arr
                 #print("group " + str(group) + " has a next array of " + str(next_arr) )
-                
+
             for ix, group in enumerate(links[1]):
                 prev_arr = links[0].copy()
                 while len(prev_arr) < 6:
                     prev_arr.append(-1)
                 self.groups[group].prev = prev_arr
                 #print("group " + str(group) + " has a prev array of " + str(prev_arr) )
-                
+
 
 # Enemy/Item Route Code End
 ##########
@@ -585,17 +585,17 @@ class CheckpointGroup(object):
 
         return checkpointgroup
 
-   
-   
-        
-    
+
+
+
+
     def write(self, f):
         self._pointcount = len(self.points)
 
         f.write(pack(">HH", self._pointcount, self.grouplink))
         f.write(pack(">hhhh", *self.prevgroup[0:4]))
         f.write(pack(">hhhh", *self.nextgroup[0:4]))
- 
+
 class Checkpoint(object):
     def __init__(self, start, end, unk1=0, unk2=0, unk3=0, unk4=0):
         self.start = start
@@ -605,7 +605,7 @@ class Checkpoint(object):
         self.unk2 = unk2
         self.unk3 = unk3
         self.unk4 = unk4
-        
+
         self.prev = -1
         self.next = -1
 
@@ -626,28 +626,28 @@ class Checkpoint(object):
         assert unk3 == 0 or unk3 == 1
         return cls(start, end, unk1, unk2, unk3, unk4)
 
-   
-   
+
+
 
     def write(self, f):
-        
-    
+
+
         f.write(pack(">fff", self.start.x, self.start.y, self.start.z))
         f.write(pack(">fff", self.end.x, self.end.y, self.end.z))
         if not ( self.unk3 == 1 and self.unk4 == 1 ):
             f.write(pack(">BBBB", self.unk1, self.unk2, self.unk3, self.unk4))
         else:
             f.write(pack(">BBBB", 0, 0, 0, 4))
-      
+
 class CheckpointGroups(object):
     def __init__(self):
         self.groups = []
-        
+
 
     @classmethod
     def from_file(cls, f, count):
         checkpointgroups = cls()
-        
+
         for i in range(count):
             group = CheckpointGroup.from_file(f)
             checkpointgroups.groups.append(group)
@@ -660,8 +660,8 @@ class CheckpointGroups(object):
 
         return checkpointgroups
 
-   
-   
+
+
 
     def new_group_id(self):
         return len(self.groups)
@@ -686,7 +686,7 @@ class Route(object):
     @classmethod
     def new(cls):
         return cls()
-    
+
     @classmethod
     def new_camera(cls):
 
@@ -700,9 +700,9 @@ class Route(object):
         obj._pointcount = len(obj.points)
         obj.unk1 = self.unk1
         obj.unk2 = self.unk2
-        
+
         return obj
-        
+
     def to_object(self):
         object_route = ObjectRoute()
         self.copy_params_to_child(object_route)
@@ -843,7 +843,7 @@ class MapObject(object):
     @classmethod
     def new(cls):
         return cls(Vector3(0.0, 0.0, 0.0), 1)
-        
+
     @classmethod
     def default_item_box(cls):
         item_box = cls(Vector3(0.0, 0.0, 0.0), 1)
@@ -891,14 +891,14 @@ class MapObject(object):
 
         self.userdata = [0 if x is None else x for x in self.userdata]
         for i in range(8):
-                
+
             f.write(pack(">h", self.userdata[i]))
         #assert f.tell() - start == self._size
-   
-   
+
+
     def copy(self):
 
-    
+
         this_class = self.__class__
         obj = this_class.new()
         obj.position = Vector3(self.position.x, self.position.y, self.position.z)
@@ -916,32 +916,32 @@ class MapObject(object):
         for setting in self.userdata:
             obj.userdata.append(setting)
         obj.route_info = self.route_info
-       
+
         return obj
-        
+
     def has_route(self):
          from widgets.data_editor import load_route_info
-        
+
          if self.objectid in OBJECTNAMES:
             name = OBJECTNAMES[self.objectid]
             route_info = load_route_info(name)
-            
-            
-            return route_info 
+
+
+            return route_info
          return None
 
     def set_route_info(self):
         from widgets.data_editor import load_route_info
-        
+
         if self.objectid in OBJECTNAMES:
             name = OBJECTNAMES[self.objectid]
             route_info = load_route_info(name)
-            
-            
-            self.route_info = route_info 
+
+
+            self.route_info = route_info
         else:
             self.route_info = None
-        
+
 class MapObjects(object):
     def __init__(self):
         self.objects = []
@@ -959,7 +959,7 @@ class MapObjects(object):
             mapobjs.objects.append(obj)
 
         return mapobjs
-        
+
 # Section 6
 # Kart/Starting positions
 POLE_LEFT = 0
@@ -996,15 +996,15 @@ class KartStartPoint(object):
         #assert kstart.unknown == 0
         return kstart
 
-  
-  
+
+
 
     def write(self, f):
         f.write(pack(">fff", self.position.x, self.position.y, self.position.z))
         f.write(pack(">fff", self.scale.x, self.scale.y, self.scale.z))
         self.rotation.write(f)
         f.write(pack(">BBH", self.poleposition, self.playerid, self.unknown))
-  
+
 class KartStartPoints(object):
     def __init__(self):
         self.positions = []
@@ -1018,8 +1018,8 @@ class KartStartPoints(object):
             kspoints.positions.append(kstart)
 
         return kspoints
-   
-   
+
+
 # Section 7
 # Areas
 
@@ -1058,7 +1058,7 @@ class Area(object):
         self.unkshort = 0
         self.shadow_id = 0
         self.lightparam_index = 0
-        
+
         self.widget = None
 
         self.widget = None
@@ -1066,8 +1066,8 @@ class Area(object):
     @classmethod
     def new(cls):
         return cls(Vector3(0.0, 0.0, 0.0))
-    
-    @classmethod 
+
+    @classmethod
     def default(cls, type = 1):
         area = cls(Vector3(0.0, 0.0, 0.0))
         area.scale = Vector3(150, 50, 150)
@@ -1096,8 +1096,8 @@ class Area(object):
 
         return area
 
-  
-  
+
+
 
 
     def write(self, f):
@@ -1107,8 +1107,8 @@ class Area(object):
         f.write(pack(">BBh", self.shape, self.area_type, self.camera_index))
         f.write(pack(">II", self.feather.i0, self.feather.i1))
         f.write(pack(">hhhh", self.unkfixedpoint, self.unkshort, self.shadow_id, self.lightparam_index))
-   
-   
+
+
 
     def copy(self):
         new_area = self.__class__.new()
@@ -1124,7 +1124,7 @@ class Area(object):
         new_area.unkshort = self.unkshort
         new_area.shadow_id = self.shadow_id
         new_area.lightparam_index = self.lightparam_index
-        
+
         return new_area
 class Areas(object):
     def __init__(self):
@@ -1164,7 +1164,7 @@ class Camera(object):
 
         self.chase = 0
         self.camtype = 0
-    
+
         self.fov = FOV()
 
         self.camduration = 0
@@ -1175,7 +1175,7 @@ class Camera(object):
         self.routespeed = 0
         self.nextcam = -1
         self.name = "null"
-        
+
         self.widget = None
         self.used_by = []
 
@@ -1192,13 +1192,13 @@ class Camera(object):
         camera.camtype = type
         camera.fov.start = 40
         camera.fov.end = 50
-        
+
         if (type == 1 ):
             camera.chase = 1
             camera.shimmer.z0 = 4000
             camera.shimmer.z1 = 4060
             camera.routespeed = 20
-        
+
         return camera
 
 
@@ -1210,7 +1210,7 @@ class Camera(object):
         cam.rotation = Rotation.from_file(f)
         cam.position2 = Vector3(*unpack(">fff", f.read(12)))
         cam.position3 = Vector3(*unpack(">fff", f.read(12)))
-        cam.chase = read_uint8(f) 
+        cam.chase = read_uint8(f)
         cam.camtype = read_uint8(f)
         cam.fov.start = read_uint16(f)
         cam.camduration = read_uint16(f)
@@ -1225,15 +1225,15 @@ class Camera(object):
 
         return cam
 
-   
-      
+
+
     def copy(self):
         new_camera = self.__class__.new()
         new_camera.position = Vector3(self.position.x, self.position.y, self.position.z)
         new_camera.position2 = Vector3(self.position2.x, self.position2.y, self.position2.z)
-        new_camera.position3 = Vector3(self.position3.x, self.position3.y, self.position3.z)        
+        new_camera.position3 = Vector3(self.position3.x, self.position3.y, self.position3.z)
         new_camera.rotation = self.rotation.copy()
-        
+
         new_camera.chase = self.chase
         new_camera.camtype = self.camtype
         new_camera.fov.start = self.fov.start
@@ -1247,17 +1247,17 @@ class Camera(object):
         new_camera.nextcam = self.nextcam
         new_camera.name = self.name
 
-        
+
         return new_camera
-      
+
     #write to bol
     def write(self, f):
-    
+
         f.write(pack(">fff", self.position.x, self.position.y, self.position.z))
         self.rotation.write(f)
         f.write(pack(">fff", self.position2.x, self.position2.y, self.position2.z))
         f.write(pack(">fff", self.position3.x, self.position3.y, self.position3.z))
-            
+
         if self.camtype in [0, 1, 2, 3]:
             f.write(pack(">B", self.chase))
         else:
@@ -1268,23 +1268,23 @@ class Camera(object):
                         self.routespeed, self.fov.end, self.nextcam))
         assert len(self.name) == 4
         f.write(bytes(self.name, encoding="ascii"))
-   
+
 
     @classmethod
     def new_type_0(cls):
         pass
-        
+
     @classmethod
     def new_type_1(cls):
         pass
-        
+
     @classmethod
     def new_type_7(cls):
         pass
-    
+
     @classmethod
     def new_type_8(cls):
-        cam =  cls(Vector3(-860.444, 6545.688, 3131.74)) 
+        cam =  cls(Vector3(-860.444, 6545.688, 3131.74))
         cam.rotation = Rotation.from_euler(Vector3(0, 0, 0))
         cam.position2 = Vector3(160, 6, 0)
         cam.position3 = Vector3(-20, -20, 450)
@@ -1300,7 +1300,7 @@ class Camera(object):
         cam.fov.end = 35
         cam.nextcam = -1
         cam.name = "para"
-            
+
         return cam
 
     def has_route(self):
@@ -1339,7 +1339,7 @@ class JugemPoint(object):
         f.write(pack(">fff", self.position.x, self.position.y, self.position.z))
         self.rotation.write(f)
         f.write(pack(">HHhh", self.respawn_id, self.unk1, self.unk2, self.unk3))
-  
+
 
 
 # Section 10
@@ -1429,19 +1429,19 @@ class BOL(object):
         self.enemypointgroups = EnemyPointGroups()
         self.checkpoints = CheckpointGroups()
         self.routes = ObjectContainer()
-        
+
         self.objects = MapObjects()
         self.kartpoints = KartStartPoints()
         self.areas = Areas()
         self.cameras = ObjectContainer()
         self.cameraroutes = ObjectContainer()
-        
+
         self.respawnpoints = ObjectContainer()
-        
+
         self.lightparams = ObjectContainer()
-        
+
         self.mgentries = ObjectContainer()
-        
+
 
 
     def set_assoc(self):
@@ -1452,18 +1452,18 @@ class BOL(object):
         self.lightparams.assoc = LightParam
         self.mgentries.assoc = MGEntry
         self.areas.assoc = Area
-        
+
     @classmethod
     def make_useful(cls):
         bol = cls()
         bol.enemypointgroups.groups.append(EnemyPointGroup.new())
         bol.checkpoints.groups.append(CheckpointGroup.new() )
         bol.kartpoints.positions.append( KartStartPoint.new() )
-        bol.cameras.append( Camera.new_type_8() )       
+        bol.cameras.append( Camera.new_type_8() )
         bol.lightparams.append(LightParam.new())
-        
+
         bol.set_assoc()
-        
+
         return bol
 
 
@@ -1622,7 +1622,7 @@ class BOL(object):
 
         f.seek(sectionoffsets[RESPAWNPOINT])
         bol.respawnpoints = ObjectContainer.from_file(f, sectioncounts[RESPAWNPOINT], JugemPoint)
-        
+
         #order by id
         bol.respawnpoints.sort(key=lambda x: x.respawn_id)
 
@@ -1634,15 +1634,15 @@ class BOL(object):
         bol.mgentries = ObjectContainer.from_file(f, sectioncounts[MINIGAME], MGEntry)
 
         bol.fixup_file()
-                    
-        
-        
+
+
+
         bol.set_assoc()
-        
+
         return bol
 
-   
-        
+
+
     def fixup_file(self):
         #set all the used by stuff
         for object in self.objects.objects:
@@ -1657,7 +1657,7 @@ class BOL(object):
         for area in self.areas.areas:
             if area.camera_index != -1 and area.camera_index < len(self.cameras):
                 self.cameras[area.camera_index].used_by.append(area)
-        
+
         #split camera and object routes
         to_split = []
         for route in self.routes:
@@ -1683,7 +1683,7 @@ class BOL(object):
             for obj in new_route.used_by:
                 obj.route = new_route_idx
                 new_route_idx += 1
-                
+
         #now that everything is split, we can spilt into cam routes and non cam routes
         object_routes = ObjectContainer()
         camera_routes = ObjectContainer()
@@ -1830,7 +1830,7 @@ class BOL(object):
             if new_cam.route != -1:
                 new_cam.route += num_obj
             cameras.append(new_cam)
-        
+
         return routes, cameras
 
     def auto_qol_all(self):
@@ -1838,14 +1838,14 @@ class BOL(object):
         for checkgroup in self.checkpoints.groups:
             checkgroup.points.clear()
         self.checkpoints.groups.clear()
-        
+
         self.enemypointgroups.assign_prev_next()
-        
+
         for i, group in enumerate( self.enemypointgroups.groups ):
             new_cp_group = CheckpointGroup(i)
             new_cp_group.prevgroup = group.prev
             new_cp_group.nextgroup = group.next
-        
+
             self.checkpoints.groups.append( new_cp_group )
 
             #group = self.enemypointgroups.groups[groupindex]
@@ -1854,27 +1854,27 @@ class BOL(object):
                 if i == 0 and j == 0:
                     draw_cp = True
                     #should both be vector3
-                    central_point = self.kartpoints.positions[0].position 
+                    central_point = self.kartpoints.positions[0].position
                     left_vector = self.kartpoints.positions[0].rotation.get_vectors()[2]
 
                 elif (i == 0 and j % 2 == 0 and len(group.points) > j + 1) or (i > 0 and j % 2 == 1 and len(group.points) > j + 1):
                 #elif (i == 0  and len(group.points) > j + 1) or (i > 0 and len(group.points) > j + 1):
                     draw_cp = True
                     central_point = point.position
-                    
+
                     deltaX = group.points[j+1].position.x - group.points[j-1].position.x
                     deltaZ = group.points[j+1].position.z - group.points[j-1].position.z
-                                     
+
                     left_vector = Vector3( -1 * deltaZ, 0, deltaX   ) * -1
-                    
+
                     left_vector.normalize()
 
-                    
-                if draw_cp: 
-                    
-                    first_point = [central_point.x + 3500 * left_vector.x, 0, central_point.z + 3500 * left_vector.z] 
-                    second_point = [central_point.x - 3500 * left_vector.x, 0, central_point.z - 3500 * left_vector.z]  
-                        
+
+                if draw_cp:
+
+                    first_point = [central_point.x + 3500 * left_vector.x, 0, central_point.z + 3500 * left_vector.z]
+                    second_point = [central_point.x - 3500 * left_vector.x, 0, central_point.z - 3500 * left_vector.z]
+
                     new_checkpoint = Checkpoint.new()
                     new_checkpoint.start = Vector3( *first_point)
                     new_checkpoint.end = Vector3(*second_point)
@@ -1884,7 +1884,7 @@ class BOL(object):
         self.remove_unused_routes()
 
     def set_checkpoint_respawns():
-    
+
         for checkgroup in self.checkpoints.groups:
             for checkpoint in checkgroup.points:
                 closest_idx = -1
@@ -1896,10 +1896,10 @@ class BOL(object):
                         closest_idx = i
                         closest_dis = dis
                 checkpoint.unk1 = closest_idx
-                    
-    
+
+
         pass
-    
+
     def reset_routes(self, start_at = 0):
 
         self.reset_object_routes(start_at)
@@ -1909,13 +1909,13 @@ class BOL(object):
         for route_index in range(start_at, len(self.routes) ):
             for object in self.routes[route_index].used_by:
                 object.route = route_index
-    
+
     def reset_camera_routes(self, start_at = 0):
         for route_index in range(start_at, len(self.cameraroutes) ):
             for object in self.cameraroutes[route_index].used_by:
                 object.route = route_index
 
-    
+
     def remove_unused_routes(self):
         self.remove_unused_object_routes()
         self.remove_unused_camera_routes()
@@ -1941,24 +1941,24 @@ class BOL(object):
         for rem_index in to_remove:
             self.cameraroutes.pop(rem_index)
         self.reset_camera_routes()
-         
-    def remove_unused_cameras(self):   
+
+    def remove_unused_cameras(self):
         used = []
         opening_cams = []
-        
+
         #type 8 stays
-        
+
         for camera in self.cameras:
             if camera.camtype == 8:
                 used.append(camera)
-            
+
         next_cam = -1
         for i,camera in enumerate(self.cameras):
             if camera.startcamera == 1:
                 next_cam = i
                 opening_cams.append(camera)
-               
-               
+
+
         while next_cam != -1 and next_cam < len(self.cameras):
             next_camera = self.cameras[next_cam]
             if next_camera in used:
@@ -1966,7 +1966,7 @@ class BOL(object):
             used.append(next_camera)
             opening_cams.append(next_camera)
             next_cam = next_camera.nextcam
-            
+
         #now iterate through area
         for area in self.areas.areas:
             if area.camera_index != -1 and area.camera_index < len(self.cameras):
@@ -1980,55 +1980,55 @@ class BOL(object):
                 if cam_to_del.route != -1 and cam_to_del.route < len(self.cameraroutes):
                     self.cameraroutes[cam_to_del.route].used_by.remove(cam_to_del)
                 self.cameras.remove(cam_to_del)
-    
+
         for i, camera in enumerate (self.cameras):
             for area in camera.used_by:
                 area.camera_index = i
-                
+
         #deal with starting cams
         curr_cam = opening_cams[0]
         for i in range(1, len(opening_cams)):
             next_idx = self.cameras.index( opening_cams[i] )
             curr_cam.nextcam = next_idx
             curr_cam = self.cameras[next_idx]
-    
+
         #figure out which cameras to remove
-        #then 
-    
+        #then
+
         pass
 
     def reassign_one_respawn(self, rsp : JugemPoint):
         min_dis = 999999999999999999
         min_idx = 0
-        idx = 0              
-        
+        idx = 0
+
         if len(self.enemypointgroups.groups ) > 0:
             for group in self.enemypointgroups.groups:
                 for point in group.points:
-                    this_dis =  point.position.distance(rsp.position) 
+                    this_dis =  point.position.distance(rsp.position)
                     if this_dis < min_dis:
                         min_dis = this_dis
                         min_idx = idx
-                    idx += 1    
+                    idx += 1
         rsp.unk1 = min_idx
 
     def reassign_respawns(self):
         for rsp in self.respawnpoints:
             self.reassign_one_respawn(rsp)
-                
+
 
     def get_route_container(self, obj):
-        if isinstance(obj, CameraRoute):
+        if isinstance(obj, (CameraRoute, Camera)):
             return self.cameraroutes
         else:
             return self.routes
-    
+
     def get_route_for_obj(self, obj):
         if isinstance(obj, CameraRoute):
             return CameraRoute()
         else:
             return ObjectRoute()
-    
+
 
 with open("lib/mkddobjects.json", "r") as f:
     tmp = json.load(f)

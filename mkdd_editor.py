@@ -2311,7 +2311,7 @@ class GenEditor(QMainWindow):
                 self.level_view.do_redraw()
         elif option == 20: #snap to route all cameras
             for camera in self.level_file.cameras:
-                if camera.has_route() and camera.route != -1 and camera.route < len(self.level_file.routes):
+                if camera.has_route() and camera.route != -1 and camera.route < len(self.level_file.cameraroutes):
                     route_points = self.level_file.cameraroutes[camera.route].points
                     if len(route_points) > 0:
                         pointone_pos = route_points[0].position
