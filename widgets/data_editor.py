@@ -599,14 +599,6 @@ class EnemyPointEdit(DataEditor):
 
         self.unknown = self.add_integer_input("Unknown", "unknown",
                                             MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        
-
-        for widget in self.position:
-            widget.editingFinished.connect(self.catch_text_update)
-        for widget in (self.enemyaction, self.enemyaction2):
-            widget.currentIndexChanged.connect(lambda _index: self.catch_text_update())
-
-        self.unknown.editingFinished.connect(self.catch_text_update)
 
     def update_data(self):
         obj: EnemyPoint = self.bound_to
@@ -823,19 +815,14 @@ class ObjectEdit(DataEditor):
             )
 
         self.objectid.currentTextChanged.connect(self.update_name)
+        self.objectid.currentTextChanged.connect(self.rename_object_parameters)
+        
         self.route.editingFinished.disconnect()
         self.route.editingFinished.connect(self.update_route_used)
 
-        for widget in self.position:
-            widget.editingFinished.connect(self.catch_text_update)
-        #print(self.objectid.currentText())
-        #self.rename_object_parameters(self.objectid.currentText())
-
-        
-        self.objectid.currentTextChanged.connect(self.rename_object_parameters)
-
         if (inthemaking):
             self.set_default_values()
+            
 
         self.assets = self.add_label("Required Assets: Unknown")
         self.assets.setWordWrap(True)
@@ -890,8 +877,7 @@ class ObjectEdit(DataEditor):
         #assert (1 == 0)
     
         obj: MapObject = self.bound_to
-        print("set defaut values", obj)
-        
+    
         if obj.objectid not in OBJECTNAMES:
             name = "INVALID"
         else:

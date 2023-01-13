@@ -126,11 +126,25 @@ class Rotation(object):
         return cls(*euler_angles)
         
     def get_vectors(self):
-        r = R.from_euler("xyz", self.x, self.y, self.z)
         
-        forward = Vector3(self.mtx[0][0], self.mtx[0][2], -self.mtx[0][1])
-        up = Vector3(self.mtx[2][0], self.mtx[2][2], -self.mtx[2][1])
-        left = Vector3(self.mtx[1][0], self.mtx[1][2], -self.mtx[1][1])
+        y = self.y - 90
+        y, z = self.z * -1, self.y
+        
+        r = R.from_euler('xyz', [self.x, y, z], degrees=True)
+        vecs = r.as_matrix()
+        vecs = vecs.transpose()
+
+        mtx = ndarray(shape=(4,4), dtype=float, order="F")
+        mtx[0][0:3] = vecs[0]
+        mtx[1][0:3] = vecs[1]
+        mtx[2][0:3] = vecs[2]
+        mtx[3][0] = mtx[3][1] = mtx[3][2] = 0.0
+        mtx[3][3] = 1.0
+
+        left = Vector3(-mtx[0][0], mtx[0][2], mtx[0][1])
+        up = Vector3(-mtx[2][0], mtx[2][2], mtx[2][1])
+        forward = Vector3(-mtx[1][0], mtx[1][2], mtx[1][1])
+
         return forward, up, left
 
     def write(self, f):

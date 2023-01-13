@@ -7,13 +7,11 @@ enemy/item/checkpoint
 - checkpoint: make constant values for highlighted, etc
 
 gobj:
-
 - proper hiding of routes field
-- create "generic" object (id zero), and then when id is changed, fill in settings
+- when id is changed from 0, fill in default settings
+- add a separate field for ids along with the dropdown
 
 poti:
-- check autorouting for cameras / Objects
--- just make an array for camera types that connect to a route in data_editor_options and use that everywhere
 - show splines
 - show route when highlighted from treeview
 

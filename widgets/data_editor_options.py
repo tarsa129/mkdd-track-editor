@@ -68,6 +68,8 @@ CAME_Type["MiniGame (Unused)"] = 7
 CAME_Type["MissionSuccess (Unused)"] = 8
 CAME_Type["MSPT"] = 9
 
+routed_cameras = [2, 5, 6]
+
 CNPT_ShootEffect = OrderedDict()
 CNPT_ShootEffect["Straight"] =  0
 CNPT_ShootEffect["Curved"] =  1

@@ -114,6 +114,11 @@ class MoreButtons(QWidget):
             auto_route_all.setText("Auto Route All Objects")
             auto_route_all.clicked.connect(lambda: self.parent.button_add_from_addi_options(17, option.bound_to) )
             self.vbox.addWidget(auto_route_all)
+
+            new_item_box = QPushButton(self)
+            new_item_box.setText("Add Generic Object")
+            new_item_box.clicked.connect(lambda: self.parent.button_add_from_addi_options(3, 0) )
+            self.vbox.addWidget(new_item_box)
             
             new_item_box = QPushButton(self)
             new_item_box.setText("Add Item Box")

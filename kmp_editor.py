@@ -38,6 +38,7 @@ from lib.libkcl import RacetrackCollision
 from lib.model_rendering import TexturedModel, CollisionModel
 from widgets.editor_widgets import ErrorAnalyzer, ErrorAnalyzerButton
 from widgets.file_select import FileSelect
+from widgets.data_editor_options import routed_cameras
 from PyQt5.QtWidgets import QTreeWidgetItem
 from lib.vectors import Vector3
 
@@ -1859,8 +1860,7 @@ class GenEditor(QMainWindow):
             route_data = load_route_info(get_kmp_name(obj.objectid))
             #print("route_data",  route_data )
         elif isinstance(obj, Camera):
-            is_object = False
-            if obj.type == 0 :
+            if obj.has_route() :
                 route_data = 2
             else:
                 route_data = -1
