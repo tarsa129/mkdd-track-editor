@@ -887,7 +887,6 @@ class GenEditor(QMainWindow):
         
 
     def analyze_for_mistakes(self):
-        print("help?")
         analyzer_window = ErrorAnalyzer(self.level_file, parent=self)
         analyzer_window.exec_()
         analyzer_window.deleteLater()
@@ -1545,6 +1544,11 @@ class GenEditor(QMainWindow):
             to_deal_with = self.level_file.get_to_deal_with(obj)
             thing_to_add = to_deal_with.get_new_point()
             self.object_to_be_added = [thing_to_add, obj.id, -1 ]
+           
+            self.pik_control.button_add_object.setChecked(True)
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)   
+
+        elif self.object_to_be_added is not None:
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
         elif option == 2: #regarding assigning checkpoints to routes
@@ -2393,8 +2397,8 @@ class GenEditor(QMainWindow):
             
                 self.level_file.areas.areas.remove(obj)
             elif isinstance(obj, libkmp.Camera):
-                if obj.route != -1 and obj.route < len(self.level_file.routes):
-                    self.level_file.routes[obj.route].used_by.remove(obj)
+                if obj.route != -1 and obj.route < len(self.level_file.cameraroutes):
+                    self.level_file.cameraroutes[obj.route].used_by.remove(obj)
             
                 self.level_file.cameras.remove(obj)
             elif isinstance(obj, PointGroup ):
