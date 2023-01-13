@@ -1188,7 +1188,6 @@ class GenEditor(QMainWindow):
         self.collision_area_dialog.finished.connect(on_dialog_finished)
 
     def analyze_for_mistakes(self):
-        print("help?")
         analyzer_window = ErrorAnalyzer(self.level_file, parent=self)
         analyzer_window.exec_()
         analyzer_window.deleteLater()
@@ -2080,7 +2079,8 @@ class GenEditor(QMainWindow):
             self.object_to_be_added = [libbol.EnemyPoint.new(), obj.id, -1 ]
             #self.object_to_be_added[0].group = obj.id
             #actively adding objects
-            self.select_tree_item_bound_to(obj)
+            self.pik_control.button_add_object.setChecked(True)
+            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)   
 
         elif self.object_to_be_added is not None:
             self.pik_control.button_add_object.setChecked(True)
@@ -2586,19 +2586,7 @@ class GenEditor(QMainWindow):
                    max_id = max(point.respawn_id, max_id)
                 placeobject.respawn_id = max_id + 1
                 
-                min_dis = 999999999999999999
-                min_idx = 0
-                idx = 0              
-                
-                if len(self.level_file.enemypointgroups.groups ) > 0:
-                    for group in self.level_file.enemypointgroups.groups:
-                        for point in group.points:
-                            this_dis =  point.position.distance(placeobject.position) 
-                            if this_dis < min_dis:
-                                min_dis = this_dis
-                                min_idx = idx
-                            idx += 1    
-                placeobject.unk1 = min_idx
+                self.level_file.reassign_one_respawn(placeobject)
             elif isinstance(object, libbol.Area):
                 self.level_file.areas.areas.append(placeobject)
             elif isinstance(object, libbol.Camera):
@@ -2949,8 +2937,8 @@ class GenEditor(QMainWindow):
             
                 self.level_file.areas.areas.remove(obj)
             elif isinstance(obj, libbol.Camera):
-                if obj.route != -1 and obj.route < len(self.level_file.routes):
-                    self.level_file.routes[obj.route].used_by.remove(obj)
+                if obj.route != -1 and obj.route < len(self.level_file.cameraroutes):
+                    self.level_file.cameraroutes[obj.route].used_by.remove(obj)
             
                 self.level_file.cameras.remove(obj)
             elif isinstance(obj, libbol.CheckpointGroup):

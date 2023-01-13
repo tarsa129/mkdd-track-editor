@@ -1996,39 +1996,26 @@ class BOL(object):
         #then 
     
         pass
-    
-    def create_respawns(self):
-        if self.bol:
-            return
-        #remove all respwans
-        self.respawnpoints.clear()
-        rsp_idx = 0
 
-        for checkgroup in self.checkpoints.groups:
-            num_checks = len(checkgroup.points)
-            for i in range(4, num_checks, 8):
-                checkpoint_mid1 = (checkgroup.points[i].start + checkgroup.points[i].end) /2
-                checkpoint_mid2 = (checkgroup.points[i+1].start + checkgroup.points[i+1].end)/2
-
-
-                respawn_new = JugemPoint( (checkpoint_mid1 + checkpoint_mid2) / 2 )
-                respawn_new.respawn_id = rsp_idx
-
-                for j in range(i - 4, i + 4):
-                    checkgroup.points[j].unk1 = rsp_idx
-                
-                rsp_idx += 1
-
-
-                self.respawnpoints.append(respawn_new)
-
-            #the ones at the end of the group have the same one as the previous
-            for i in range( (int)(num_checks / 8), num_checks):
-                checkgroup.points[i].respawn_id = rsp_idx - 1
+    def reassign_one_respawn(self, rsp : JugemPoint):
+        min_dis = 999999999999999999
+        min_idx = 0
+        idx = 0              
+        
+        if len(self.enemypointgroups.groups ) > 0:
+            for group in self.enemypointgroups.groups:
+                for point in group.points:
+                    this_dis =  point.position.distance(rsp.position) 
+                    if this_dis < min_dis:
+                        min_dis = this_dis
+                        min_idx = idx
+                    idx += 1    
+        rsp.unk1 = min_idx
 
     def reassign_respawns(self):
-        if len(self.checkpoints.groups == 0):
-            return
+        for rsp in self.respawnpoints:
+            self.reassign_one_respawn(rsp)
+                
 
     def get_route_container(self, obj):
         if isinstance(obj, CameraRoute):

@@ -720,11 +720,11 @@ class CheckpointEdit(DataEditor):
         self.end = self.add_multiple_decimal_input("End", "end", ["x", "y", "z"],
                                                      -inf, +inf)
 
-        self.unk1 = self.add_integer_input("Skippable Group / Respawn", "unk1",
+        self.unk1 = self.add_integer_input("Skippable Group", "unk1",
                                            MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        self.unk2 = self.add_checkbox("Unknown Flag / Key CP", "unk2",
+        self.unk2 = self.add_checkbox("Unknown Flag", "unk2",
                                       0, 1)
-        self.unk3 = self.add_checkbox("Prevent Box Skipping/ MKWii", "unk3",
+        self.unk3 = self.add_checkbox("Prevent Box Skipping", "unk3",
                                            0, 1)
 
                               

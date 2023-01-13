@@ -50,24 +50,15 @@ class MoreButtons(QWidget):
             self.vbox.addWidget(new_enemy_group)
             
             new_enemy_point = QPushButton(self)
-            new_enemy_point.setText("Add Enemy Points")
+            new_enemy_point.setText("Add Enemy Points To End")
             new_enemy_point.clicked.connect(lambda: self.parent.button_add_from_addi_options(1, option.bound_to) )
             self.vbox.addWidget(new_enemy_point)
 
-            new_enemy_point = QPushButton(self)
-            new_enemy_point.setText("Add Enemy Points To End (Advanced)")
-            new_enemy_point.clicked.connect(lambda: self.parent.button_add_from_addi_options(1, option.bound_to) )
-            self.vbox.addWidget(new_enemy_point)
         elif isinstance(option.bound_to, EnemyPoint):
             all_options = False
             new_enemy_point = QPushButton(self)
             new_enemy_point.setText("Add Enemy Points Here")
             new_enemy_point.clicked.connect(lambda: self.parent.button_add_from_addi_options(11, option.bound_to) )
-            self.vbox.addWidget(new_enemy_point)
-
-            new_enemy_point = QPushButton(self)
-            new_enemy_point.setText("Add Enemy Points Here (Advanced)")
-            new_enemy_point.clicked.connect(lambda: self.parent.button_add_from_addi_options(1, option.bound_to) )
             self.vbox.addWidget(new_enemy_point)
             
         elif isinstance(option.bound_to, CheckpointGroups):
@@ -317,12 +308,7 @@ class MoreButtons(QWidget):
             self.vbox.addWidget(new_respawn)
 
             auto_respawn_existing = QPushButton(self)
-            auto_respawn_existing.setText("Auto Respawns (Create from Checkpoints)")
-            auto_respawn_existing.clicked.connect(lambda: self.parent.button_add_from_addi_options(22, option.bound_to) )
-            self.vbox.addWidget(auto_respawn_existing)
-
-            auto_respawn_existing = QPushButton(self)
-            auto_respawn_existing.setText("Auto Respawns (Assign to Closest)")
+            auto_respawn_existing.setText("Auto Respawns (Assign to Closest Enemypoint)")
             auto_respawn_existing.clicked.connect(lambda: self.parent.button_add_from_addi_options(22.5, option.bound_to) )
             self.vbox.addWidget(auto_respawn_existing)
         elif isinstance(option.bound_to, JugemPoint):
