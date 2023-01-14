@@ -730,8 +730,12 @@ class CheckpointEdit(DataEditor):
 
         self.respawn = self.add_integer_input("Respawn", "respawn",
                                            MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        self.type = self.add_checkbox("Key CP", "type",
+        self.lapcounter = self.add_checkbox("Lap Counter", "lapcounter",
                                       0, 1)
+        self.type = self.add_checkbox("Key Checkpoint", "type",
+                                      0, 1)
+        self.lapcounter.stateChanged.connect(self.update_checkpoint_types)
+        self.type.stateChanged.connect(self.update_checkpoint_types)
 
     def update_data(self):
         obj: Checkpoint = self.bound_to
@@ -743,8 +747,19 @@ class CheckpointEdit(DataEditor):
         self.end[1].setText(str(round(obj.end.z, 3)))
 
         self.respawn.setText(str(obj.respawn))
+        self.lapcounter.setChecked(obj.lapcounter != 0)
         self.type.setChecked(obj.type != 0)
 
+        self.update_checkpoint_types()
+
+    def update_checkpoint_types(self):
+        obj: Checkpoint = self.bound_to
+        self.type.setDisabled( obj.lapcounter != 0 )
+        self.lapcounter.setDisabled( obj.type != 0)
+        self.update_name()
+
+    def update_name(self):
+        super().update_name()
 class ObjectRouteEdit(DataEditor):
     def setup_widgets(self):
         self.smooth = self.add_dropdown_input("Sharp/Smooth motion", "smooth", POTI_Setting1)
@@ -1014,7 +1029,6 @@ class ObjectEdit(DataEditor):
 
         #update the name, may be needed
         self.update_name(self.bound_to.objectid)
-
 
 class KartStartPointsEdit(DataEditor):
     def setup_widgets(self):

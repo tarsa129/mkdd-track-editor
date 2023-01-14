@@ -848,10 +848,13 @@ class Checkpoint(KMPPoint):
         self.mid = (start+end)/2.0
         self.respawn = respawn
         self.type = type
+        self.lapcounter = 0
 
 
         self.prev = -1
         self.next = -1
+
+        self.widget = None
 
     @classmethod
     def new(cls):
@@ -875,7 +878,9 @@ class Checkpoint(KMPPoint):
         checkpoint.respawn = read_uint8(f) #respawn
 
         checkpoint_type = read_uint8(f)
-        if checkpoint_type != 0xFF:
+        if checkpoint_type == 0:
+            checkpoint.lapcounter = 1
+        elif checkpoint_type != 0xFF:
             checkpoint.type = 1
 
         checkpoint.prev = read_uint8(f)
@@ -889,7 +894,10 @@ class Checkpoint(KMPPoint):
         f.write(pack(">ff", self.end.x, self.end.z))
         f.write(pack(">b", self.respawn))
 
-        if self.type == 1:
+        if self.lapcounter == 1:
+            f.write(pack(">b", 0))
+            key = 1
+        elif self.type == 1:
             f.write(pack(">b", key))
             key += 1
         else:

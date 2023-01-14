@@ -179,6 +179,10 @@ class ItemRoutePoint(RoutePoint):
         self.setText(0, "Item Point {0} (pos={1})".format(index + offset, index))
 
 class Checkpoint(RoutePoint):
+    def __init__(self, parent, name, bound_to):
+        super().__init__(parent, name, bound_to)
+        bound_to.widget = self
+
     def update_name(self):
         offset = 0
         group_item = self.parent()
@@ -196,7 +200,13 @@ class Checkpoint(RoutePoint):
 
         index = group.points.index(self.bound_to)
 
-        self.setText(0, "Checkpoint {0} (pos={1})".format(index+offset, index))
+        disp_string = "Checkpoint {0} (pos={1})".format(index+offset, index)
+        checkpoint = self.bound_to
+        if checkpoint.lapcounter != 0:
+            disp_string += ", Lap Counter"
+        elif checkpoint.type != 0:
+            disp_string += ", Key Checkpoint"
+        self.setText(0, disp_string)
 
 class ObjectRoutePoint(NamedItem):
     def update_name(self):

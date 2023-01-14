@@ -5,8 +5,7 @@ mkwii to do list:
 
 enemy/item/checkpoint
 - pointgroups: add helper function for getting the absolute index of a point (for area) and enemy point from an absolute index
-- checkpoint: add special stuff for lap counters
-- checkpoint: make constant values for highlighted, etc
+- checkpoint: make constant values for highlighted, lapcounter, key, etc
 
 gobj:
 - manually improve all descriptions / settings / and add default values

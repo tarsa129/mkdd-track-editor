@@ -341,10 +341,10 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
             self.offset_x *= -1
             self.do_redraw()
 
-    
+
     #def logic(self, delta, diff):
     #    self.dolphin.logic(self, delta, diff)
-    
+
     @catch_exception
     def render_loop(self):
         now = default_timer()
@@ -694,7 +694,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     self.gizmo.run_callback(hit)
                     self.gizmo.was_hit_at_all = True
 
-                    
+
                     # Clear the potential marquee selection, which may have been just created as a
                     # result of a mouse move event that was processed slightly earlier than this
                     # current paint event.
@@ -818,7 +818,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         (vismenu.respawnpoints.is_selectable(), self.level_file.respawnpoints),
                         (vismenu.cannonpoints.is_selectable(), self.level_file.cannonpoints),
                         (vismenu.missionpoints.is_selectable(), self.level_file.missionpoints)
-                        
+
                         ):
                     offset = len(objlist)
                     if not is_selectable:
@@ -1017,7 +1017,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                     if selected:
                         glLineWidth(3.0)
-                    
+
                     glBegin(GL_LINE_STRIP)
                     glColor3f(0.0, 0.0, 0.0)
                     for point in route.points:
@@ -1058,7 +1058,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         glVertex3f(pos.x, -pos.z, pos.y)
                     glEnd()
                     if selected:
-                        glLineWidth(1.0)        
+                        glLineWidth(1.0)
             if vismenu.enemyroute.is_visible():
                 enemypoints_to_highlight = set()
                 all_groups = self.level_file.enemypointgroups.groups
@@ -1073,12 +1073,12 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                 #draw each individual group - points first, and then connections between points within the group
                 for i, group in enumerate(all_groups):
                     if len(group.points) == 0:
-                        continue 
-                        
+                        continue
+
                     if group in self.selected:
                         selected_groups[i] = True
 
-                    
+
                     for point in group.points:
                         if point in select_optimize:
                             selected_groups[i] = True
@@ -1092,9 +1092,9 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         if point_index in indices_to_circle:
                             glColor3f(0.0, 0.0, 1.0)
                             self.models.draw_sphere(point.position, 600)
-                
+
                         self.models.render_generic_position_colored(point.position, point in select_optimize, "enemypoint")
-                        
+
                         enemyaction_colors = [ [1.0, 0.0, 0.0], [0.5, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.5, 0.0]    ]
                         if point.enemyaction in [1, 2, 3, 4]:
                             glColor3f(  *enemyaction_colors[point.enemyaction - 1]  )
@@ -1104,7 +1104,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                             glColor3f(  *enemyaction2_colors[point.enemyaction2 - 1]  )
                             self.models.draw_cylinder(point.position, 600, 600)
 
-                        
+
 
                         point_index += 1
 
@@ -1146,7 +1146,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     for group in group.nextgroup:
                         if group != -1 and used_colors[group] is None:
                             used_colors[group] = color_components
-                            
+
 
                     #draw arrows
                     for group, point in nextpoints:
@@ -1161,12 +1161,12 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         glEnd()
 
                         self.models.draw_arrow_head(prevpoint.position, point.position)
-                    
+
                         if selected_groups[i] or selected_groups[group]:
                             glLineWidth(1.0)
             if vismenu.itemroute.is_visible():
                 enemypoints_to_highlight = set()
-               
+
                 all_groups = self.level_file.itempointgroups.groups
                 used_colors = [None] * len(all_groups) #stores the ingoing colors
                 selected_groups = [False] * len(all_groups)
@@ -1174,8 +1174,8 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                 point_index = 0
                 for i, group in enumerate( all_groups ):
                     if len(group.points) == 0:
-                        continue 
-                        
+                        continue
+
 
                     if group in self.selected:
                         selected_groups[i] = True
@@ -1244,7 +1244,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     for group in group.nextgroup:
                         if group != -1 and used_colors[group] is None:
                             used_colors[group] = color_components
-                            
+
                     for group, point in nextpoints:
                         glColor3f(*used_colors[group])
 
@@ -1257,28 +1257,26 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         glEnd()
 
                         self.models.draw_arrow_head(prevpoint.position, point.position)
-                    
+
                         if selected_groups[i] or selected_groups[group]:
                             glLineWidth(4.0)
-        
+
             #for checkpoints
             all_groups = self.level_file.checkpoints.groups
             used_colors = [None] * len(all_groups) #stores the ingoing colors
-            selected_groups = [False] * len(all_groups)        
-            
+            selected_groups = [False] * len(all_groups)
+
             respawns_to_highlight = set()
 
             #draw checkpoint groups first the points themselves and then the connections
             if vismenu.checkpoints.is_visible():
                 checkpoints_to_highlight = set()
 
-                    
                 num_respawns = len(self.level_file.respawnpoints )
 
                 count = 0
                 for i, group in enumerate(all_groups):
 
-                    
                     if group in self.selected:
                         selected_groups[i] = True
 
@@ -1295,8 +1293,8 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                             selected_groups[i] = True
 
                             if checkpoint.respawn < num_respawns:
-                               respawns_to_highlight.add(checkpoint.respawn) 
-                            respawns_to_highlight.add 
+                               respawns_to_highlight.add(checkpoint.respawn)
+                            respawns_to_highlight.add
                             checkpoints_to_highlight.add(count)
 
                         if checkpoint.respawn < num_respawns and self.level_file.respawnpoints[checkpoint.respawn] in select_optimize:
@@ -1314,14 +1312,15 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                         glLineWidth(1.0)
                         glColor3f(*colors[i % 4])
-                        if checkpoint.type == 1 or selected_groups[i]:              
+                        if checkpoint.type == 1 or selected_groups[i] or checkpoint.lapcounter == 1:
                             glLineWidth(4.0)
-                        
-                        if checkpoint.type == 1:
+                        if checkpoint.lapcounter == 1:
+                            glColor3f( 1.0, 0.5, 0.0 )
+                        elif checkpoint.type == 1:
                             glColor3f( 1.0, 1.0, 0.0 )
-                            
-                            
-                        
+
+
+
                         #draw between
                         glBegin(GL_LINES)
                         glVertex3f(pos1.x, -pos1.z, pos1.y)
@@ -1342,7 +1341,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                         glEnd()
                         prev = checkpoint
-                
+
                 #draw thicker lines for selected ones
                 if checkpoints_to_highlight or any(selected_groups):
                     glLineWidth(8.0)
@@ -1366,7 +1365,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                 glLineWidth(1.0)
 
             glPushMatrix()
-            
+
             #draw the arrow head between successive checkpoints in the same group
             if vismenu.checkpoints.is_visible():
                 for i, group in enumerate(self.level_file.checkpoints.groups):
@@ -1391,7 +1390,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     if selected_groups[i]:
                         glLineWidth(1.0)
             #draw the arrow body between sucessive checkpoints
-            
+
             if vismenu.checkpoints.is_visible():
                 for i, group in enumerate( self.level_file.checkpoints.groups ) :
                     if selected_groups[i]:
@@ -1443,9 +1442,9 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     for group in group.nextgroup:
                         if group != -1 and used_colors[group] is None:
                             used_colors[group] = color_components
-                            
 
-                    
+
+
                     for group, point in nextpoints:
                         glColor3f(*used_colors[group])
 
@@ -1465,7 +1464,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         glEnd()
 
                         self.models.draw_arrow_head(prevpoint.end, point.end)
-                    
+
                         if selected_groups[i] or selected_groups[group]:
                             glLineWidth(1.0)
             glPopMatrix()
@@ -1486,7 +1485,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                                                                 object in select_optimize)
                     if object in select_optimize:
                         z_scale = 4800 if self.level_file.kartpoints.start_squeeze else 5300
-                        self.models.draw_wireframe_cube( object.position, 
+                        self.models.draw_wireframe_cube( object.position,
                                                          object.rotation,
                                                          Vector3( 2000, 50, z_scale   ), kartstart = True)
             if vismenu.areas.is_visible():
@@ -1731,10 +1730,10 @@ class FilterViewMenu(QMenu):
         self.itemroute = ObjectViewSelectionToggle("Item Routes", self)
         self.checkpoints = ObjectViewSelectionToggle("Checkpoints", self)
         self.respawnpoints = ObjectViewSelectionToggle("Respawn Points", self)
-        
+
         self.objects = ObjectViewSelectionToggle("Objects", self)
         self.objectroutes = ObjectViewSelectionToggle("Object Paths", self)
-        
+
         self.areas = ObjectViewSelectionToggle("Areas", self)
         self.cameras = ObjectViewSelectionToggle("Cameras", self)
         self.cameraroutes = ObjectViewSelectionToggle("Camera Paths", self)
