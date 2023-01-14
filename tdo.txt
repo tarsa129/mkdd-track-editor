@@ -32,7 +32,6 @@ came:
 
 juge:
 - when adding respawn points, use the angle of the closest two enemypoints
-- edit treeview to remove the parenthesis
 
 before release: match lorenzis with colors
 
@@ -41,6 +40,7 @@ error analyzer - i'll figure this out when i get to it
 starting mode topdown vs 3d - add to config file
 refactor options code to move stuff to libkmp
 add limit checks of 255 on everything
+for stuff with types (area / camera / object), make sure that proper handling is done for invalid ids
 add an option for "cleanup"
 - merge enemy groups, and removed unused groups
 - remove unused respawns
