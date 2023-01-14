@@ -20,7 +20,7 @@ def load_route_info(objectname):
         with open(os.path.join("object_parameters", objectname+".json"), "r") as f:
             data = json.load(f)
             if "Route Info" in data.keys():
-            
+
                 return data["Route Info"]
             else:
                 return None
@@ -50,9 +50,9 @@ def load_parameter_names(objectname):
             assets = data["Assets"]
             if len(parameter_names) != 8:
                 raise RuntimeError("Not enough or too many parameters: {0} (should be 8)".format(len(parameter_names)))
-            
+
             route_info = data["Route Info"]
-            
+
             return parameter_names, assets, route_info
     else:
         return None, None, None
@@ -83,7 +83,7 @@ class PythonIntValidator(QValidator):
 
 class DataEditor(QWidget):
     emit_3d_update = pyqtSignal()
-    
+
 
     def __init__(self, parent, bound_to):
         super().__init__(parent)
@@ -286,6 +286,29 @@ class DataEditor(QWidget):
         return line_edit, layout.itemAt(0)
 
     def add_dropdown_input(self, text, attribute, keyval_dict):
+        #create the combobox
+        combobox = QComboBox(self)
+        for val in keyval_dict:
+            combobox.addItem(val)
+
+        #create the layout and label
+        layout = self.create_labeled_widget(self, text, combobox)
+
+        def item_selected(item):
+            val = keyval_dict[item]
+            #print("selected", item)
+            setattr(self.bound_to, attribute, val)
+        combobox.currentTextChanged.connect(item_selected)
+
+       
+
+        #print("created for", text, attribute)
+
+        self.vbox.addLayout(layout)
+
+        return combobox
+
+    def add_dropdown_lineedit_input(self, text, attribute, keyval_dict, min_val, max_val):
         combobox = QComboBox(self)
         for val in keyval_dict:
             combobox.addItem(val)
@@ -298,9 +321,24 @@ class DataEditor(QWidget):
             setattr(self.bound_to, attribute, val)
 
         combobox.currentTextChanged.connect(item_selected)
+
+        #create the lineedit
+        line_edit = QLineEdit(self)
+        line_edit.setValidator(PythonIntValidator(min_val, max_val, line_edit))
+
+        def input_edited():
+            #print("Hmmmm")
+            text = line_edit.text()
+            #print("input:", text)
+
+            setattr(self.bound_to, attribute, int(text))
+
+        line_edit.editingFinished.connect(input_edited)
+        layout.addWidget(line_edit)
+
         self.vbox.addLayout(layout)
 
-        return combobox
+        return combobox, line_edit
 
     def add_multiple_integer_input(self, text, attribute, subattributes, min_val, max_val):
         line_edits = []
@@ -388,11 +426,11 @@ class DataEditor(QWidget):
         y_ang = float( y ) if y.replace('.','',1).isdigit() else 0
         z_ang = float( y ) if z.replace('.','',1).isdigit() else 0
         """
-        
+
         xang.setText(str(round(euler_angs[0], 4)))
         yang.setText(str(round(euler_angs[1], 4)))
         zang.setText(str(round(euler_angs[2], 4)))
-        
+
         """
         for attr in ("x", "y", "z"):
             if getattr(forward, attr) == 0.0:
@@ -410,9 +448,9 @@ class DataEditor(QWidget):
         forwardedits[1].setText(str(round(degs[1], 4)))
         forwardedits[2].setText(str(round(degs[2], 4)))
         """
-        
+
         """
-        
+
         forwardedits[0].setText(str(round(forward.x, 4)))
         forwardedits[1].setText(str(round(forward.y, 4)))
         forwardedits[2].setText(str(round(forward.z, 4)))
@@ -424,14 +462,14 @@ class DataEditor(QWidget):
         leftedits[1].setText(str(round(left.y, 4)))
         leftedits[2].setText(str(round(left.z, 4)))
         """
-        
+
         #self.bound_to.rotation = Rotation.from_euler(Vector3(x_ang, y_ang, z_ang))
         self.catch_text_update()
 
     def add_rotation_input(self):
         rotation = self.bound_to.rotation
 
-        
+
         angle_edits = [] #these are the checkboxes
         for attr in ("x", "y", "z"):
             line_edit = QLineEdit(self)
@@ -440,31 +478,31 @@ class DataEditor(QWidget):
             line_edit.setValidator(validator)
 
             angle_edits.append(line_edit)
-        
+
 
 
         def change_angle():
             newup = Vector3(*[float(v.text()) for v in angle_edits])
 
             self.bound_to.rotation = Rotation.from_euler(newup)
-           
+
             self.update_rotation(*angle_edits)
-            
+
         for edit in angle_edits:
             edit.editingFinished.connect(change_angle)
-       
-       
-        
-       
+
+
+
+
         layout = self.create_labeled_widgets(self, "Angles", angle_edits)
-        
-        
-        
+
+
+
         self.vbox.addLayout(layout)
 
         #return forward_edits, up_edits, left_edits
         return angle_edits
-    
+
     def set_value(self, field, val):
         field.setText(str(val))
 
@@ -547,7 +585,7 @@ def choose_data_editor(obj):
         return KartStartPointsEdit
     elif isinstance(obj, Area):
         return AreaEdit
-    
+
     elif isinstance(obj, Camera):
         return CameraEdit
     elif isinstance(obj, JugemPoint):
@@ -607,7 +645,7 @@ class EnemyPointEdit(DataEditor):
         self.position[2].setText(str(round(obj.position.z, 3)))
 
         self.scale.setText(str(obj.scale))
-       
+
         if obj.enemyaction < len(ENPT_Setting1):
             self.enemyaction.setCurrentIndex(obj.enemyaction)
         else:
@@ -653,7 +691,7 @@ class ItemPointEdit(DataEditor):
         self.position[0].setText(str(round(obj.position.x, 3)))
         self.position[1].setText(str(round(obj.position.y, 3)))
         self.position[2].setText(str(round(obj.position.z, 3)))
-       
+
         if obj.setting1 < len(ITPT_Setting1):
             self.setting1.setCurrentIndex(obj.setting1)
         else:
@@ -693,11 +731,11 @@ class CheckpointEdit(DataEditor):
         self.respawn = self.add_integer_input("Respawn", "respawn",
                                            MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
         self.type = self.add_checkbox("Key CP", "type",
-                                      0, 1)                
+                                      0, 1)
 
     def update_data(self):
         obj: Checkpoint = self.bound_to
-        
+
         self.start[0].setText(str(round(obj.start.x, 3)))
         self.start[1].setText(str(round(obj.start.z, 3)))
 
@@ -709,13 +747,13 @@ class CheckpointEdit(DataEditor):
 
 class ObjectRouteEdit(DataEditor):
     def setup_widgets(self):
-        self.smooth = self.add_dropdown_input("Sharp/Smooth motion", "smooth", POTI_Setting1) 
-        self.cyclic = self.add_dropdown_input("Cyclic/Back and forth motion", "cycle", POTI_Setting2) 
+        self.smooth = self.add_dropdown_input("Sharp/Smooth motion", "smooth", POTI_Setting1)
+        self.cyclic = self.add_dropdown_input("Cyclic/Back and forth motion", "cycle", POTI_Setting2)
 
     def update_data(self):
         obj: Route = self.bound_to
-        self.smooth.setCurrentIndex( min(obj.smooth, 1)) 
-        self.cyclic.setCurrentIndex( min(obj.cyclic, 1)) 
+        self.smooth.setCurrentIndex( min(obj.smooth, 1))
+        self.cyclic.setCurrentIndex( min(obj.cyclic, 1))
 
 class ObjectRoutePointEdit(DataEditor):
     def setup_widgets(self):
@@ -731,8 +769,8 @@ class ObjectRoutePointEdit(DataEditor):
         self.position[0].setText(str(round(obj.position.x, 3)))
         self.position[1].setText(str(round(obj.position.y, 3)))
         self.position[2].setText(str(round(obj.position.z, 3)))
-        self.unk1.setText(str(obj.unk1)) 
-        self.unk2.setText(str(obj.unk2)) 
+        self.unk1.setText(str(obj.unk1))
+        self.unk2.setText(str(obj.unk2))
 
 class KMPEdit(DataEditor):
     def setup_widgets(self):
@@ -741,21 +779,21 @@ class KMPEdit(DataEditor):
                                         MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
 
         self.speed_modifier = self.add_decimal_input("Speed Modifier", "speed_modifier", -inf, +inf)
-                                        
-        
+
+
 
         self.lens_flare = self.add_checkbox("Enable Lens Flare", "lens_flare",
                                             off_value=0, on_value=1)
 
         self.flare_colorbutton, self.flare_color = self.add_color_input("Flare Color", "flare_color", ["r", "g", "b"],
                                                            MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        self.flare_colorbutton.clicked.connect(lambda: self.open_color_picker_light("flare_color") )  
+        self.flare_colorbutton.clicked.connect(lambda: self.open_color_picker_light("flare_color") )
         self.flare_alpha = self.add_integer_input("Flare Alpha %", "flare_alpha",
                                            MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
 
-            
 
-       
+
+
 
     def update_data(self):
         obj: KMP = self.bound_to
@@ -768,10 +806,10 @@ class KMPEdit(DataEditor):
         self.flare_alpha.setText(str(obj.flare_alpha))
         self.speed_modifier.setText(str(obj.speed_modifier))
 
-    def open_color_picker_light(self, attrib): 
+    def open_color_picker_light(self, attrib):
         obj = self.bound_to
 
-    
+
         color_dia = QColorDialog(self)
         #color_dia.setCurrentColor( QColor(curr_color.r, curr_color.g, curr_color.b, curr_color.a) )
 
@@ -779,11 +817,11 @@ class KMPEdit(DataEditor):
         if color.isValid():
             color_comps = color.getRgbF()
             color_vec = getattr(obj, attrib )
-            
+
             color_vec.r = int(color_comps[0] * 255)
             color_vec.g = int(color_comps[1] * 255)
             color_vec.b = int(color_comps[2] * 255)
-            
+
             self.update_data()
 
 class ObjectEdit(DataEditor):
@@ -798,7 +836,9 @@ class ObjectEdit(DataEditor):
         self.scale = self.add_multiple_decimal_input("Scale", "scale", ["x", "y", "z"],
                                                     -inf, +inf)
         self.rotation = self.add_rotation_input()
-        self.objectid = self.add_dropdown_input("Object Type", "objectid", REVERSEOBJECTNAMES)
+        self.objectid, self.objectid_edit = self.add_dropdown_lineedit_input("Object Type", "objectid", REVERSEOBJECTNAMES, 0, 755)
+        self.objectid.currentTextChanged.disconnect()
+        self.objectid_edit.editingFinished.disconnect()
 
         self.route, self.route_label = self.add_integer_input_hideable("Object Path ID", "route",
                                              MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
@@ -814,15 +854,15 @@ class ObjectEdit(DataEditor):
                                              MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
             )
 
-        self.objectid.currentTextChanged.connect(self.update_name)
-        self.objectid.currentTextChanged.connect(self.rename_object_parameters)
-        
+        self.objectid.currentTextChanged.connect(self.object_id_combo_changed)
+        self.objectid_edit.editingFinished.connect(self.object_id_edit_changed)
+
         self.route.editingFinished.disconnect()
         self.route.editingFinished.connect(self.update_route_used)
 
         if (inthemaking):
             self.set_default_values()
-            
+
 
         self.assets = self.add_label("Required Assets: Unknown")
         self.assets.setWordWrap(True)
@@ -830,13 +870,53 @@ class ObjectEdit(DataEditor):
         hint.setVerticalPolicy(QSizePolicy.Minimum)
         self.assets.setSizePolicy(hint)
 
+    def object_id_edit_changed(self):
+        new = int(self.objectid_edit.text()) #grab text from the lineedit
+        self.update_combobox(new) #use it to update the combobox
+        self.update_name(new) #do the main editing
+        self.rename_object_parameters( self.get_objectname(new) )
+
+    def object_id_combo_changed(self):
+        new = REVERSEOBJECTNAMES[ self.objectid.currentText() ] #grab id from combobox
+        self.update_lineedit(new)
+        self.update_name( new )
+        self.rename_object_parameters( self.get_objectname(new) )
+
+    def update_name(self, new):
+        obj: MapObject = self.bound_to
+        obj.objectid = new
+        self.set_default_values()
+
+        super().update_name()
+
+    def get_objectname(self, objectid):
+        if objectid not in OBJECTNAMES:
+            return "INVALID"
+        else:
+            return OBJECTNAMES[objectid]
+
+    def update_lineedit(self, objectid):
+        self.objectid_edit.editingFinished.disconnect()
+        self.objectid_edit.setText(str(objectid))
+        self.objectid_edit.editingFinished.connect(self.object_id_edit_changed)
+
+    def update_combobox(self, objectid):
+        self.objectid.currentTextChanged.disconnect()
+        name = self.get_objectname(objectid)
+        index = self.objectid.findText(name)
+        self.objectid.setCurrentIndex(index)
+        self.objectid.currentTextChanged.connect(self.object_id_combo_changed)
+
     def rename_object_parameters(self, current):
-        
+
         parameter_names, assets, route_info = load_parameter_names(current)
 
         #parameter_names = None
         #assets = []
-        
+        self.route.setVisible( route_info is not None)
+        self.route_label.setVisible( route_info is not None)
+
+
         if parameter_names is None:
             for i in range(8):
                 self.userdata[i][0].setText("Obj Data {0}".format(i+1))
@@ -868,29 +948,25 @@ class ObjectEdit(DataEditor):
             self.route.setVisible(route_info is not None)
             self.route_label.setVisible(route_info is not None)
 
-            
-                
         if hasattr(self, "in_production") and self.in_production:
             self.set_default_values()
     def set_default_values(self):
-    
-        #assert (1 == 0)
-    
+
         obj: MapObject = self.bound_to
-    
+
         if obj.objectid not in OBJECTNAMES:
             name = "INVALID"
         else:
             name = OBJECTNAMES[obj.objectid]
-        
+
         if name != "INVALID":
             defaults = load_default_info(name)
-            
-            
+
+
             if defaults is not None:
                 defaults = [0 if x is None else x for x in defaults]
                 obj.userdata = defaults.copy()
-                
+
                 for i in range(8):
                     if defaults[i] is not None:
                         self.userdata[i][1].setText(str(obj.userdata[i]))
@@ -911,19 +987,17 @@ class ObjectEdit(DataEditor):
 
         self.update_rotation(*self.rotation)
 
-        if obj.objectid not in OBJECTNAMES:
-            name = "INVALID"
-        else:
-            name = OBJECTNAMES[obj.objectid]
-        index = self.objectid.findText(name)
-        self.objectid.setCurrentIndex(index)
+        self.update_combobox(obj.objectid)
+        self.update_lineedit(obj.objectid)
+
+        self.rename_object_parameters( self.get_objectname(obj.objectid) )
 
         self.route.setText(str(obj.route))
-       
+
         self.single.setChecked( obj.single != 0)
         self.double.setChecked( obj.double != 0)
         self.triple.setChecked( obj.triple != 0)
-  
+
         if load_defaults:
             self.in_production = load_defaults
             self.set_default_values()
@@ -934,12 +1008,13 @@ class ObjectEdit(DataEditor):
         #print('update route used', self.bound_to.route)
         #emit signal with old and new route numbers, for easier changing
         self.emit_route_update.emit(self.bound_to, self.bound_to.route, int(self.route.text()) )
-        
+
         #now update the value
         self.bound_to.route = int(self.route.text())
-        
+
         #update the name, may be needed
-        self.update_name()
+        self.update_name(self.bound_to.objectid)
+
 
 class KartStartPointsEdit(DataEditor):
     def setup_widgets(self):
@@ -956,7 +1031,7 @@ class KartStartPointsEdit(DataEditor):
     def update_starting_info(self):
         self.bound_to.pole_position = self.pole_position.currentIndex()
         self.bound_to.start_squeeze = self.start_squeeze.currentIndex()
-        
+
         self.update_name()
 
     def update_name(self):
@@ -967,10 +1042,10 @@ class KartStartPointEdit(DataEditor):
         self.position = self.add_multiple_decimal_input("Position", "position", ["x", "y", "z"],
                                                         -inf, +inf)
         self.rotation = self.add_rotation_input()
-        
+
         self.playerid = self.add_integer_input("Player ID", "playerid",
                                                MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        
+
 
     def update_data(self):
         obj: KartStartPoint = self.bound_to
@@ -992,19 +1067,19 @@ class AreaEdit(DataEditor):
         self.rotation = self.add_rotation_input()
 
         self.area_type = self.add_dropdown_input("Area Type", "type", AREA_Type)
-                                                
+
 
         self.shape = self.add_dropdown_input("Shape", "shape", AREA_Shape)
 
         self.priority = self.add_integer_input("Priority", "priority",
-                                           MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)                                           
+                                           MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
 
         self.camera_index, self.camera_index_label = self.add_integer_input_hideable("Camera Index", "camera_index",
                                                    MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
 
         self.setting1, self.setting1_label = self.add_integer_input_hideable("Setting 1", "setting1", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
         self.setting2, self.setting2_label = self.add_integer_input_hideable("Setting 2", "setting2", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
-        
+
         self.routeid, self.routeid_label = self.add_integer_input_hideable("Route ID", "route", MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
         self.enemypointid, self.enemypointid_label = self.add_integer_input_hideable("Enemy Point ID", "enemypointid", MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
 
@@ -1028,7 +1103,7 @@ class AreaEdit(DataEditor):
         self.area_type.setCurrentIndex( obj.type )
         self.camera_index.setText(str(obj.camera_index))
         self.priority.setText(str(obj.priority))
-    
+
         self.setting1.setText(str(obj.setting1))
         self.setting2.setText(str(obj.setting2))
         self.routeid.setText(str(obj.route))
@@ -1047,14 +1122,14 @@ class AreaEdit(DataEditor):
         if obj.type in [2, 3, 6, 8, 9]:
             self.setting1_label.setText(setting1_labels[ obj.type ])
         self.setting1_label.setVisible(obj.type in [2, 3, 6, 8, 9])
-        
+
 
         setting2_labels = { 3: "Moving Water Speed", 6: "Transition Time (frames)"}
         self.setting2.setVisible(obj.type in [3, 6])
         if obj.type in [3, 6]:
             self.setting2_label.setText( setting2_labels[obj.type]   )
         self.setting2_label.setVisible(obj.type in [3, 6])
-        
+
 
         self.routeid.setVisible(obj.type == 3)
         self.routeid_label.setVisible(obj.type == 3)
@@ -1069,10 +1144,10 @@ class AreaEdit(DataEditor):
         #print('update route used', self.bound_to.route)
         #emit signal with old and new route numbers, for easier changing
         self.emit_camera_update.emit(self.bound_to, self.bound_to.camera_index, int(self.camera_index.text()) )
-        
+
         #now update the value
         self.bound_to.camera_index = int(self.camera_index.text())
-        
+
         #update the name, may be needed
         self.update_name()
 
@@ -1099,12 +1174,12 @@ class CameraEdit(DataEditor):
         self.position = self.add_multiple_decimal_input("Position", "position", ["x", "y", "z"],
                                                         -inf, +inf)
         self.rotation = self.add_rotation_input()
-        
+
         self.position2 = self.add_multiple_decimal_input("Start Point", "position2", ["x", "y", "z"],
                                                         -inf, +inf)
         self.position3 = self.add_multiple_decimal_input("End Point", "position3", ["x", "y", "z"],
                                                         -inf, +inf)
-        
+
         self.type = self.add_dropdown_input("Camera Type", "type", CAME_Type)
 
         self.nextcam = self.add_integer_input("Next Cam", "nextcam",
@@ -1149,7 +1224,7 @@ class CameraEdit(DataEditor):
 
         self.update_rotation(*self.rotation)
 
-   
+
         self.type.setCurrentIndex( obj.type )
         self.nextcam.setText(str(obj.nextcam))
         self.shake.setText(str(obj.shake))
@@ -1163,7 +1238,7 @@ class CameraEdit(DataEditor):
         self.fov[0].setText(str(obj.fov.start))
         self.fov[1].setText(str(obj.fov.end))
         self.camduration.setText(str(obj.camduration))
-    
+
 
         self.nextcam.setText(str(obj.nextcam))
 
@@ -1171,10 +1246,10 @@ class CameraEdit(DataEditor):
         #print('update route used', self.bound_to.route)
         #emit signal with old and new route numbers, for easier changing
         self.emit_route_update.emit(self.bound_to, self.bound_to.route, int(self.route.text()) )
-        
+
         #now update the value
         self.bound_to.route = int(self.route.text())
-        
+
         #update the name, may be needed
         self.update_name()
 
@@ -1183,7 +1258,7 @@ class RespawnPointEdit(DataEditor):
         self.position = self.add_multiple_decimal_input("Position", "position", ["x", "y", "z"],
                                                         -inf, +inf)
         self.rotation = self.add_rotation_input()
-        
+
         #self.respawn_id = self.add_integer_input("Respawn ID", "respawn_id", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
         self.range = self.add_integer_input("Range", "range",
                                            MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)

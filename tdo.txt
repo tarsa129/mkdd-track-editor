@@ -9,9 +9,6 @@ enemy/item/checkpoint
 - checkpoint: make constant values for highlighted, etc
 
 gobj:
-- proper hiding of routes field
-- when id is changed from 0, fill in default settings
-- add a separate lineedit for ids along with the dropdown
 - manually improve all descriptions / settings / and add default values
 
 poti:
