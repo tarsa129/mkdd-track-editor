@@ -122,14 +122,14 @@ class Rotation(object):
     @classmethod
     def from_file(cls, f, printe = False):
         euler_angles = list(unpack(">fff", f.read(12)))
-        
+
         return cls(*euler_angles)
-        
+
     def get_vectors(self):
-        
+
         y = self.y - 90
         y, z = self.z * -1, self.y
-        
+
         r = R.from_euler('xyz', [self.x, y, z], degrees=True)
         vecs = r.as_matrix()
         vecs = vecs.transpose()
@@ -155,7 +155,7 @@ class Rotation(object):
         return self.get_rotation_matrix()
 
     def get_euler(self):
-        
+
         vec = [self.x % 360, self.y % 360 , self.z % 360]
 
         return vec
@@ -164,9 +164,9 @@ class Rotation(object):
     def from_euler(cls, degs):
         rotation = cls(degs.x, degs.y, degs.z )
 
-        
+
         return rotation
-        
+
 
     def copy(self):
         return deepcopy(self)
@@ -176,7 +176,7 @@ class ObjectContainer(list):
         super().__init__(*args, **kwargs)
         self.assoc = None
 
-    @classmethod 
+    @classmethod
     def from_empty(cls):
         container = cls()
         return container
@@ -274,7 +274,7 @@ class PointGroup(object):
 
         self.nextgroup = [new_id] + [-1] * 5
         self.prevgroup = [new_id if id == self.id else id for id in self.prevgroup]
-        
+
         return group
 
     def remove_after(self, point):
@@ -361,7 +361,7 @@ class PointGroups(object):
     def merge_groups(self):
 
         if len(self.groups) < 2:
-            return 
+            return
 
         restart = True
         i = 0
@@ -375,8 +375,8 @@ class PointGroups(object):
                 if 0 in group.nextgroup:
                     i += 1 #do not merge with the start
                     continue
-                del_group = self.groups[ group.nextgroup[0] ] 
-                
+                del_group = self.groups[ group.nextgroup[0] ]
+
                 #print('merge ' + str(i) + " and " + str(del_group.id))
                 if group.id == del_group.id:
                     print("ERROR: TRYING TO MERGE INTO ITSELF", group.id)
@@ -389,16 +389,16 @@ class PointGroups(object):
 
                 #replace this group's next with the deleted group's next
                 group.nextgroup = del_group.nextgroup.copy()
-        
-                #around the deleted groups: 
+
+                #around the deleted groups:
 
                 for this_group in self.groups:
                     if this_group.id > del_group.id:
                         this_group.id -= 1
-                for this_group in self.groups: 
+                for this_group in self.groups:
                     #replace links to the deleted group with the group it was merged into
                     this_group.prevgroup = [ id if id != del_group.id else this_group.id for id in this_group.prevgroup]
-                    
+
                     #this_group.nextgroup = [ id if id != del_group.id else this_group.id for id in group.nextgroup]
 
                     #deal with others
@@ -424,13 +424,13 @@ class PointGroups(object):
 
     def remove_group(self, del_group, merge = True):
         self.groups.remove(del_group)
-        
-        #around the deleted groups: 
+
+        #around the deleted groups:
 
         for group in self.groups :
             if group.id > del_group.id:
                 group.id -= 1
-            
+
             #remove previous links to the deleted group
             group.prevgroup = [ id for id in group.prevgroup if id != del_group.id]
             group.nextgroup = [ id for id in group.nextgroup if id != del_group.id]
@@ -474,10 +474,10 @@ class PointGroups(object):
             if idx in visited:
                 to_visit.pop(0)
             visited.append(idx)
-           
-            to_visit.extend( [id for id in self.groups[idx].nextgroup if id != -1 and id not in visited] ) 
-              
-            
+
+            to_visit.extend( [id for id in self.groups[idx].nextgroup if id != -1 and id not in visited] )
+
+
 
         unused_groups = [self.groups[i] for i in list( range(1, len(self.groups) )) if i not in visited]
         num_points = [len(group.points) for group in unused_groups]
@@ -494,11 +494,11 @@ class EnemyPoint(KMPPoint):
                  position,
                  scale,
                  enemyaction,
-                 enemyaction2, 
+                 enemyaction2,
                  unknown):
         super().__init__()
         self.position = position
- 
+
         self.scale = scale
         self.enemyaction = enemyaction
         self.enemyaction2 = enemyaction2
@@ -516,7 +516,7 @@ class EnemyPoint(KMPPoint):
         point = cls.new()
         point.position = Vector3(*unpack(">fff", f.read(12)))
         point.scale = read_float(f)
-        point.enemyaction = read_uint16(f) 
+        point.enemyaction = read_uint16(f)
         point.enemyaction2 = read_uint8(f)
         point.unknown = read_uint8(f)
 
@@ -544,16 +544,16 @@ class EnemyPointGroup(PointGroup):
         group.id = idx
         start_idx = read_uint8(f)
         len = read_uint8(f)
-        
- 
-        group.prevgroup = list(unpack(">bbbbbb", f.read(6)) ) 
-        group.nextgroup = list(unpack(">bbbbbb", f.read(6)) ) 
+
+
+        group.prevgroup = list(unpack(">bbbbbb", f.read(6)) )
+        group.nextgroup = list(unpack(">bbbbbb", f.read(6)) )
         f.read( 2)
-        
+
         for i in range(start_idx, start_idx + len):
             group.points.append(points[i])
             points[i].group = idx
-        
+
         return group
 
     def copy_group(self, new_id):
@@ -568,10 +568,10 @@ class EnemyPointGroup(PointGroup):
         for point in self.points:
             point.write(f)
         return len(self.points)
-        
+
     def write_enph(self, f, index):
-         f.write(pack(">B", index ) ) 
-         f.write(pack(">B", len(self.points) ) ) 
+         f.write(pack(">B", index ) )
+         f.write(pack(">B", len(self.points) ) )
          for i in range(6):
             f.write(pack(">b", self.prevgroup[i]))
          for i in range(6):
@@ -591,7 +591,7 @@ class EnemyPointGroups(PointGroups):
     def remove_point(self, del_point):
         """
         type_4_areas= [ area for area in areas if area.type == 4]
-        groupslen = [ len(group.points) for group in self.groups ]  
+        groupslen = [ len(group.points) for group in self.groups ]
         points_before = sum(groupslen[0:del_group.id])
         points_includ = sum(groupslen[0:del_group.id + 1])
 
@@ -606,7 +606,7 @@ class EnemyPointGroups(PointGroups):
     def remove_group(self, del_group, merge = True):
         """
         type_4_areas= [ area for area in areas if area.type == 4]
-        groupslen = [ len(group.points) for group in self.groups ]  
+        groupslen = [ len(group.points) for group in self.groups ]
         points_before = sum(groupslen[0:del_group.id])
         points_includ = sum(groupslen[0:del_group.id + 1])
 
@@ -621,23 +621,23 @@ class EnemyPointGroups(PointGroups):
     @classmethod
     def from_file(cls, f):
         enemypointgroups = cls()
-        
+
         assert f.read(4) == b"ENPT"
         count = read_uint16(f)
         f.read(2)
-        
-        
+
+
         all_points = []
         #read the enemy points
         for i in range(count):
             enemypoint = EnemyPoint.from_file(f)
             all_points.append(enemypoint)
-        
+
         assert f.read(4) == b"ENPH"
         count = read_uint16(f)
         f.read(2)
-        
-       
+
+
         for i in range(count):
             enemypath = EnemyPointGroup.from_file(f, i, all_points)
             enemypointgroups.groups.append(enemypath)
@@ -646,31 +646,31 @@ class EnemyPointGroups(PointGroups):
 
     def write(self, f):
 
-    
+
         f.write(b"ENPT")
-        count_offset = f.tell() 
+        count_offset = f.tell()
         f.write(pack(">H", 0) ) # will be overridden later
         f.write(pack(">H", 0) )
-        
+
         sum_points = 0
         point_indices = []
-        
+
         for group in self.groups:
             point_indices.append(sum_points)
-            sum_points += group.write_points_enpt(f)        
+            sum_points += group.write_points_enpt(f)
         enph_offset = f.tell()
-            
+
         if sum_points > 0xFF:
             raise Exception("too many enemy points")
         else:
             f.seek(count_offset)
             f.write(pack(">H", sum_points) )
-             
+
         f.seek(enph_offset)
         f.write(b"ENPH")
-        f.write(pack(">H", len(self.groups) ) ) 
+        f.write(pack(">H", len(self.groups) ) )
         f.write(pack(">H", 0) )
-        
+
         for idx, group in enumerate( self.groups ):
             group.write_enph(f, point_indices[idx])
 
@@ -690,7 +690,7 @@ class ItemPoint(KMPPoint):
     @classmethod
     def new(cls):
         return cls( Vector3(0.0, 0.0, 0.0), 0, 1, 0)
-        
+
     def set_setting2(self, setting2):
         self.unknown = setting2 & 0x4
         self.lowpriority = setting2 & 0x2
@@ -698,12 +698,12 @@ class ItemPoint(KMPPoint):
 
     @classmethod
     def from_file(cls, f):
-    
+
         point = cls.new()
 
         point.position = Vector3(*unpack(">fff", f.read(12)))
         point.scale = read_float(f)
-        point.setting1 = read_uint16(f) 
+        point.setting1 = read_uint16(f)
         point.set_setting2(read_uint16(f))
 
         return point
@@ -732,16 +732,16 @@ class ItemPointGroup(PointGroup):
         group.id = idx
         start_idx = read_uint8(f)
         len = read_uint8(f)
-        
- 
-        group.prevgroup = list( unpack(">bbbbbb", f.read(6)) ) 
-        group.nextgroup = list(unpack(">bbbbbb", f.read(6)) ) 
+
+
+        group.prevgroup = list( unpack(">bbbbbb", f.read(6)) )
+        group.nextgroup = list(unpack(">bbbbbb", f.read(6)) )
         f.read( 2)
-        
+
         for i in range(start_idx, start_idx + len):
             group.points.append(points[i])
             points[i].group = idx
-        
+
         return group
 
     def copy_group(self, new_id):
@@ -756,13 +756,13 @@ class ItemPointGroup(PointGroup):
         for point in self.points:
             point.write(f)
         return len(self.points)
-        
+
     def write_itph(self, f, index):
          self.prevgroup += [-1] * (6 - len(self.prevgroup) )
          self.nextgroup += [-1] * (6 - len(self.nextgroup) )
-    
-         f.write(pack(">B", index ) ) 
-         f.write(pack(">B", len(self.points) ) ) 
+
+         f.write(pack(">B", index ) )
+         f.write(pack(">B", len(self.points) ) )
          for i in range(6):
             f.write(pack(">b", self.prevgroup[i]))
          for i in range(6):
@@ -783,24 +783,24 @@ class ItemPointGroups(PointGroups):
     @classmethod
     def from_file(cls, f):
         itempointgroups = cls()
-        
+
         assert f.read(4) == b"ITPT"
         count = read_uint16(f)
         f.read(2)
-        
-        
+
+
         all_points = []
         #read the item points
         for i in range(count):
             itempoint = ItemPoint.from_file(f)
             all_points.append(itempoint)
-        
-        
+
+
         assert f.read(4) == b"ITPH"
         count = read_uint16(f)
         f.read(2)
-        
-       
+
+
         for i in range(count):
             itempath = ItemPointGroup.from_file(f, i, all_points)
             itempointgroups.groups.append(itempath)
@@ -809,36 +809,36 @@ class ItemPointGroups(PointGroups):
     def write(self, f):
 
         f.write(b"ITPT")
-        
+
         count_offset = f.tell()
         f.write(pack(">H", 0) ) #overwritten
         f.write(pack(">H", 0) )
-        
+
         sum_points = 0
         point_indices = []
-        
+
         for group in self.groups:
             point_indices.append(sum_points)
             sum_points += group.write_itpt(f)
-        
+
         itph_offset = f.tell()
-        
+
         if sum_points > 0xFF:
             raise Exception("too many enemy points")
         else:
             f.seek(count_offset)
             f.write(pack(">H", sum_points) )
-             
+
         f.seek(itph_offset)
-        
+
         f.write(b"ITPH")
-        f.write(pack(">H", len(self.groups) ) ) 
+        f.write(pack(">H", len(self.groups) ) )
         f.write(pack(">H", 0) )
-        
+
         for idx, group in enumerate( self.groups ):
             group.write_itph(f, point_indices[idx])
-   
-    
+
+
         return  itph_offset
 
 class Checkpoint(KMPPoint):
@@ -849,7 +849,7 @@ class Checkpoint(KMPPoint):
         self.respawn = respawn
         self.type = type
 
-        
+
         self.prev = -1
         self.next = -1
 
@@ -863,24 +863,24 @@ class Checkpoint(KMPPoint):
         distances = [ respawn.position.distance_2d( mid  ) for respawn in respawns ]
         smallest = [ i for i, x in enumerate(distances) if x == min(distances)]
         self.respawn = smallest[0]
-   
+
 
     @classmethod
     def from_file(cls, f):
         checkpoint = cls.new()
-        
+
         checkpoint.start = Vector3(*unpack(">f", f.read(4) ), 0, *unpack(">f", f.read(4) ) )
         checkpoint.end = Vector3(*unpack(">f", f.read(4) ), 0, *unpack(">f", f.read(4) ) )
 
         checkpoint.respawn = read_uint8(f) #respawn
-        
+
         checkpoint_type = read_uint8(f)
         if checkpoint_type != 0xFF:
             checkpoint.type = 1
-        
+
         checkpoint.prev = read_uint8(f)
         checkpoint.next = read_uint8(f)
-        
+
         return checkpoint
 
 
@@ -888,7 +888,7 @@ class Checkpoint(KMPPoint):
         f.write(pack(">ff", self.start.x, self.start.z))
         f.write(pack(">ff", self.end.x, self.end.z))
         f.write(pack(">b", self.respawn))
-        
+
         if self.type == 1:
             f.write(pack(">b", key))
             key += 1
@@ -919,9 +919,9 @@ class CheckpointGroup(PointGroup):
 
     @classmethod
     def from_file(cls, f, all_points):
-    
+
         checkpointgroup = cls.new()
-    
+
         start_point = read_uint8(f)
         end_point = read_uint8(f)
 
@@ -929,27 +929,27 @@ class CheckpointGroup(PointGroup):
             assert( all_points[start_point].prev == 0xFF )
             assert( all_points[start_point + end_point - 1].next == 0xFF)
         checkpointgroup.points = all_points[start_point: start_point + end_point]
-        
+
         checkpointgroup.prevgroup = list(unpack(">bbbbbb", f.read(6)))
         checkpointgroup.nextgroup = list(unpack(">bbbbbb", f.read(6)))
         f.read(2)
-        
+
         return checkpointgroup
-        
-    
+
+
     def write_ckpt(self, f, key, prev):
 
         if len(self.points) > 0:
             key = self.points[0].write(f, -1, 1 + prev, key)
-            
+
             for i in range(1, len( self.points) -1 ):
                 key = self.points[i].write(f, i-1 + prev, i + 1 + prev, key)
             key = self.points[-1].write(f, len(self.points) - 2 + prev, -1, key)
         return len(self.points), key
-        
+
     def write_ckph(self, f, index):
-         f.write(pack(">B", index ) ) 
-         f.write(pack(">B", len(self.points) ) ) 
+         f.write(pack(">B", index ) )
+         f.write(pack(">B", len(self.points) ) )
          f.write(pack(">bbbbbb", self.prevgroup[0], self.prevgroup[1], self.prevgroup[2], self.prevgroup[3], self.prevgroup[4], self.prevgroup[5]) )
          f.write(pack(">bbbbbb", self.nextgroup[0], self.nextgroup[1], self.nextgroup[2], self.nextgroup[3], self.nextgroup[4], self.nextgroup[5]) )
          f.write(pack(">H",  0) )
@@ -967,27 +967,27 @@ class CheckpointGroups(PointGroups):
     @classmethod
     def from_file(cls, f):
         checkpointgroups = cls()
-        
+
         assert f.read(4) == b"CKPT"
         count = read_uint16(f)
         f.read(2)
-        
+
         all_points = []
         #read the enemy points
         for i in range(count):
             checkpoint = Checkpoint.from_file(f)
             all_points.append(checkpoint)
-        
-        
+
+
         assert f.read(4) == b"CKPH"
         count = read_uint16(f)
         f.read(2)
-        
+
         for i in range(count):
             checkpointpath = CheckpointGroup.from_file(f, all_points)
             checkpointgroups.groups.append(checkpointpath)
-        
-        
+
+
         return checkpointgroups
 
     def write(self, f):
@@ -995,14 +995,14 @@ class CheckpointGroups(PointGroups):
         count_offset = f.tell()
         f.write(pack(">H", 0) ) # will be overridden later
         f.write(pack(">H", 0) )
-        
+
         sum_points = 0
         indices_offset = []
         num_key = 0
-        
+
         for group in self.groups:
             indices_offset.append(sum_points)
-            idx_points, num_key = group.write_ckpt(f, num_key, sum_points) 
+            idx_points, num_key = group.write_ckpt(f, num_key, sum_points)
             sum_points += idx_points
         ckph_offset = f.tell()
 
@@ -1011,42 +1011,42 @@ class CheckpointGroups(PointGroups):
         else:
             f.seek(count_offset)
             f.write(pack(">H", sum_points) )
-        
+
         f.seek(ckph_offset)
         f.write(b"CKPH")
-        f.write(pack(">H", len(self.groups) ) ) 
+        f.write(pack(">H", len(self.groups) ) )
         f.write(pack(">H", 0) )
-        
-        
+
+
         for idx, group in enumerate( self.groups ):
             group.write_ckph(f, indices_offset[idx])
         return ckph_offset
-     
+
     def set_key_cps(self):
         #assume that checkpoint 0 is always the first one
         to_visit = [0]
         splits = [0]
-        
+
         while len(to_visit) > 0:
             i = to_visit[0]
             checkgroup = self.groups[i]
-            
+
             #print(splits)
-            
+
             if len(splits) == 1:
                 checkgroup.points[0].unk2 = 1
-                
+
                 for i in range(10, len(checkgroup.points), 10):
                     checkgroup.points[i].unk2 = 1
-                
+
                 checkgroup.points[-1].unk2 = 1
 
             actual_next = [x for x in checkgroup.nextgroup if x != -1]
-                
+
             splits.extend(actual_next)
             splits = [*set(splits)]
             splits = [x for x in splits if x != i]
-            
+
             to_visit.extend(actual_next)
             to_visit = [*set(to_visit)]
             to_visit.pop(0)
@@ -1073,7 +1073,7 @@ class Route(object):
     @classmethod
     def new(cls):
         return cls()
-    
+
     def copy(self):
         this_class = self.__class__
         obj = this_class.new()
@@ -1081,9 +1081,9 @@ class Route(object):
         obj._pointcount = len(obj.points)
         obj.smooth = self.smooth
         obj.cyclic = self.cyclic
-        
+
         return obj
-        
+
     def to_object(self):
         object_route = ObjectRoute()
         self.copy_params_to_child(object_route)
@@ -1101,7 +1101,7 @@ class Route(object):
         new_route.used_by = self.used_by
 
         return new_route
-        
+
 
 
     @classmethod
@@ -1111,7 +1111,7 @@ class Route(object):
         route.smooth = read_uint8(f)
         route.cyclic = read_uint8(f)
 
-        
+
         for i in range(route._pointcount):
             route.points.append( RoutePoint.from_file(f, route)  )
 
@@ -1126,12 +1126,12 @@ class Route(object):
 
     def write(self, f):
          f.write(pack(">H", len(self.points) ) )
-         
+
 
          f.write(pack(">B", self.smooth & 0xFF ) )
-         
+
          f.write(pack(">B", self.cyclic) )
-         
+
          for point in self.points[0:-1]:
             point.write(f)
          if len(self.points) > 0:
@@ -1181,13 +1181,13 @@ class RoutePoint(object):
     @classmethod
     def from_file(cls, f, partof = None):
         position = Vector3(*unpack(">fff", f.read(12)))
-        point = cls(position) 
-        
+        point = cls(position)
+
         point.unk1 = read_uint16(f) & 0xFF
         point.unk2 = read_uint16(f) & 0xFF
         point.partof = partof
         return point
-        
+
 
     def copy(self):
         this_class = self.__class__
@@ -1217,8 +1217,8 @@ class MapObject(object):
         self.position = position
         self.rotation = Rotation.default()
         self.scale = Vector3(1.0, 1.0, 1.0)
-        
-        
+
+
         self.route = -1
         self.userdata = [0 for i in range(8)]
 
@@ -1232,7 +1232,7 @@ class MapObject(object):
     @classmethod
     def new(cls, obj_id = 101):
         return cls(Vector3(0.0, 0.0, 0.0), obj_id)
-        
+
     @classmethod
     def default_item_box(cls):
         item_box = cls(Vector3(0.0, 0.0, 0.0), 101)
@@ -1243,47 +1243,47 @@ class MapObject(object):
         self.double = prescence & 0x2
         self.triple = prescence & 0x4
 
-    @classmethod 
+    @classmethod
     def from_file(cls, f):
         object = cls.new()
-        
+
         object.objectid = read_uint16(f)
 
-                
+
         f.read(2)
         object.position = Vector3(*unpack(">fff", f.read(12)))
         object.rotation = Rotation.from_file(f)
-        
+
         object.scale = Vector3(*unpack(">fff", f.read(12)))
         object.route = read_int16(f)
         object.userdata = unpack(">hhhhhhhh", f.read(2 * 8))
         object.split_prescence( read_uint16(f) )
-        
+
         return object
 
     def write(self, f):
 
         f.write(pack(">H", self.objectid  ))
 
-        
+
         f.write(pack(">H", 0) )
         f.write(pack(">fff", self.position.x, self.position.y, self.position.z))
         self.rotation.write(f)
         f.write(pack(">fff", self.scale.x, self.scale.y, self.scale.z))
         f.write(pack(">h", self.route) )
-        
+
 
         for i in range(8):
             f.write(pack(">h", self.userdata[i]))
 
         presence = self.single | (self.double << 1) | (self.triple << 2)
-        
+
 
         f.write( pack(">H", presence) )
         return 1
     def copy(self):
 
-    
+
         this_class = self.__class__
         obj = this_class.new()
         obj.position = Vector3(self.position.x, self.position.y, self.position.z)
@@ -1291,7 +1291,7 @@ class MapObject(object):
         obj.scale = Vector3(self.scale.x, self.scale.y, self.scale.z)
         obj.objectid = self.objectid
         obj.route = self.route
-    
+
         obj.single = self.single
         obj.double = self.double
         obj.triple = self.triple
@@ -1300,32 +1300,32 @@ class MapObject(object):
         for setting in self.userdata:
             obj.userdata.append(setting)
         obj.route_info = self.route_info
-       
+
         return obj
-        
+
     def has_route(self):
          from widgets.data_editor import load_route_info
-        
+
          if self.objectid in OBJECTNAMES:
             name = OBJECTNAMES[self.objectid]
             route_info = load_route_info(name)
-            
-            
-            return route_info 
+
+
+            return route_info
          return None
 
     def set_route_info(self):
         from widgets.data_editor import load_route_info
-        
+
         if self.objectid in OBJECTNAMES:
             name = OBJECTNAMES[self.objectid]
             route_info = load_route_info(name)
-            
-            
-            self.route_info = route_info 
+
+
+            self.route_info = route_info
         else:
             self.route_info = None
-        
+
 class MapObjects(object):
     def __init__(self):
         self.objects = []
@@ -1338,24 +1338,24 @@ class MapObjects(object):
     @classmethod
     def from_file(cls, f, objectcount):
         mapobjs = cls()
-        
+
         for i in range(objectcount):
             obj = MapObject.from_file(f)
             if obj is not None:
                 mapobjs.objects.append(obj)
 
         return mapobjs
-    
+
     def write(self, f):
-    
+
         num_written = 0
 
-        
+
         f.write(b"GOBJ")
         count_offset = f.tell()
         f.write(pack(">H", len(self.objects)))
         f.write(pack(">H", 0) )
-            
+
         #print(bol2kmp)
         for object in self.objects:
             object.write(f )
@@ -1369,7 +1369,7 @@ class KartStartPoint(object):
         self.rotation = Rotation.default()
         self.playerid = 0xFF
 
-        
+
 
 
     @classmethod
@@ -1387,9 +1387,9 @@ class KartStartPoint(object):
 
     def write(self,f):
         f.write(pack(">fff", self.position.x, self.position.y, self.position.z))
-        
+
         self.rotation.write(f)
-        
+
         if self.playerid == 0xFF:
             f.write(pack(">H", self.playerid + 0xFF00 ) )
         else:
@@ -1412,9 +1412,9 @@ class KartStartPoints(object):
         for i in range(count):
             kstart = KartStartPoint.from_file(f)
             kspoints.positions.append(kstart)
-        
+
         return kspoints
-    
+
     def write(self, f):
         f.write(b"KTPT")
         f.write(pack(">H", len(self.positions)))
@@ -1436,20 +1436,20 @@ class Area(object):
         self.position = position
         self.rotation = Rotation.default()
         self.scale = Vector3(1.0, 1.0, 1.0)
-       
+
         self.setting1 = 0
         self.setting2 = 0
 
         self.route = 0
         self.enemypointid = 0
-        
+
         self.widget = None
 
     @classmethod
     def new(cls):
         return cls(Vector3(0.0, 0.0, 0.0))
-    
-    @classmethod 
+
+    @classmethod
     def default(cls, type = 0):
         area = cls(Vector3(0.0, 0.0, 0.0))
         area.scale = Vector3(1, .5, 1)
@@ -1459,33 +1459,33 @@ class Area(object):
 
     @classmethod
     def from_file(cls, f):
-        
-        shape = read_uint8(f) #shape 
+
+        shape = read_uint8(f) #shape
         type = read_uint8(f)
         camera = read_int8(f)
         priority = read_uint8(f)    #priority
 
         position = Vector3(*unpack(">fff", f.read(12)))
         area = cls(position)
-            
+
         area.shape = shape
         area.type = type
         area.camera_index = camera
         area.priority = priority
         #print(rotation)
         area.rotation = Rotation.from_file(f)
-        
-        
+
+
         area.scale = Vector3(*unpack(">fff", f.read(12)))
         area.scale.x = area.scale.x
-        area.scale.y = area.scale.y 
-        area.scale.z = area.scale.z 
+        area.scale.y = area.scale.y
+        area.scale.z = area.scale.z
 
         area.setting1= read_int16(f) #unk1
         area.setting2 = read_int16(f) #unk2
         area.route = read_uint8(f) #route
         area.enemypointid = read_uint8(f) #enemy
-    
+
         f.read(2)
 
         return area
@@ -1495,11 +1495,11 @@ class Area(object):
         f.write(pack(">B", self.type ) )
         f.write(pack(">b", self.camera_index) )
         f.write(pack(">B", self.priority & 0xFF) ) #priority
-    
+
         f.write(pack(">fff", self.position.x, self.position.y, self.position.z))
         self.rotation.write(f)
         f.write(pack(">fff", self.scale.x, self.scale.y, self.scale.z))
-        
+
         f.write(pack(">HHBBH", self.setting1, self.setting2, self.route, self.enemypointid, 0 ) )
         return 1
 
@@ -1515,7 +1515,7 @@ class Area(object):
         new_area.setting2 = self.setting2
         new_area.route = self.route
         new_area.enemypointid = self.enemypointid
-        
+
         return new_area
 class Areas(object):
     def __init__(self):
@@ -1523,7 +1523,7 @@ class Areas(object):
 
 
 
-    @classmethod 
+    @classmethod
     def from_file(cls, f, count):
         areas = cls()
         for i in range(count):
@@ -1538,11 +1538,11 @@ class Areas(object):
         area_count_off = f.tell()
         f.write(pack(">H", 0xFFFF) )
         f.write(pack(">H", 0) )
-        
+
         num_written = 0
         for area in self.areas:
             num_written += area.write(f)
-            
+
         end_sec = f.tell()
         f.seek(area_count_off)
         f.write(pack(">H", num_written) )
@@ -1584,17 +1584,17 @@ class Camera(object):
         self.position = position
         self.rotation = Rotation.default()
 
-        
+
 
         self.fov = FOV()
 
         self.position2 = Vector3(0.0, 0.0, 0.0)
         self.position3 = Vector3(0.0, 0.0, 0.0)
-        
+
 
         self.camduration = 0
         self.startcamera = 0
-        
+
         self.widget = None
         self.used_by = []
 
@@ -1607,7 +1607,7 @@ class Camera(object):
         camera.type = type
         camera.fov.start = 30
         camera.fov.end = 50
-        
+
         return camera
 
     @classmethod
@@ -1618,17 +1618,17 @@ class Camera(object):
         next_cam = read_int8(f)
         shake = read_uint8(f)
         route = read_int8(f)
-        
+
         move_velocity = read_uint16(f)
         zoom_velocity = read_uint16(f)
         view_velocity = read_uint16(f)
-        
+
         start_flag = read_uint8(f)
         movie_flag = read_uint8(f)
-        
+
         position = Vector3(*unpack(">fff", f.read(12)))
         cam = cls(position)
-        
+
         cam.type = type
         cam.nextcam = next_cam
         cam.shake = shake
@@ -1636,29 +1636,29 @@ class Camera(object):
         cam.routespeed = move_velocity
         cam.zoomspeed = zoom_velocity
         cam.viewspeed = view_velocity
-        
+
         cam.startflag = start_flag
         cam.movieflag = movie_flag
-        
-        
+
+
         #print(rotation)
         cam.rotation = Rotation.from_file(f)
-        
+
         cam.fov.start = read_float(f)
         cam.fov.end = read_float(f)
         cam.position2 = Vector3(*unpack(">fff", f.read(12)))
         cam.position3 = Vector3(*unpack(">fff", f.read(12)))
         cam.camduration = read_float(f)
-        
+
         return cam
-      
+
     def copy(self):
         new_camera = self.__class__.new()
         new_camera.position = Vector3(self.position.x, self.position.y, self.position.z)
         new_camera.position2 = Vector3(self.position2.x, self.position2.y, self.position2.z)
-        new_camera.position3 = Vector3(self.position3.x, self.position3.y, self.position3.z)        
+        new_camera.position3 = Vector3(self.position3.x, self.position3.y, self.position3.z)
         new_camera.rotation = self.rotation.copy()
-        
+
         new_camera.type = self.type
         new_camera.nextcam = self.nextcam
         new_camera.shake = self.shake
@@ -1675,16 +1675,16 @@ class Camera(object):
 
         new_camera.camduration = self.camduration
 
- 
+
         return new_camera
-      
-  
+
+
     def write(self, f):
 
         f.write(pack(">B", self.type ) )
         f.write(pack(">bBb", self.nextcam, 0, self.route) )
 
-                
+
 
         f.write(pack(">H", self.routespeed ) )
         f.write(pack(">H", self.zoomspeed ) )
@@ -1693,27 +1693,27 @@ class Camera(object):
         f.write(pack(">B", self.startflag ) )
         f.write(pack(">B", self.movieflag ) )
 
-       
-        f.write(pack(">fff", self.position.x, self.position.y, self.position.z))       
+
+        f.write(pack(">fff", self.position.x, self.position.y, self.position.z))
         self.rotation.write(f)
-        
+
         f.write(pack(">ff", self.fov.start, self.fov.end))
-        
-        
-        f.write(pack(">fff", self.position3.x, self.position3.y, self.position3.z))  
-        if self.type == 4:      
-            f.write(pack(">fff", self.position3.x, self.position3.y, self.position3.z)) 
+
+
+        f.write(pack(">fff", self.position3.x, self.position3.y, self.position3.z))
+        if self.type == 4:
+            f.write(pack(">fff", self.position3.x, self.position3.y, self.position3.z))
         else:
-            f.write(pack(">fff", self.position2.x, self.position2.y, self.position2.z))   
+            f.write(pack(">fff", self.position2.x, self.position2.y, self.position2.z))
         f.write(pack(">f", self.camduration) )
-            
+
         return 1
-    
+
     @classmethod
     def new_type_0(cls):
-        cam =  cls(Vector3(-860.444, 6545.688, 3131.74)) 
-        
-            
+        cam =  cls(Vector3(-860.444, 6545.688, 3131.74))
+
+
         return cam
 
     def has_route(self):
@@ -1738,12 +1738,12 @@ class JugemPoint(object):
     def from_file(cls, f):
         position = Vector3(*unpack(">fff", f.read(12)))
         jugem = cls(position)
-        
+
         #rotation = Vector3(*unpack(">fff", f.read(12)))
         #print(rotation)
         jugem.rotation = Rotation.from_file(f)
-        
-        
+
+
         #jugem.respawn_id = read_uint16(f)
         read_uint16(f)
 
@@ -1775,9 +1775,9 @@ class CannonPoint(object):
     def from_file(cls, f):
         position = Vector3(*unpack(">fff", f.read(12)))
         cannon = cls(position)
-        
+
         cannon.rotation = Rotation.from_file(f)
-        cannon.id = read_uint16(f)    
+        cannon.id = read_uint16(f)
         cannon.shoot_effect = read_int16(f)
 
         return cannon
@@ -1804,9 +1804,9 @@ class MissionPoint(object):
     def from_file(cls, f):
         position = Vector3(*unpack(">fff", f.read(12)))
         jugem = cls(position)
-        
+
         jugem.rotation = Rotation.from_file(f)
-        jugem.mission_id = read_uint16(f)    
+        jugem.mission_id = read_uint16(f)
         jugem.unk = read_uint16(f)
 
         return jugem
@@ -1827,20 +1827,20 @@ class KMP(object):
         self.flare_color = ColorRGB(255, 255, 255)
         self.flare_alpha = 0x32
         self.speed_modifier = 0
-      
+
         self.kartpoints = KartStartPoints()
         self.enemypointgroups = EnemyPointGroups()
         self.itempointgroups = ItemPointGroups()
 
         self.checkpoints = CheckpointGroups()
         self.routes = ObjectContainer()
-        
+
         self.objects = MapObjects()
-        
+
         self.areas = Areas()
         self.cameras = Cameras()
         self.cameraroutes = ObjectContainer()
-    
+
         self.respawnpoints = ObjectContainer()
         self.cannonpoints = ObjectContainer()
 
@@ -1852,8 +1852,8 @@ class KMP(object):
         self.respawnpoints.assoc = JugemPoint
         self.cannonpoints.assoc = CannonPoint
         self.missionpoints.assoc = MissionPoint
-    
-        
+
+
     @classmethod
     def make_useful(cls):
         kmp = cls()
@@ -1867,9 +1867,9 @@ class KMP(object):
         kmp.checkpoints.groups[0].add_new_prev(0)
         kmp.checkpoints.groups[0].add_new_next(0)
         kmp.kartpoints.positions.append( KartStartPoint.new() )
-        
+
         kmp.set_assoc()
-        
+
         return kmp
 
     def objects_with_position(self):
@@ -1958,7 +1958,7 @@ class KMP(object):
         magic = f.read(4)
         assert magic == b"RKMD"
 
-        
+
         f.read(0xC)       #header stuff
         ktpt_offset = read_uint32(f)
         enpt_offset = read_uint32(f)
@@ -1975,37 +1975,37 @@ class KMP(object):
         cnpt_offset = read_uint32(f)
         mspt_offset = read_uint32(f)
         stgi_offset = read_uint32(f)
-        
+
         header_len = f.tell()
         f.seek(ktpt_offset + header_len)
         assert f.read(4) == b"KTPT"
         count = read_uint16(f)
         f.read(2)
         kmp.kartpoints = KartStartPoints.from_file(f, count)
-        
+
         f.seek(enpt_offset + header_len)
         kmp.enemypointgroups = EnemyPointGroups.from_file(f)
-        
+
         f.seek(itpt_offset + header_len)
         kmp.itempointgroups = ItemPointGroups.from_file(f)
-        
+
         #skip itpt
         f.seek(ckpt_offset + header_len)
         kmp.checkpoints = CheckpointGroups.from_file(f)
-        
+
         #bol.checkpoints = CheckpointGroups.from_file(f, sectioncounts[CHECKPOINT])
-        
+
         f.seek(gobj_offset + header_len)
         assert f.read(4) == b"GOBJ"
         count = read_uint16(f)
         f.read(2)
         kmp.objects = MapObjects.from_file(f, count)
-        
+
         f.seek(poti_offset + header_len)
         assert f.read(4) == b"POTI"
         count = read_uint16(f)
         total = read_uint16(f)
-        
+
         # will handle the routes
         kmp.routes = ObjectContainer.from_file(f, count, Route)
 
@@ -2015,7 +2015,7 @@ class KMP(object):
         count = read_uint16(f)
         f.read(2)
         kmp.areas = Areas.from_file(f, count)
-        
+
         f.seek(came_offset + header_len)
         assert f.read(4) == b"CAME"
         count = read_uint16(f)
@@ -2023,13 +2023,13 @@ class KMP(object):
         f.read(1)
         kmp.cameras = Cameras.from_file(f, count)
         kmp.cameras.startcam = start
-        
+
         f.seek(jgpt_offset + header_len)
         assert f.read(4) == b"JGPT"
         count = read_uint16(f)
         f.read(2)
         kmp.respawnpoints = ObjectContainer.from_file(f, count, JugemPoint)
-        
+
         f.seek(cnpt_offset + header_len)
         assert f.read(4) == b"CNPT"
         count = read_uint16(f)
@@ -2064,8 +2064,8 @@ class KMP(object):
 
         kmp.speed_modifier = unpack('>f', bytearray([b0, b1, 0, 0])  )[0]
 
-        
-        
+
+
         kmp.fix_file()
 
         kmp.set_assoc()
@@ -2073,7 +2073,7 @@ class KMP(object):
         Area.level_file = kmp
 
         return kmp
-               
+
     def fix_file(self):
         #set all the used by stuff
         for object in self.objects.objects:
@@ -2091,7 +2091,7 @@ class KMP(object):
                 self.cameras[area.camera_index].used_by.append(area)
             if area.type == 3 and area.route != -1 and area.route < len(self.routes):
                 self.routes[area.route].used_by.append(area)
-        
+
         to_split = []
         for route in self.routes:
             has_object = False
@@ -2109,7 +2109,7 @@ class KMP(object):
         for route in to_split :
             # we know that these have both objects and cameras
             new_route = route.copy()
-            
+
             new_route.used_by = filter(lambda thing: isinstance(thing, Camera), route.used_by)
             route.used_by = filter(lambda thing: isinstance(thing, MapObject), route.used_by)
 
@@ -2117,7 +2117,7 @@ class KMP(object):
             for obj in new_route.used_by:
                 obj.route = new_route_idx
                 new_route_idx += 1
-                
+
         #now that everything is split, we can spilt into cam routes and non cam routes
         object_routes = ObjectContainer()
         camera_routes = ObjectContainer()
@@ -2159,8 +2159,8 @@ class KMP(object):
                     group.nextgroup = [ id if id < unused_id or id == -1 else id - 1 for id in group.nextgroup ]
 
             #get rid of self-referencing groups at load
-            if len(grouped_things) > 1:   
-                for group in grouped_things:    
+            if len(grouped_things) > 1:
+                for group in grouped_things:
                     group.prevgroup = [ id for id in group.prevgroup if id != group.id ]
                     group.prevgroup += [-1] * (6-len(group.prevgroup))
                     group.nextgroup = [ id for id in group.nextgroup if id != group.id ]
@@ -2168,7 +2168,7 @@ class KMP(object):
 
             grouped_things.sort( key = lambda h: (h.id)   )
 
-        
+
         self.cannonpoints.sort( key = lambda h: h.id)
 
         #sequentialize the ids of respawn points, cannon ids, and mission success points
@@ -2186,10 +2186,10 @@ class KMP(object):
          f.write(pack(">I", 0x9d8)) #length of header
          sec_offs = f.tell()
          f.write(b"FFFF" * 15) #placeholder for offsets
-         
+
          offsets = [ f.tell()]  #offset 1 for ktpt
          self.kartpoints.write(f)
-         
+
          offsets.append( f.tell() ) #offset 2 for entp
          enph_off = self.enemypointgroups.write(f)
          offsets.append(enph_off) #offset 3 for enph
@@ -2197,95 +2197,95 @@ class KMP(object):
          offsets.append( f.tell() ) #offset 4 for itpt
          itph_off = self.itempointgroups.write(f)
          offsets.append(itph_off) #offset 5 for itph
-         
+
          offsets.append(f.tell()) #offset 6 for ckpt
          ktph_offset = self.checkpoints.write(f)
          offsets.append(ktph_offset) #offset 7 for ktph
-         
+
          offsets.append(f.tell() ) #offset 8 for gobj
          self.objects.write(f)
-         
+
          routes, cameras = self.combine_routes()
          #print(len(routes), [camera.route for camera in cameras])
 
          offsets.append(f.tell() ) #offset 9 for poti
-         f.write(b"POTI")       
+         f.write(b"POTI")
          f.write(pack(">H", len(routes) ) )
-         count_off = f.tell()   
+         count_off = f.tell()
          f.write(pack(">H", 0xFFFF ) )  # will be overridden later
-         
+
          count = 0
          for route in routes:
             count += route.write(f)
-         
+
          offset = f.tell()
          offsets.append(offset) #offset 10 for AREA
-         
+
          f.seek(count_off)
          f.write(pack(">H", count ) )  # will be overridden later
          f.seek(offset)
-         
+
          self.areas.write(f)
-         
+
          offsets.append(f.tell() ) # offset 11 for CAME
          f.write(b"CAME")
          count_off = f.tell()
          f.write(pack(">H", 0xFFFF ) )  # will be overridden later
          f.write(pack(">H", 0xFFFF ) )  # will be overridden later
-         
+
          count = 0
-         
+
          for camera in cameras:
             count += camera.write(f)
-                  
+
          offset = f.tell()  #offset 12 for JPGT
          offsets.append(offset)
-         
+
          f.seek(count_off)
-         f.write(pack(">H", count ) ) 
+         f.write(pack(">H", count ) )
          if self.cameras.startcam == -1:
             f.write(pack(">bB", -1, 0 ) )
          else:
             f.write(pack(">BB", self.cameras.startcam, 0 ) )
          f.seek(offset)
-         
 
-         
+
+
          f.write(b"JGPT")
          f.write(pack(">H", len(self.respawnpoints) ) )  # will be overridden later
          f.write(pack(">H", 0 ) )
-         
+
          count = 0
          for point in self.respawnpoints:
             point.write(f, count)
             count += 1
-         
+
 
          offset = f.tell()
          offsets.append(offset) #offset 13 for CNPT
-         
+
          f.write(b"CNPT")
-         count_off = f.tell() 
+         count_off = f.tell()
          f.write(pack(">H", len(self.cannonpoints) ) )  # will be overridden later
          f.write(pack(">H", 0 ) )
-         
+
          for point in self.cannonpoints:
             point.write(f)
          offset = f.tell()
          offsets.append(offset) #offset 14 for MSPT
-         
+
          f.write(b"MSPT")
-         count_off = f.tell() 
+         count_off = f.tell()
          f.write(pack(">H", len(self.missionpoints) ) )  # will be overridden later
          f.write(pack(">H", 0 ) )
-         
-         
+
+
          count = 0
          for point in self.missionpoints:
             point.write(f, count)
             count += 1
          offset = f.tell()
-         
+
          offsets.append(offset) #offset 15 for STGI
          f.write(b"STGI")
          f.write(pack(">HH", 1, 0 ) )
@@ -2297,7 +2297,7 @@ class KMP(object):
 
          byte_array = pack(">f", self.speed_modifier)
          f.write( byte_array[0:2])
-         
+
          assert( len(offsets) == 15 )
          size = f.tell()
          f.seek(size_off)
@@ -2326,20 +2326,20 @@ class KMP(object):
             if new_cam.route != -1:
                 new_cam.route += num_obj
             cameras.append(new_cam)
-        
+
         return routes, cameras
 
     def create_checkpoints_from_enemy(self):
         for checkgroup in self.checkpoints.groups:
             checkgroup.points.clear()
         self.checkpoints.groups.clear()
-        
+
         #create checkpoints from enemy points
         for i, group in enumerate( self.enemypointgroups.groups ):
             new_cp_group = CheckpointGroup(i)
             new_cp_group.prevgroup = group.prev
             new_cp_group.nextgroup = group.next
-        
+
             self.checkpoints.groups.append( new_cp_group )
 
             #group = self.enemypointgroups.groups[groupindex]
@@ -2348,27 +2348,27 @@ class KMP(object):
                 if i == 0 and j == 0:
                     draw_cp = True
                     #should both be vector3
-                    central_point = self.kartpoints.positions[0].position 
+                    central_point = self.kartpoints.positions[0].position
                     left_vector = self.kartpoints.positions[0].rotation.get_vectors()[2]
 
                 elif (i == 0 and j % 2 == 0 and len(group.points) > j + 1) or (i > 0 and j % 2 == 1 and len(group.points) > j + 1):
                 #elif (i == 0  and len(group.points) > j + 1) or (i > 0 and len(group.points) > j + 1):
                     draw_cp = True
                     central_point = point.position
-                    
+
                     deltaX = group.points[j+1].position.x - group.points[j-1].position.x
                     deltaZ = group.points[j+1].position.z - group.points[j-1].position.z
-                                     
+
                     left_vector = Vector3( -1 * deltaZ, 0, deltaX   ) * -1
-                    
+
                     left_vector.normalize()
 
-                    
-                if draw_cp: 
-                    
-                    first_point = [central_point.x + 3500 * left_vector.x, 0, central_point.z + 3500 * left_vector.z] 
-                    second_point = [central_point.x - 3500 * left_vector.x, 0, central_point.z - 3500 * left_vector.z]  
-                        
+
+                if draw_cp:
+
+                    first_point = [central_point.x + 3500 * left_vector.x, 0, central_point.z + 3500 * left_vector.z]
+                    second_point = [central_point.x - 3500 * left_vector.x, 0, central_point.z - 3500 * left_vector.z]
+
                     new_checkpoint = Checkpoint.new()
                     new_checkpoint.start = Vector3( *first_point)
                     new_checkpoint.end = Vector3(*second_point)
@@ -2376,12 +2376,12 @@ class KMP(object):
 
     def auto_qol_all(self):
         # clear checkpoints
-        
+
         self.create_checkpoints_from_enemy()
         self.remove_unused_cameras()
         self.remove_unused_routes()
         #self.copy_enemy_to_item()
-    
+
     def reset_routes(self, start_at = 0):
 
         self.reset_object_routes(start_at)
@@ -2391,7 +2391,7 @@ class KMP(object):
         for route_index in range(start_at, len(self.routes) ):
             for object in self.routes[route_index].used_by:
                 object.route = route_index
-    
+
     def reset_camera_routes(self, start_at = 0):
         for route_index in range(start_at, len(self.cameraroutes) ):
             for object in self.cameraroutes[route_index].used_by:
@@ -2402,7 +2402,7 @@ class KMP(object):
         self.remove_unused_object_routes()
         self.remove_unused_camera_routes()
 
-    def remove_unused_object_routes(self):   
+    def remove_unused_object_routes(self):
         to_remove = []
         for i, route in enumerate(self.routes):
             if len(route.used_by) == 0:
@@ -2413,7 +2413,7 @@ class KMP(object):
             self.routes.pop(rem_index)
         self.reset_object_routes()
 
-    def remove_unused_camera_routes(self):   
+    def remove_unused_camera_routes(self):
 
         to_remove = []
         for i, route in enumerate(self.cameraroutes):
@@ -2424,40 +2424,40 @@ class KMP(object):
         for rem_index in to_remove:
             self.cameraroutes.pop(rem_index)
         self.reset_camera_routes()
-        
+
     def copy_enemy_to_item(self):
         self.itempointgroups = ItemPointGroups()
-        
+
         for group in self.enemypointgroups.groups:
             new_group = ItemPointGroup()
             new_group.id = group.id
             new_group.prevgroup = group.prevgroup.copy()
             new_group.nextgroup = group.nextgroup.copy()
-            
+
             for point in group.points:
                 new_point = ItemPoint.new()
                 new_point.position = point.position.copy()
-                
+
                 new_group.points.append(new_point)
-                
+
             self.itempointgroups.groups.append(new_group)
-        
+
         pass
-        
-    def remove_unused_cameras(self):   
+
+    def remove_unused_cameras(self):
         used = []
         opening_cams = []
-        
+
         #type 8 stays
-        
+
         for camera in self.cameras:
             if camera.type == 0:
                 used.append(camera)
-            
+
 
         opening_cams.append(self.cameras[self.cameras.startcam])
-               
-               
+
+
         while next_cam != -1 and next_cam < len(self.cameras):
             next_camera = self.cameras[next_cam]
             if next_camera in used:
@@ -2465,7 +2465,7 @@ class KMP(object):
             used.append(next_camera)
             opening_cams.append(next_camera)
             next_cam = next_camera.nextcam
-            
+
         #now iterate through area
         for area in self.areas.areas:
             if area.camera_index != -1 and area.camera_index < len(self.cameras):
@@ -2479,25 +2479,25 @@ class KMP(object):
                 if cam_to_del.route != -1 and cam_to_del.route < len(self.cameraroutes):
                     self.cameraroutes[cam_to_del.route].used_by.remove(cam_to_del)
                 self.cameras.remove(cam_to_del)
-    
+
         for i, camera in enumerate (self.cameras):
             for area in camera.used_by:
                 area.camera_index = i
-                
+
         #deal with starting cams
         curr_cam = opening_cams[0]
         for i in range(1, len(opening_cams)):
             next_idx = self.cameras.index( opening_cams[i] )
             curr_cam.nextcam = next_idx
             curr_cam = self.cameras[next_idx]
-    
+
         #figure out which cameras to remove
-        #then 
-    
+        #then
+
         pass
-    
+
     def create_respawns(self):
-       
+
         #remove all respwans
         self.respawnpoints.clear()
         rsp_idx = 0
@@ -2514,7 +2514,7 @@ class KMP(object):
 
                 for j in range(i - 4, i + 4):
                     checkgroup.points[j].respawn = rsp_idx
-                
+
                 rsp_idx += 1
 
 
@@ -2528,7 +2528,7 @@ class KMP(object):
         if len(self.checkpoints.groups) == 0:
             return
 
-        
+
         for checkgroup in self.checkpoints.groups:
             for checkpoint in checkgroup.points:
                 checkpoint.assign_to_closest(self.respawnpoints)
@@ -2581,12 +2581,12 @@ class KMP(object):
     def remove_group(self, del_group):
         to_deal_with = self.get_to_deal_with(del_group)
 
-        to_deal_with.remove_group(del_group) 
-        
+        to_deal_with.remove_group(del_group)
+
     def remove_point(self, del_point):
         to_deal_with = self.get_to_deal_with(del_point)
 
-        to_deal_with.remove_point(del_point) 
+        to_deal_with.remove_point(del_point)
 
     def get_route_container(self, obj):
         if isinstance(obj, (CameraRoute, Camera)):
