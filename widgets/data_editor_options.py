@@ -68,6 +68,9 @@ CAME_Type["MiniGame (Unused)"] = 7
 CAME_Type["MissionSuccess (Unused)"] = 8
 CAME_Type["MSPT"] = 9
 
+CAME_TYPES = ["Goal", "FixSearch (R)", "PathSearch (R)", "KartFollow (R)", "KartPathFollow (R/O)",
+                "OP_FixMoveAt(O)", "OP_PathMoveAt (R)", "MiniGame", "MissionSuccess", "MSPT"]
+
 routed_cameras = [2, 5, 6]
 
 CNPT_ShootEffect = OrderedDict()
