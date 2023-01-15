@@ -1164,6 +1164,8 @@ class GenEditor(QMainWindow):
             with open(filepath, "rb") as f:
                 try:
                     kmp_file = KMP.from_file(f)
+                    error_string = kmp_file.fix_file() #will do a popup for 'stuff fixed at load'
+
                     self.setup_kmp_file(kmp_file, filepath)
                     self.leveldatatreeview.set_objects(kmp_file)
                     self.leveldatatreeview.bound_to_group(kmp_file)
@@ -1523,10 +1525,8 @@ class GenEditor(QMainWindow):
 
     @catch_exception
     def button_stop_adding(self):
-
-        self.pik_control.button_add_object.setChecked(False)
         self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_NONE)
-
+        self.pik_control.button_add_object.setChecked(False)
         # see if you are adding a camera point
         if self.object_to_be_added is not None:
             thing_added = self.object_to_be_added[0]
@@ -1705,6 +1705,9 @@ class GenEditor(QMainWindow):
         elif option == 11: #new enemy point here
             #find its position in the enemy point group
             to_deal_with = self.level_file.get_to_deal_with(obj)
+            if to_deal_with.num_total_points() == 255:
+                self.button_stop_adding()
+                return
             start_groupind, start_group, start_pointind = to_deal_with.find_group_of_point(obj)
 
             thing_to_add = to_deal_with.get_new_point()
@@ -2016,14 +2019,15 @@ class GenEditor(QMainWindow):
             placeobject.position.z = z
 
 
-            if isinstance(object, libkmp.EnemyPoint):
+            if isinstance(object, (libkmp.EnemyPoint, ItemPoint) ):
                 # For convenience, create a group if none exists yet.
-                if group == 0 and not self.level_file.enemypointgroups.groups:
-                    self.level_file.enemypointgroups.groups.append(libkmp.EnemyPointGroup.new())
-                placeobject.group = group
-
-                self.level_file.enemypointgroups.groups[group].points.insert(position + self.points_added, placeobject)
+                to_deal_with = self.level_file.get_to_deal_with(object)
+                if group == 0 and not to_deal_with.groups:
+                    to_deal_with.groups.append(to_deal_with.get_new_group())
+                to_deal_with.groups[group].points.insert(position + self.points_added, placeobject)
                 self.points_added += 1
+                if to_deal_with.num_total_points() == 255:
+                    self.button_stop_adding()
             elif isinstance(object, libkmp.RoutePoint):
                 route_container = self.level_file.get_route_container(object.partof)
                 if group == 0 and not route_container:
@@ -2129,12 +2133,12 @@ class GenEditor(QMainWindow):
                 if hasattr(placeobject, "position"):
                     placeobject.position = Vector3(x, y, z)
 
-                if isinstance(object, libkmp.EnemyPoint):
-                    self.level_file.enemypointgroups.groups[group].points.insert(position + self.points_added, placeobject)
+                if isinstance(object, (libkmp.EnemyPoint, libkmp.ItemPoint)):
+                    to_deal_with = self.level_file.get_to_deal_with(object)
+                    to_deal_with.groups[group].points.insert(position + self.points_added, placeobject)
                     self.points_added += 1
-                if isinstance(object, libkmp.ItemPoint):
-                    self.level_file.itempointgroups.groups[group].points.insert(position + self.points_added, placeobject)
-                    self.points_added += 1
+                    if to_deal_with.num_total_points() == 255:
+                        self.button_stop_adding()
 
                 elif isinstance(object, libkmp.RoutePoint):
                     self.level_file.routes[group].points.insert(position, placeobject)

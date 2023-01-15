@@ -487,6 +487,9 @@ class PointGroups(object):
                 self.remove_group( group, False   )
         self.merge_groups()
 
+    def num_total_points(self):
+        return sum( [len(group.points) for group in self.groups]  )
+
 # Section 1
 # Enemy/Item Route Code Start
 class EnemyPoint(KMPPoint):
@@ -2079,10 +2082,6 @@ class KMP(object):
         b1 = read_uint8(f)
 
         kmp.speed_modifier = unpack('>f', bytearray([b0, b1, 0, 0])  )[0]
-
-
-
-        kmp.fix_file()
 
         kmp.set_assoc()
 
