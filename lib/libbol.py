@@ -1,6 +1,6 @@
 import json
 from struct import unpack, pack
-from numpy import ndarray, array
+from numpy import ndarray, array, arctan
 from math import cos, sin
 from .vectors import Vector3
 from collections import OrderedDict
@@ -1997,25 +1997,68 @@ class BOL(object):
 
         pass
 
-    def reassign_one_respawn(self, rsp : JugemPoint):
-        min_dis = 999999999999999999
-        min_idx = 0
+    def find_closest_enemy_to_rsp(self, rsp: JugemPoint):
+        enemy_groups = self.enemypointgroups.groups
+        closest = None
+        distance = 999999999
+        group_idx = -1
+        point_idx = -1
+        master_point_idx = -1
         idx = 0
-
-        if len(self.enemypointgroups.groups ) > 0:
-            for group in self.enemypointgroups.groups:
-                for point in group.points:
-                    this_dis =  point.position.distance(rsp.position)
-                    if this_dis < min_dis:
-                        min_dis = this_dis
-                        min_idx = idx
-                    idx += 1
-        rsp.unk1 = min_idx
+        for i, group in enumerate(enemy_groups):
+            for j, point in enumerate(group.points):
+                curr_distance = point.position.distance(rsp.position)
+                if curr_distance < distance:
+                    closest = point
+                    distance = curr_distance
+                    group_idx = i
+                    point_idx = j
+                    master_point_idx = idx
+                idx += 1
+        return closest, group_idx, point_idx, master_point_idx
+    def reassign_one_respawn(self, rsp : JugemPoint):
+        point, group_idx, pos_idx, point_idx = self.find_closest_enemy_to_rsp(rsp)
+        if point_idx == -1:
+            point_idx = 0
+        rsp.unk1 = point_idx
 
     def reassign_respawns(self):
         for rsp in self.respawnpoints:
             self.reassign_one_respawn(rsp)
 
+    def rotate_one_respawn(self, rsp :JugemPoint):
+        point, group_idx, pos_idx, point_idx = self.find_closest_enemy_to_rsp(rsp)
+        enemy_groups = self.enemypointgroups.groups
+
+        if point_idx == -1:
+            return
+
+        point_behind_dis =  999999999999
+        point_ahead_dis =   999999999999
+
+        if pos_idx != 0:
+            point_behind = enemy_groups[group_idx].points[pos_idx - 1].position
+            point_behind_dis = point_behind.distance(rsp.position)
+        if pos_idx < len(enemy_groups[group_idx].points) - 1:
+            point_ahead = enemy_groups[group_idx].points[pos_idx + 1].position
+            point_ahead_dis = point_ahead.distance(rsp.position)
+
+        #no other points in group, i am not bothering with finding the linking points
+        if point_behind_dis == point_ahead_dis and point_behind_dis == 999999999999:
+            return
+
+        if point_behind_dis < point_ahead_dis:
+            pos_ray = point.position - point_behind
+        else:
+            pos_ray = point_ahead - point.position
+
+        if pos_ray.x == 0:
+            pos_ray.x = 1
+
+        theta = arctan( -pos_ray.z / pos_ray.x ) * 180 / 3.14
+        if rsp.position.z < 0:
+            theta += 180
+        rsp.rotation = Rotation.from_euler(Vector3(0, theta + 90, 0))
 
     def get_route_container(self, obj):
         if isinstance(obj, (CameraRoute, Camera)):

@@ -2588,6 +2588,7 @@ class GenEditor(QMainWindow):
                 placeobject.respawn_id = max_id + 1
 
                 self.level_file.reassign_one_respawn(placeobject)
+                self.level_file.rotate_one_respawn(placeobject)
             elif isinstance(object, libbol.Area):
                 self.level_file.areas.areas.append(placeobject)
             elif isinstance(object, libbol.Camera):
