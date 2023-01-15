@@ -12,9 +12,8 @@ gobj:
 
 poti:
 - show splines (talk to zatchi)
-- camera options: auto do the frames field (based on the length to the next point)
--- on creation, auto do it (based on first connection)
--- have an option to fill it out automatically
+- camera auto route - make it based on the total length (parse all files to find average distance / speed)
+- upon route creation, INCLUDING VIA AUTOROUTE, make all but the first 50
 
 area:
 - highlight camera / route point when relevant. (ALSO APPLIES TO MKDD)
@@ -26,6 +25,8 @@ area:
 - add 'c' linking for areas 
 
 came:
+- add "lazy replay cams" (aka one area and one type 4) option
+- make sure there are side buttons for ALL different types of starting cams
 - camera replaying (long shot)
 
 before release: match lorenzis with colors

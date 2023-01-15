@@ -111,11 +111,11 @@ class ErrorAnalyzer(QDialog):
 
         #check for empty (and used!) routes
         for i, group in enumerate(kmp.routes):
-            
+
             if len(group.used_by) > 0 :
                 if len(group.points) == 0:
                     write_line("Route {0} is used, but does not have any points".format( i ))
-                elif len(group.points) == 1:  
+                elif len(group.points) == 1:
                     write_line("Route {0} is used, but only has one point".format( i ))
 
         # Validate path id in objects
@@ -165,14 +165,14 @@ class ErrorAnalyzer(QDialog):
                 write_line("Camera {0} uses invalid path id {1}".format(i, camera.route))
             if camera.type == 1 and camera.route < 0:
                 write_line("Camera {0} uses invalid path id {1}".format(i, camera.route))
-            
+
             if camera.startcamera != 0 and not have_start:
                 first_start = i
                 have_start = True
             elif camera.startcamera != 0 and have_start:
                 write_line("Camera {0} is a starting cam, but Camera {1} is already a starting cam".format(i, first_start))
-        
-        
+
+
         if len(kmp.checkpoints.groups) == 0:
             write_line("You need at least one checkpoint group!")
 
@@ -270,7 +270,7 @@ class SpecificAddOWindow(QMdiSubWindow):
     def emit_add_object(self):
         self.button_savetext.pressed.emit()
 
-    def get_content(self): 
+    def get_content(self):
         return self.created_object
 
 class ErrorAnalyzerButton(QtWidgets.QPushButton):
@@ -425,12 +425,12 @@ class AddPikObjectWindow(QDialog):
             "Camera": libkmp.Camera,
             "Respawn Point": libkmp.JugemPoint,
             "Kart Start Point": libkmp.KartStartPoint,
-            
+
             #"Checkpoint Group": libkmp.CheckpointGroup,
 
         }
-    
-      
+
+
         self.category_menu.addItem("Object")
         self.category_menu.addItem("Kart Start Point")
         self.category_menu.addItem("Camera")
@@ -474,9 +474,7 @@ class AddPikObjectWindow(QDialog):
                 margin = self.fontMetrics().averageCharWidth()
                 self.editor_widget.setContentsMargins(margin, margin, margin, margin)
                 self.editor_layout.setWidget(self.editor_widget)
-                
-                
-                
+
                 #print("isobject", isinstance(self.editor_widget, ObjectEdit))
                 if isinstance(self.editor_widget, ObjectEdit):
                     self.editor_widget.update_data(load_defaults = True)

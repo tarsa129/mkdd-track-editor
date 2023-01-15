@@ -1110,7 +1110,11 @@ class Route(object):
 
         return new_route
 
-
+    def total_distance(self):
+        distance = 0
+        for i, point in enumerate(self.points[:-1]):
+            distance += point.position.distance( self.points[i + 1].position  )
+        return distance
 
     @classmethod
     def from_file(cls, f):
@@ -1565,7 +1569,7 @@ class Cameras(list):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.startcam = -1
-        self.bound_to = None
+        self.widget = None
 
     @classmethod
     def from_file(cls, f, count):

@@ -60,15 +60,15 @@ class PikminSideWidget(QWidget):
         #self.lineedit_rotationz = QLineEdit(parent)
         self.verticalLayout.addWidget(self.button_add_object)
         self.verticalLayout.addWidget(self.button_stop_object)
-        
+
         self.verticalLayout.addWidget(self.button_remove_object)
         self.verticalLayout.addWidget(self.button_ground_object)
         #self.verticalLayout.addWidget(self.button_move_object)
-        
+
 
         self.more_buttons = MoreButtons(parent)
         self.more_buttons.add_buttons(None)
-        self.more_buttons.setMinimumSize(self.button_add_object.width(), 30)  
+        self.more_buttons.setMinimumSize(self.button_add_object.width(), 30)
         self.verticalLayout.addWidget(self.more_buttons)
         self.verticalLayout.addStretch(20)
 
@@ -80,7 +80,7 @@ class PikminSideWidget(QWidget):
         #self.identifier_label.setFont(font)
         #self.identifier_label.setMinimumSize(self.name_label.width(), 50)
         #self.identifier_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        
+
 
         self.verticalLayout.addWidget(self.name_label)
         #self.verticalLayout.addWidget(self.identifier_label)
@@ -146,7 +146,7 @@ class PikminSideWidget(QWidget):
 
     #updates the data editor
     def set_info(self, obj, update3d, usedby=[]):
-       
+
         if usedby:
             self.name_label.setText("Selected: {}\nUsed by: {}".format(type(obj).__name__,
                                     ", ".join(usedby)))
@@ -160,8 +160,6 @@ class PikminSideWidget(QWidget):
             self.object_data_edit = None
             #print("should be removed")
 
-        
-        
         #return a CLASS to add
         editor = choose_data_editor(obj)
         if editor is not None:
@@ -169,7 +167,7 @@ class PikminSideWidget(QWidget):
             self.object_data_edit = editor(self, obj)
             self.verticalLayout.addWidget(self.object_data_edit)
             self.object_data_edit.emit_3d_update.connect(update3d)
-            
+
             if isinstance(self.object_data_edit, ObjectEdit) or isinstance(self.object_data_edit, CameraEdit):
                 #self.object_data_edit.set_default_values()
                 self.object_data_edit.emit_route_update.connect(lambda obj, old, new: self.parent.update_route_used_by(obj, old, new) )
@@ -204,7 +202,7 @@ class PikminSideWidget(QWidget):
                 text += "\nAnd {0} more object".format(diff)
             elif diff > 1:
                 text += "\nAnd {0} more objects".format(diff)
-                
+
             self.more_buttons.add_buttons_multi(objs)
 
         else:
@@ -212,4 +210,4 @@ class PikminSideWidget(QWidget):
 
         self.comment_label.setText(text)
 
-    
+

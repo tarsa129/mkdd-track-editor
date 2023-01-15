@@ -1523,9 +1523,21 @@ class GenEditor(QMainWindow):
 
     @catch_exception
     def button_stop_adding(self):
-        self.points_added = 0
+
         self.pik_control.button_add_object.setChecked(False)
         self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_NONE)
+
+        # see if you are adding a camera point
+        if self.object_to_be_added is not None:
+            thing_added = self.object_to_be_added[0]
+            if isinstance( thing_added, RoutePoint ) and isinstance( thing_added.partof, CameraRoute):
+                group : Route =  self.level_file.cameraroutes[ self.object_to_be_added[1] ]
+                #if you created a new route from scratch
+                if self.points_added == len(group.points) and self.points_added > 0:
+                    for point in group.points[:-1]:
+                        point.unk1 = 50
+
+        self.points_added = 0
         self.objects_to_be_added = None
         self.object_to_be_added = None
 

@@ -1168,7 +1168,6 @@ class AreaEdit(DataEditor):
 class CamerasEdit(DataEditor):
     def setup_widgets(self):
         self.startcam = self.add_integer_input("Starting Camera", "startcam", 0, 255)
-
         self.startcam.editingFinished.connect(self.update_starting_cam)
     def update_data(self):
         obj: Cameras = self.bound_to
