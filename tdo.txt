@@ -24,7 +24,6 @@ area:
 
 came:
 - add "lazy replay cams" (aka one area and one type 4) option
-- make sure there are side buttons for ALL different types of starting cams
 - camera replaying (long shot)
 
 before release: match lorenzis with colors

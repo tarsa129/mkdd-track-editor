@@ -1665,16 +1665,17 @@ class GenEditor(QMainWindow):
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
         elif option == 8:  #add new camera with route
 
-            if obj in [1, 3, 4, 5]:
+            if obj in routed_cameras:
                 self.objects_to_be_added = []
                 self.object_to_be_added = None
 
                 new_route = libkmp.CameraRoute.new()
 
-
                 for i in range(2):
                     point = libkmp.RoutePoint.new()
                     point.partof = new_route
+                    if i == 0:
+                        point.unk1 = 50
                     new_route.points.append(point)
 
                 #self.addobjectwindow_last_selected_category = 8
@@ -1684,10 +1685,8 @@ class GenEditor(QMainWindow):
                 self.objects_to_be_added = None
                 self.object_to_be_added = [libkmp.Camera.default(obj), None, None ]
 
-
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
-            self.object_to_be_added = None
         elif option == 9: #add new respawn point
             rsp = libkmp.JugemPoint.new()
             self.object_to_be_added = [rsp, obj, None ]

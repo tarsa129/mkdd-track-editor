@@ -271,19 +271,15 @@ class MoreButtons(QWidget):
             self.vbox.addWidget(snap_camera)
 
             new_camera = QPushButton(self)
-            new_camera.setText("Add Camera Type 4 with Route (StartFixPath)")
+            new_camera.setText("Add Opening Camera Type 4 (KartPathFollow)")
             new_camera.clicked.connect(lambda: self.parent.button_add_from_addi_options(8, 4) )
             self.vbox.addWidget(new_camera)
 
             new_camera = QPushButton(self)
-            new_camera.setText("Add Camera Type 5 with Route (StartPath)")
+            new_camera.setText("Add Opening Camera Type 5 with Route (OP_FixMoveAt)")
             new_camera.clicked.connect(lambda: self.parent.button_add_from_addi_options(8, 5) )
             self.vbox.addWidget(new_camera)
 
-            new_camera = QPushButton(self)
-            new_camera.setText("Add Camera Type 6 (StartLookPath)")
-            new_camera.clicked.connect(lambda: self.parent.button_add_from_addi_options(8, 6) )
-            self.vbox.addWidget(new_camera)
 
             #add area / camera / route?
 
