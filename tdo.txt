@@ -12,6 +12,7 @@ gobj:
 poti:
 - show splines (talk to zatchi)
 - camera auto route - make it based on the total length (parse all files to find average distance / speed)
+- render area routes differently (dark blue?)
 
 area:
 - highlight camera / route point when relevant. (ALSO APPLIES TO MKDD)
@@ -23,7 +24,6 @@ area:
 - add 'c' linking for areas 
 
 came:
-- add "lazy replay cams" (aka one area and one type 4) option
 - camera replaying (long shot)
 
 before release: match lorenzis with colors

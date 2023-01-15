@@ -1724,7 +1724,11 @@ class Camera(object):
     @classmethod
     def new_type_0(cls):
         cam =  cls(Vector3(-860.444, 6545.688, 3131.74))
-
+        cam.position2 = Vector3(-30, -1.0, 550)
+        cam.position3 = Vector3(-5, 1.0, 0)
+        cam.zoomspeed = 30
+        cam.fov.start = 85
+        cam.fov.end = 40
 
         return cam
 

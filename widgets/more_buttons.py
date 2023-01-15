@@ -255,18 +255,19 @@ class MoreButtons(QWidget):
 
             all_options = False
             #auto route all
-            auto_route_all = QPushButton(self)
-            auto_route_all.setText("Auto Route All Cameras")
-            auto_route_all.clicked.connect(lambda: self.parent.button_add_from_addi_options(17, option.bound_to) )
-            self.vbox.addWidget(auto_route_all)
 
             remove_unused_cams = QPushButton(self)
             remove_unused_cams.setText("Remove Unused Cameras")
             remove_unused_cams.clicked.connect(lambda: self.parent.button_add_from_addi_options(25, option.bound_to) )
             self.vbox.addWidget(remove_unused_cams)
 
+            auto_route_all = QPushButton(self)
+            auto_route_all.setText("Auto Route All Cameras")
+            auto_route_all.clicked.connect(lambda: self.parent.button_add_from_addi_options(17, option.bound_to) )
+            self.vbox.addWidget(auto_route_all)
+
             snap_camera = QPushButton(self)
-            snap_camera.setText("Snap All to Route")
+            snap_camera.setText("Snap All Cameras to Route")
             snap_camera.clicked.connect(lambda: self.parent.button_add_from_addi_options(20, option.bound_to) )
             self.vbox.addWidget(snap_camera)
 
@@ -280,8 +281,10 @@ class MoreButtons(QWidget):
             new_camera.clicked.connect(lambda: self.parent.button_add_from_addi_options(8, 5) )
             self.vbox.addWidget(new_camera)
 
-
-            #add area / camera / route?
+            new_goal = QPushButton(self)
+            new_goal.setText("Add Goal Camera (if currently none)")
+            new_goal.clicked.connect(lambda: self.parent.button_add_from_addi_options(8, 0) )
+            self.vbox.addWidget(new_goal)
 
         elif isinstance(option.bound_to, ObjectContainer) and option.bound_to.assoc is ObjectRoute:
             new_route_group = QPushButton(self)

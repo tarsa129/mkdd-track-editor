@@ -1665,6 +1665,14 @@ class GenEditor(QMainWindow):
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
         elif option == 8:  #add new camera with route
 
+            if obj == 0:
+                came_types_exist = [ camera.type for camera in self.level_file.cameras]
+                if 0 not in came_types_exist:
+                    self.level_file.cameras.append(  Camera.new_type_0() )
+                self.leveldatatreeview.set_objects(self.level_file)
+                self.update_3d()
+                return
+
             if obj in routed_cameras:
                 self.objects_to_be_added = []
                 self.object_to_be_added = None
