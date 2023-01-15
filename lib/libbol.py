@@ -2056,9 +2056,12 @@ class BOL(object):
             pos_ray.x = 1
 
         theta = arctan( -pos_ray.z / pos_ray.x ) * 180 / 3.14
-        if rsp.position.z < 0:
+        if pos_ray.x > 0:
             theta += 180
-        rsp.rotation = Rotation.from_euler(Vector3(0, theta + 90, 0))
+        theta += 270
+
+        print(theta, pos_ray.x, pos_ray.z)
+        rsp.rotation = Rotation.from_euler(Vector3(0, theta, 0))
 
     def get_route_container(self, obj):
         if isinstance(obj, (CameraRoute, Camera)):
