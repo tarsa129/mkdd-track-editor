@@ -163,13 +163,11 @@ class PikminSideWidget(QWidget):
         #return a CLASS to add
         editor = choose_data_editor(obj)
         if editor is not None:
-
             self.object_data_edit = editor(self, obj)
             self.verticalLayout.addWidget(self.object_data_edit)
             self.object_data_edit.emit_3d_update.connect(update3d)
 
             if isinstance(self.object_data_edit, ObjectEdit) or isinstance(self.object_data_edit, CameraEdit):
-                #self.object_data_edit.set_default_values()
                 self.object_data_edit.emit_route_update.connect(lambda obj, old, new: self.parent.update_route_used_by(obj, old, new) )
             elif isinstance(self.object_data_edit, AreaEdit):
                 self.object_data_edit.emit_camera_update.connect(lambda obj, old, new: self.parent.update_camera_used_by(obj, old, new) )

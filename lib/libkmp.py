@@ -1565,7 +1565,7 @@ class FOV:
     def __ini__(self):
         self.start = 0
         self.end = 0
-class Cameras(list):
+class Cameras(ObjectContainer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.startcam = -1

@@ -251,10 +251,9 @@ class MoreButtons(QWidget):
                 self.vbox.addWidget(copy_camera)
 
 
-        elif isinstance(option.bound_to, ObjectContainer) and option.bound_to.assoc is Camera:
+        elif isinstance(option.bound_to, Cameras):
 
             all_options = False
-
             #auto route all
             auto_route_all = QPushButton(self)
             auto_route_all.setText("Auto Route All Cameras")

@@ -2731,7 +2731,7 @@ class GenEditor(QMainWindow):
                 if self.leveldatatreeview.cameras.isSelected():
                     self.pik_control.set_info(self.leveldatatreeview.cameras.bound_to, self.update_3d)
                     self.pik_control.update_info()
-                if self.leveldatatreeview.kartpoints.isSelected():
+                elif self.leveldatatreeview.kartpoints.isSelected():
                     self.pik_control.set_info(self.leveldatatreeview.kartpoints.bound_to, self.update_3d)
                     self.pik_control.update_info()
                 else:
