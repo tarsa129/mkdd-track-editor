@@ -1693,6 +1693,8 @@ class BOL(object):
                     camera_routes.append(route.to_camera())
                 elif isinstance(route.used_by[0], MapObject):
                     object_routes.append(route.to_object())
+            else:
+                object_routes.append(route.to_object())
         self.routes = object_routes
         self.cameraroutes = camera_routes
 
