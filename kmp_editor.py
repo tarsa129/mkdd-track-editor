@@ -1406,6 +1406,8 @@ class GenEditor(QMainWindow):
                 self.button_add_from_addi_options( 6, self.level_file.cameraroutes[-1] )
             elif isinstance(obj, RoutePoint):
                 self.button_add_from_addi_options( 15, obj)
+            elif isinstance(obj, ObjectContainer) and obj.assoc == JugemPoint:
+                self.button_add_from_addi_options( 9, True)
             else:
                 print('nothing caught')
                 add_something = False
@@ -1547,7 +1549,6 @@ class GenEditor(QMainWindow):
 
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
-
         elif self.object_to_be_added is not None:
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
@@ -1785,15 +1786,15 @@ class GenEditor(QMainWindow):
         elif option == 22.5: #reassign respawns
             self.level_file.reassign_respawns()
             self.level_view.do_redraw()
-        elif option == 23:
+        elif option == 23: #remove unused object routes
             self.level_file.remove_unused_object_routes()
             self.level_view.do_redraw()
-        elif option == 23.5:
+        elif option == 23.5: #remove unused camera routes
             self.level_file.remove_unused_camera_routes()
             self.level_view.do_redraw()
         elif option == 24: #copy enemy to item
             self.level_file.copy_enemy_to_item()
-        elif option == 25:
+        elif option == 25: #remove unused cameras
             self.level_file.remove_unused_cameras()
             self.level_view.do_redraw()
         elif option == 26: #remove unused respawns:
