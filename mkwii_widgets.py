@@ -1268,6 +1268,11 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
             respawns_to_highlight = set()
 
+            highligh_sp_width = 8.0
+            highligh_cp_width = 4.0
+            highligh_cp_lengt = 4.0
+            normal_width = 1.0
+
             #draw checkpoint groups first the points themselves and then the connections
             if vismenu.checkpoints.is_visible():
                 checkpoints_to_highlight = set()
@@ -1310,25 +1315,27 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         pos1 = checkpoint.start
                         pos2 = checkpoint.end
 
-                        glLineWidth(1.0)
+                        #draw the line for each singular checkpoint
+                        glLineWidth(normal_width)
                         glColor3f(*colors[i % 4])
-                        if checkpoint.type == 1 or selected_groups[i] or checkpoint.lapcounter == 1:
-                            glLineWidth(4.0)
+
+                        if (checkpoint.type == 1 or checkpoint.lapcounter == 1) and selected_groups[i]:
+                            glLineWidth(highligh_sp_width)
+                        elif checkpoint.type == 1 or selected_groups[i] or checkpoint.lapcounter == 1:
+                            glLineWidth(highligh_cp_width)
                         if checkpoint.lapcounter == 1:
                             glColor3f( 1.0, 0.5, 0.0 )
                         elif checkpoint.type == 1:
                             glColor3f( 1.0, 1.0, 0.0 )
 
-
-
-                        #draw between
                         glBegin(GL_LINES)
                         glVertex3f(pos1.x, -pos1.z, pos1.y)
                         glVertex3f(pos2.x, -pos2.z, pos2.y)
                         glEnd()
 
+                        #draw between successive checkpoints
                         glColor3f(*colors[i % 4])
-                        glLineWidth(1.0)
+                        glLineWidth(normal_width)
                         glBegin(GL_LINES)
                         if prev is not None:
                             pos3 = prev.start
@@ -1344,7 +1351,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                 #draw thicker lines for selected ones
                 if checkpoints_to_highlight or any(selected_groups):
-                    glLineWidth(8.0)
+
                     point_index = 0
                     for i, group in enumerate(self.level_file.checkpoints.groups):
                         for checkpoint in group.points:
@@ -1352,17 +1359,23 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                                 pos1 = checkpoint.start
                                 pos2 = checkpoint.end
 
-                                if checkpoint.type == 1:
+                                glColor3f(*colors[i % 4])
+                                if checkpoint.lapcounter == 1:
+                                    glColor3f( 1.0, 0.5, 0.0 )
+                                    glLineWidth(highligh_sp_width)
+                                elif checkpoint.type == 1:
+                                    glLineWidth(highligh_sp_width)
                                     glColor3f( 1.0, 1.0, 0.0 )
                                 else:
-                                    glColor3f(*colors[i % 4])
+                                    glLineWidth(highligh_cp_width)
+
 
                                 glBegin(GL_LINES)
                                 glVertex3f(pos1.x, -pos1.z, pos1.y)
                                 glVertex3f(pos2.x, -pos2.z, pos2.y)
                                 glEnd()
                             point_index += 1
-                glLineWidth(1.0)
+                glLineWidth(normal_width)
 
             glPushMatrix()
 
@@ -1370,7 +1383,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
             if vismenu.checkpoints.is_visible():
                 for i, group in enumerate(self.level_file.checkpoints.groups):
                     if selected_groups[i]:
-                        glLineWidth(3.0)
+                        glLineWidth(normal_width)
 
                     glColor3f(*colors[i % 4])
                     prev = None
@@ -1388,13 +1401,12 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                             prev = checkpoint
 
                     if selected_groups[i]:
-                        glLineWidth(1.0)
+                        glLineWidth(normal_width)
             #draw the arrow body between sucessive checkpoints
-
             if vismenu.checkpoints.is_visible():
                 for i, group in enumerate( self.level_file.checkpoints.groups ) :
                     if selected_groups[i]:
-                        glLineWidth(3.0)
+                        glLineWidth(highligh_cp_lengt)
                     glColor3f(*colors[i % 4])
                     prev = None
                     for checkpoint in group.points:
@@ -1411,7 +1423,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                             prev = checkpoint
                             glEnd()
                     if selected_groups[i]:
-                        glLineWidth(1.0)
+                        glLineWidth(normal_width)
 
 
             #draw arrows between groups
@@ -1449,7 +1461,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         glColor3f(*used_colors[group])
 
                         if selected_groups[i] or selected_groups[group]:
-                            glLineWidth(3.0)
+                            glLineWidth(highligh_cp_lengt)
 
                         glBegin(GL_LINES)
                         glVertex3f(prevpoint.start.x, -prevpoint.start.z, prevpoint.start.y)
@@ -1466,7 +1478,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         self.models.draw_arrow_head(prevpoint.end, point.end)
 
                         if selected_groups[i] or selected_groups[group]:
-                            glLineWidth(1.0)
+                            glLineWidth(normal_width)
             glPopMatrix()
 
 

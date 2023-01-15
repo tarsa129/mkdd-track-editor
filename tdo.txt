@@ -5,7 +5,6 @@ mkwii to do list:
 
 enemy/item/checkpoint
 - pointgroups: add helper function for getting the absolute index of a point (for area) and enemy point from an absolute index
-- checkpoint: make constant values for highlighted, lapcounter, key, etc
 
 gobj:
 - manually improve all descriptions / settings / and add default values
@@ -13,7 +12,6 @@ gobj:
 poti:
 - show splines (talk to zatchi)
 - camera auto route - make it based on the total length (parse all files to find average distance / speed)
-- move unused routes (at load) to be unused object routes?
 
 area:
 - highlight camera / route point when relevant. (ALSO APPLIES TO MKDD)
