@@ -27,10 +27,6 @@ area:
 
 came:
 - camera replaying (long shot)
-- properly hide fields
-
-juge:
-- when adding respawn points, use the angle of the closest two enemypoints
 
 before release: match lorenzis with colors
 

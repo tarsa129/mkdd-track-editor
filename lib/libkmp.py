@@ -2628,9 +2628,10 @@ class KMP(object):
             pos_ray.x = 1
 
         theta = arctan( -pos_ray.z / pos_ray.x ) * 180 / 3.14
-        if rsp.position.z < 0:
+        if pos_ray.x > 0:
             theta += 180
-        rsp.rotation = Rotation(0, theta + 90, 0)
+        theta += 270
+        rsp.rotation = Rotation(0, theta, 0)
 
     def get_to_deal_with(self, obj):
         if isinstance(obj, (EnemyPointGroup, EnemyPoint, EnemyPointGroups) ):
