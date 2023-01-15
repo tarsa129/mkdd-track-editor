@@ -2139,6 +2139,7 @@ class KMP(object):
                     camera_routes.append(route.to_camera())
                 elif isinstance(route.used_by[0], (MapObject, Area) ):
                     object_routes.append(route.to_object())
+
         self.routes = object_routes
         self.cameraroutes = camera_routes
 
