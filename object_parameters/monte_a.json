@@ -3,7 +3,7 @@
         "Unused",
         "1 = Enable player rotation and clapping.",
         "Distance at which it rotates to face the player.",
-        "Distance at which it loads the clapping chr0. If higher than setting 3, this will be ignored until that setting's distance is reached.",
+        "Distance at which it loads the clapping chr0. If higher than setting 3, this will be ignored until that settings distance is reached.",
         "Unused",
         "Unused",
         "Unused",

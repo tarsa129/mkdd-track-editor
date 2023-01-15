@@ -1,7 +1,7 @@
 {
     "Object Parameters": [
         "Number of slave cows following the master cow unordered",
-        "Unused",
+        "Unknown",
         "Start delay of the slave cows in 1/60 seconds.<br>The master cow starts a few seconds earlier",
         "Unused",
         "Unused",

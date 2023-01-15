@@ -1,6 +1,6 @@
 {
     "Object Parameters": [
-        "0 = Use Thwomp<br>1 = Don't use Thwomp",
+        "0 = Use Thwomp<br>1 = Dont use Thwomp",
         "Sand shake wave length. 0 by default if s1 = 0",
         "Time until sand wave reaches the end. 0 by default if s1 = 0. Must not be 0 if s1 = 1",
         "Sand push and pull strength.",

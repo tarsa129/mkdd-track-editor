@@ -50,8 +50,8 @@ for line in lines:
         
     elif line.startswith("|s"):
         index = int(line[2])
-        
-        if not ( line[5: ].startswith("&mdash;") or "Unknown" in line[5: ] ):
+        line = line.replace("'", "")
+        if not ( line[5: ].startswith("&mdash;") ):
             current_object.settings[index - 1] = line[5:-1 ]
     elif line.startswith("|info"):
         info =  line[7: ]

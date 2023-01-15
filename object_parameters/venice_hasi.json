@@ -2,7 +2,7 @@
     "Object Parameters": [
         "Time until the bridge goes up (and animation starts playing)",
         "Animation / Bridge opening speed (0x3 normal, 0x1 faster, 0x10 slow)",
-        "Unused",
+        "Unknown",
         "Unused",
         "Unused",
         "Unused",

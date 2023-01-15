@@ -1,6 +1,6 @@
 {
     "Object Parameters": [
-        "ID (1-based), used in ''begoman_manager'' to control when they appear",
+        "ID (1-based), used in begoman_manager to control when they appear",
         "The radius of the 1st ring in which the topman is allowed to roam in. ",
         "Time in frames from the start of the race until the topman will switch from the 1st ring to the 2nd ring.",
         "The radius of the 2nd ring in which the topman is allowed to roam in. ",

@@ -1,7 +1,7 @@
 {
     "Object Parameters": [
         "Unused",
-        "Fall time controller in Time Trial and Online VS Race, controls the delay before starting in seconds after starting of countdown, depending on the value T:<br>T = 0 \u00e2\u2020\u2019 Block doesn't fall<br>T > 0 \u00e2\u2020\u2019 Block falls after T seconds<br>T = 4 \u00e2\u2020\u2019 Block falls immediately after the \"GO!\"",
+        "Fall time controller in Time Trial and Online VS Race, controls the delay before starting in seconds after starting of countdown, depending on the value T:<br>T = 0 \u00e2\u2020\u2019 Block doesnt fall<br>T > 0 \u00e2\u2020\u2019 Block falls after T seconds<br>T = 4 \u00e2\u2020\u2019 Block falls immediately after the \"GO!\"",
         "Additional delay of X/60 seconds, goes added to S2",
         "Unused",
         "Unused",

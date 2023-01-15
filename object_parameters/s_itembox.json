@@ -1,13 +1,13 @@
 {
     "Object Parameters": [
-        "Unused",
+        "Unknown",
         "[[Item_Settings_-_Item_Boxes|Item type (player)]]",
         "[[Item_Settings_-_Item_Boxes|Item type (enemy)]]",
         "Disables shadow if set",
         "Unused",
         "[[Item_Settings_-_Item_Boxes|Timing lottery]]",
-        "Height offset with object's position, signed.",
-        "Unused"
+        "Height offset with objects position, signed.",
+        "Unknown"
     ],
     "Assets": [
         ".brres file needed"

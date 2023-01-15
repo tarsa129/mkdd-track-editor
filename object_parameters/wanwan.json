@@ -1,7 +1,7 @@
 {
     "Object Parameters": [
         "Length of chain in game units",
-        "Unused",
+        "Unknown",
         "Unused",
         "Let (X,Y) be the center of the area where the Chain Chomp snaps to (neither X nor Y are height coordinates). If X is positive, X/10 is the X-Value for the setting; if X is negative, 65536 + X/10 is the X-Value for the setting (make sure to include the negative sign when adding!).  ",
         "Let (X,Y) be the center of the area where the Chain Chomp snaps to (neither X nor Y are height coordinates). If Y is positive, Y/10 is the Y-Value for the setting; if Y is negative, 65536 + Y/10 is the Y-Value for the setting (make sure to include the negative sign when adding!).",

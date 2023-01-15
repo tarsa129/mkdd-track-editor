@@ -14,9 +14,9 @@
         ".brasd files needed"
     ],
     "Default Values": [
-        600,
-        40,
-        120,
+        null,
+        null,
+        null,
         null,
         null,
         null,
