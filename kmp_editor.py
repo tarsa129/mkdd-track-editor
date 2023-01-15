@@ -2034,7 +2034,7 @@ class GenEditor(QMainWindow):
                 self.level_file.respawnpoints.append(placeobject)
                 if group:
                     self.level_file.reassign_one_respawn(placeobject)
-
+                self.level_file.rotate_one_respawn(placeobject)
 
             elif isinstance(object, libkmp.Area):
                 self.level_file.areas.areas.append(placeobject)
