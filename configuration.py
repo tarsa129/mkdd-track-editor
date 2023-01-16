@@ -27,7 +27,7 @@ def make_default_config():
         "hidden_collision_types": "",
         "hidden_collision_type_groups": "",
         "filter_view": "",
-        "default_view": "topdownview"
+        "default_view": "topdownview",
     }
 
     with open("editor_config.ini", "w") as f:

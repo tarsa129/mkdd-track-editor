@@ -132,6 +132,9 @@ class GenEditor(QMainWindow):
         self.leveldatatreeview.bound_to_group(self.level_file)
         self.level_view.do_redraw()
 
+        if self.editorconfig.get("default_view") == "3dview":
+            self.change_to_3dview(True)
+
         self.update_3d()
 
         if self.editorconfig.get("default_view") == "3dview":
@@ -953,6 +956,16 @@ class GenEditor(QMainWindow):
             if self.first_time_3dview:
                 self.first_time_3dview = False
                 self.frame_selection(adjust_zoom=True)
+
+    def on_default_view_changed(self, view_string):
+        self.editorconfig["default_view"] = view_string
+        save_cfg(self.configuration)
+
+        view_actions = [self.load_as_topdown, self.load_as_3dview]
+        view_options = ("topdownview", "3dview")
+
+        for i, option in enumerate(view_options):
+            view_actions[i].setChecked(option == view_string)
 
     def on_default_view_changed(self, view_string):
         self.editorconfig["default_view"] = view_string
