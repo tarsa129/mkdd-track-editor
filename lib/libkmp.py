@@ -1583,6 +1583,11 @@ class Cameras(ObjectContainer):
 
         return cameras
 
+    def add_goal_camera(self):
+        came_types_exist = [ camera.type for camera in self]
+        if 0 not in came_types_exist:
+            self.append(  Camera.new_type_0() )
+
 class Camera(object):
     can_copy = True
     def __init__(self, position):
@@ -1778,7 +1783,6 @@ class JugemPoint(object):
         self.rotation.write(f)
         f.write(pack(">H", count) )
         f.write(pack(">h", self.range ) )
-
 
 class CannonPoint(object):
     def __init__(self, position):
@@ -2355,13 +2359,13 @@ class KMP(object):
 
         #create checkpoints from enemy points
         for i, group in enumerate( self.enemypointgroups.groups ):
-            new_cp_group = CheckpointGroup(i)
-            new_cp_group.prevgroup = group.prev
-            new_cp_group.nextgroup = group.next
+            new_cp_group = CheckpointGroup()
+            new_cp_group.id = i
+            new_cp_group.prevgroup = group.prevgroup
+            new_cp_group.nextgroup = group.nextgroup
 
             self.checkpoints.groups.append( new_cp_group )
 
-            #group = self.enemypointgroups.groups[groupindex]
             for j, point in enumerate( group.points ):
                 draw_cp = False
                 if i == 0 and j == 0:
@@ -2369,6 +2373,7 @@ class KMP(object):
                     #should both be vector3
                     central_point = self.kartpoints.positions[0].position
                     left_vector = self.kartpoints.positions[0].rotation.get_vectors()[2]
+                    left_vector = Vector3( -1 * left_vector.x, left_vector.y,-1 * left_vector.z  )
 
                 elif (i == 0 and j % 2 == 0 and len(group.points) > j + 1) or (i > 0 and j % 2 == 1 and len(group.points) > j + 1):
                 #elif (i == 0  and len(group.points) > j + 1) or (i > 0 and len(group.points) > j + 1):
@@ -2393,13 +2398,26 @@ class KMP(object):
                     new_checkpoint.end = Vector3(*second_point)
                     new_cp_group.points.append( new_checkpoint)
 
-    def auto_qol_all(self):
-        # clear checkpoints
+    def auto_generation(self):
+        """
+            - add opening cams
+            - add goal camera
+            - add replay cams"""
 
         self.create_checkpoints_from_enemy()
-        self.remove_unused_cameras()
+        self.create_checkpoints_from_enemy()
+        self.create_respawns()
+        self.cameras.add_goal_camera()
+
+    def auto_cleanup(self):
+        self.enemypointgroups.merge_groups()
+        self.itempointgroups.merge_groups()
+        self.checkpoints.merge_groups()
+
         self.remove_unused_routes()
-        #self.copy_enemy_to_item()
+        self.remove_unused_cameras()
+
+        self.remove_unused_respawns()
 
     def reset_routes(self, start_at = 0):
 
@@ -2415,7 +2433,6 @@ class KMP(object):
         for route_index in range(start_at, len(self.cameraroutes) ):
             for object in self.cameraroutes[route_index].used_by:
                 object.route = route_index
-
 
     def remove_unused_routes(self):
         self.remove_unused_object_routes()
@@ -2473,17 +2490,16 @@ class KMP(object):
             if camera.type == 0:
                 used.append(camera)
 
+        if self.cameras.startcam != -1 and (self.cameras.startcam < len(self.cameras)):
+            opening_cams.append(self.cameras[self.cameras.startcam])
 
-        opening_cams.append(self.cameras[self.cameras.startcam])
-
-
-        while next_cam != -1 and next_cam < len(self.cameras):
-            next_camera = self.cameras[next_cam]
-            if next_camera in used:
-                break
-            used.append(next_camera)
-            opening_cams.append(next_camera)
-            next_cam = next_camera.nextcam
+            while next_cam != -1 and next_cam < len(self.cameras):
+                next_camera = self.cameras[next_cam]
+                if next_camera in used:
+                    break
+                used.append(next_camera)
+                opening_cams.append(next_camera)
+                next_cam = next_camera.nextcam
 
         #now iterate through area
         for area in self.areas.areas:
@@ -2525,18 +2541,17 @@ class KMP(object):
             num_checks = len(checkgroup.points)
             for i in range(4, num_checks, 8):
                 checkpoint_mid1 = (checkgroup.points[i].start + checkgroup.points[i].end) /2
-                checkpoint_mid2 = (checkgroup.points[i+1].start + checkgroup.points[i+1].end)/2
-
+                checkpoint_mid2 = (checkgroup.points[i-1].start + checkgroup.points[i-1].end)/2
 
                 respawn_new = JugemPoint( (checkpoint_mid1 + checkpoint_mid2) / 2 )
-                #respawn_new.respawn_id = rsp_idx
 
-                for j in range(i - 4, i + 4):
-                    checkgroup.points[j].respawn = rsp_idx
+                for j in range( i - 4, i + 4):
+                    if j < num_checks:
+                        checkgroup.points[j].respawn = rsp_idx
 
                 rsp_idx += 1
 
-
+                self.rotate_one_respawn(respawn_new)
                 self.respawnpoints.append(respawn_new)
 
             #the ones at the end of the group have the same one as the previous

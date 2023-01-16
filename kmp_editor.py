@@ -645,16 +645,20 @@ class GenEditor(QMainWindow):
         self.misc_menu.addMenu(self.choose_default_view)
         self.misc_menu.addSeparator()
 
-        self.do_auto_qol = QAction("Run Auto QOL")
-        self.do_auto_qol.triggered.connect(self.auto_qol)
-        self.misc_menu.addAction(self.do_auto_qol)
-        self.do_auto_qol.setShortcut("Ctrl+4")
+        self.do_generation = QAction("Run Generation")
+        self.do_generation.triggered.connect(self.auto_generation)
+        self.misc_menu.addAction(self.do_generation)
+        self.do_generation.setShortcut("Ctrl+3")
+
+        self.do_cleanup = QAction("Run Cleanup")
+        self.do_cleanup.triggered.connect(self.auto_generation)
+        self.misc_menu.addAction(self.do_cleanup)
+        self.do_cleanup.setShortcut("Ctrl+4")
 
         self.misc_menu.addAction(self.frame_action)
         self.analyze_action = QAction("Analyze for common mistakes", self)
         self.analyze_action.triggered.connect(self.analyze_for_mistakes)
         self.misc_menu.addAction(self.analyze_action)
-
 
         self.menubar.addAction(self.file_menu.menuAction())
         self.menubar.addAction(self.edit_menu.menuAction())
@@ -1704,9 +1708,7 @@ class GenEditor(QMainWindow):
         elif option == 8:  #add new camera with route
 
             if obj == 0:
-                came_types_exist = [ camera.type for camera in self.level_file.cameras]
-                if 0 not in came_types_exist:
-                    self.level_file.cameras.append(  Camera.new_type_0() )
+                self.level_file.cameras.add_goal_camera()
                 self.leveldatatreeview.set_objects(self.level_file)
                 self.update_3d()
                 return
@@ -3036,12 +3038,18 @@ class GenEditor(QMainWindow):
         #will use self.obj_to_copy
 
 
-    def auto_qol(self):
-        self.level_file.auto_qol_all()
+    def auto_generation(self):
+        self.level_file.auto_generation()
         self.leveldatatreeview.set_objects(self.level_file)
         self.leveldatatreeview.bound_to_group(self.level_file)
         self.level_view.do_redraw()
+        self.update_3d()
 
+    def auto_cleanup(self):
+        self.level_file.auto_cleanup()
+        self.leveldatatreeview.set_objects(self.level_file)
+        self.leveldatatreeview.bound_to_group(self.level_file)
+        self.level_view.do_redraw()
         self.update_3d()
 
 def find_file(rarc_folder, ending):

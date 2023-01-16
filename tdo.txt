@@ -3,16 +3,19 @@ drag n drop opening
 
 mkwii to do list:
 
+ktpt
+- add 'v' option for addition
+
 enemy/item/checkpoint
 - pointgroups: add helper function for getting the absolute index of a point (for area) and enemy point from an absolute index
 
 gobj:
 - manually improve all descriptions / settings / and add default values
+- line drawing for item boxes
 
 poti:
 - show splines (talk to zatchi)
 - camera auto route - make it based on the total length (parse all files to find average distance / speed)
-- render area routes differently (dark blue?)
 
 area:
 - highlight camera / route point when relevant. (ALSO APPLIES TO MKDD)
@@ -22,6 +25,7 @@ area:
 -- ONLY have to worry about deletions, as additions will preserve the existence of the point
 - add helper functions in areas to get all areas of a specific type
 - add 'c' linking for areas 
+- render area connections in a consistent color
 
 came:
 - camera replaying (long shot)
@@ -32,9 +36,13 @@ general:
 error analyzer - i'll figure this out when i get to it
 refactor options code to move stuff to libkmp
 add an option for "cleanup"
-- merge enemy groups, and removed unused groups
-- remove unused respawns
-- remove unused paths
-- remove unused cameras
+- parse areas, remove areas with invalid connections
+generation
+- create checkpoints from enemyroutes
+- copy enemypoints to itempoints
+- create respawns from checkpoints
+- add opening cams
+- add goal camera
+- add replay cams
 
 
