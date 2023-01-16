@@ -178,6 +178,9 @@ class GenEditor(QMainWindow):
         self.leveldatatreeview.bound_to_group(self.level_file)
         self.level_view.do_redraw()
 
+        if self.editorconfig.get("default_view") == "3dview":
+            self.change_to_3dview(True)
+
         self.update_3d()
 
     def save_geometry(self):
@@ -770,6 +773,19 @@ class GenEditor(QMainWindow):
         self.change_to_3dview_action.setCheckable(True)
         self.change_to_3dview_action.setShortcut("Ctrl+2")
 
+        self.choose_default_view = QMenu("Choose Default View")
+        self.load_as_topdown = self.choose_default_view.addAction("Topdown View")
+        self.load_as_topdown.setCheckable(True)
+        self.load_as_topdown.setChecked( self.editorconfig.get("default_view") == "topdownview" )
+        self.load_as_topdown.triggered.connect( lambda: self.on_default_view_changed("topdownview") )
+        self.load_as_3dview = self.choose_default_view.addAction("3D View")
+        self.load_as_3dview.setCheckable(True)
+        self.load_as_3dview.setChecked( self.editorconfig.get("default_view") == "3dview" )
+        self.load_as_3dview.triggered.connect( lambda: self.on_default_view_changed("3dview") )
+        if self.editorconfig.get("default_view") not in ("topdownview", "3dview"):
+            self.on_default_view_changed("topdownview")
+        self.misc_menu.addMenu(self.choose_default_view)
+
         self.choose_bco_area = QAction("Collision Areas (BCO)")
         self.choose_bco_area.triggered.connect(self.action_choose_bco_area)
         self.misc_menu.addAction(self.choose_bco_area)
@@ -1243,6 +1259,16 @@ class GenEditor(QMainWindow):
             if self.first_time_3dview:
                 self.first_time_3dview = False
                 self.frame_selection(adjust_zoom=True)
+
+    def on_default_view_changed(self, view_string):
+        self.editorconfig["default_view"] = view_string
+        save_cfg(self.configuration)
+
+        view_actions = [self.load_as_topdown, self.load_as_3dview]
+        view_options = ("topdownview", "3dview")
+
+        for i, option in enumerate(view_options):
+            view_actions[i].setChecked(option == view_string)
 
     def setup_ui_toolbar(self):
         # self.toolbar = QtWidgets.QToolBar("Test", self)
