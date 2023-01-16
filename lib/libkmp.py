@@ -1871,6 +1871,8 @@ class KMP(object):
 
         self.missionpoints = ObjectContainer()
 
+        self.set_assoc()
+
     def set_assoc(self):
         self.routes.assoc = ObjectRoute
         self.cameraroutes.assoc = CameraRoute
@@ -1893,7 +1895,7 @@ class KMP(object):
         kmp.checkpoints.groups[0].add_new_next(0)
         kmp.kartpoints.positions.append( KartStartPoint.new() )
 
-        kmp.set_assoc()
+        kmp.cameras.add_goal_camera()
 
         return kmp
 
@@ -2352,56 +2354,9 @@ class KMP(object):
 
         return routes, cameras
 
-    def create_checkpoints_from_enemy(self):
-        for checkgroup in self.checkpoints.groups:
-            checkgroup.points.clear()
-        self.checkpoints.groups.clear()
-
-        #create checkpoints from enemy points
-        for i, group in enumerate( self.enemypointgroups.groups ):
-            new_cp_group = CheckpointGroup()
-            new_cp_group.id = i
-            new_cp_group.prevgroup = group.prevgroup
-            new_cp_group.nextgroup = group.nextgroup
-
-            self.checkpoints.groups.append( new_cp_group )
-
-            for j, point in enumerate( group.points ):
-                draw_cp = False
-                if i == 0 and j == 0:
-                    draw_cp = True
-                    #should both be vector3
-                    central_point = self.kartpoints.positions[0].position
-                    left_vector = self.kartpoints.positions[0].rotation.get_vectors()[2]
-                    left_vector = Vector3( -1 * left_vector.x, left_vector.y,-1 * left_vector.z  )
-
-                elif (i == 0 and j % 2 == 0 and len(group.points) > j + 1) or (i > 0 and j % 2 == 1 and len(group.points) > j + 1):
-                #elif (i == 0  and len(group.points) > j + 1) or (i > 0 and len(group.points) > j + 1):
-                    draw_cp = True
-                    central_point = point.position
-
-                    deltaX = group.points[j+1].position.x - group.points[j-1].position.x
-                    deltaZ = group.points[j+1].position.z - group.points[j-1].position.z
-
-                    left_vector = Vector3( -1 * deltaZ, 0, deltaX   ) * -1
-
-                    left_vector.normalize()
-
-
-                if draw_cp:
-
-                    first_point = [central_point.x + 3500 * left_vector.x, 0, central_point.z + 3500 * left_vector.z]
-                    second_point = [central_point.x - 3500 * left_vector.x, 0, central_point.z - 3500 * left_vector.z]
-
-                    new_checkpoint = Checkpoint.new()
-                    new_checkpoint.start = Vector3( *first_point)
-                    new_checkpoint.end = Vector3(*second_point)
-                    new_cp_group.points.append( new_checkpoint)
-
     def auto_generation(self):
         """
             - add opening cams
-            - add goal camera
             - add replay cams"""
 
         self.create_checkpoints_from_enemy()
@@ -2418,67 +2373,6 @@ class KMP(object):
         self.remove_unused_cameras()
 
         self.remove_unused_respawns()
-
-    def reset_routes(self, start_at = 0):
-
-        self.reset_object_routes(start_at)
-        self.reset_camera_routes(start_at)
-
-    def reset_object_routes(self, start_at = 0):
-        for route_index in range(start_at, len(self.routes) ):
-            for object in self.routes[route_index].used_by:
-                object.route = route_index
-
-    def reset_camera_routes(self, start_at = 0):
-        for route_index in range(start_at, len(self.cameraroutes) ):
-            for object in self.cameraroutes[route_index].used_by:
-                object.route = route_index
-
-    def remove_unused_routes(self):
-        self.remove_unused_object_routes()
-        self.remove_unused_camera_routes()
-
-    def remove_unused_object_routes(self):
-        to_remove = []
-        for i, route in enumerate(self.routes):
-            if len(route.used_by) == 0:
-                to_remove.append(i)
-        to_remove.sort()
-        to_remove.reverse()
-        for rem_index in to_remove:
-            self.routes.pop(rem_index)
-        self.reset_object_routes()
-
-    def remove_unused_camera_routes(self):
-
-        to_remove = []
-        for i, route in enumerate(self.cameraroutes):
-            if len(route.used_by) == 0:
-                to_remove.append(i)
-        to_remove.sort()
-        to_remove.reverse()
-        for rem_index in to_remove:
-            self.cameraroutes.pop(rem_index)
-        self.reset_camera_routes()
-
-    def copy_enemy_to_item(self):
-        self.itempointgroups = ItemPointGroups()
-
-        for group in self.enemypointgroups.groups:
-            new_group = ItemPointGroup()
-            new_group.id = group.id
-            new_group.prevgroup = group.prevgroup.copy()
-            new_group.nextgroup = group.nextgroup.copy()
-
-            for point in group.points:
-                new_point = ItemPoint.new()
-                new_point.position = point.position.copy()
-
-                new_group.points.append(new_point)
-
-            self.itempointgroups.groups.append(new_group)
-
-        pass
 
     def remove_unused_cameras(self):
         used = []
@@ -2526,11 +2420,7 @@ class KMP(object):
             curr_cam.nextcam = next_idx
             curr_cam = self.cameras[next_idx]
 
-        #figure out which cameras to remove
-        #then
-
-        pass
-
+    #respawn code
     def create_respawns(self):
 
         #remove all respwans
@@ -2659,6 +2549,7 @@ class KMP(object):
         theta += 270
         rsp.rotation = Rotation(0, theta, 0)
 
+    #enemy/item/checkpoint code
     def get_to_deal_with(self, obj):
         if isinstance(obj, (EnemyPointGroup, EnemyPoint, EnemyPointGroups) ):
             return self.enemypointgroups
@@ -2677,6 +2568,70 @@ class KMP(object):
 
         to_deal_with.remove_point(del_point)
 
+    def create_checkpoints_from_enemy(self):
+        for checkgroup in self.checkpoints.groups:
+            checkgroup.points.clear()
+        self.checkpoints.groups.clear()
+
+        #create checkpoints from enemy points
+        for i, group in enumerate( self.enemypointgroups.groups ):
+            new_cp_group = CheckpointGroup()
+            new_cp_group.id = i
+            new_cp_group.prevgroup = group.prevgroup
+            new_cp_group.nextgroup = group.nextgroup
+
+            self.checkpoints.groups.append( new_cp_group )
+
+            for j, point in enumerate( group.points ):
+                draw_cp = False
+                if i == 0 and j == 0:
+                    draw_cp = True
+                    #should both be vector3
+                    central_point = self.kartpoints.positions[0].position
+                    left_vector = self.kartpoints.positions[0].rotation.get_vectors()[2]
+                    left_vector = Vector3( -1 * left_vector.x, left_vector.y,-1 * left_vector.z  )
+
+                elif (i == 0 and j % 2 == 0 and len(group.points) > j + 1) or (i > 0 and j % 2 == 1 and len(group.points) > j + 1):
+                #elif (i == 0  and len(group.points) > j + 1) or (i > 0 and len(group.points) > j + 1):
+                    draw_cp = True
+                    central_point = point.position
+
+                    deltaX = group.points[j+1].position.x - group.points[j-1].position.x
+                    deltaZ = group.points[j+1].position.z - group.points[j-1].position.z
+
+                    left_vector = Vector3( -1 * deltaZ, 0, deltaX   ) * -1
+
+                    left_vector.normalize()
+
+
+                if draw_cp:
+
+                    first_point = [central_point.x + 3500 * left_vector.x, 0, central_point.z + 3500 * left_vector.z]
+                    second_point = [central_point.x - 3500 * left_vector.x, 0, central_point.z - 3500 * left_vector.z]
+
+                    new_checkpoint = Checkpoint.new()
+                    new_checkpoint.start = Vector3( *first_point)
+                    new_checkpoint.end = Vector3(*second_point)
+                    new_cp_group.points.append( new_checkpoint)
+
+    def copy_enemy_to_item(self):
+        self.itempointgroups = ItemPointGroups()
+
+        for group in self.enemypointgroups.groups:
+            new_group = ItemPointGroup()
+            new_group.id = group.id
+            new_group.prevgroup = group.prevgroup.copy()
+            new_group.nextgroup = group.nextgroup.copy()
+
+            for point in group.points:
+                new_point = ItemPoint.new()
+                new_point.position = point.position.copy()
+
+                new_group.points.append(new_point)
+
+            self.itempointgroups.groups.append(new_group)
+
+    #ruoutes code
     def get_route_container(self, obj):
         if isinstance(obj, (CameraRoute, Camera)):
             return self.cameraroutes
@@ -2696,6 +2651,46 @@ class KMP(object):
                 return i
         return -1
 
+    def reset_routes(self, start_at = 0):
+        self.reset_object_routes(start_at)
+        self.reset_camera_routes(start_at)
+
+    def reset_object_routes(self, start_at = 0):
+        for route_index in range(start_at, len(self.routes) ):
+            for object in self.routes[route_index].used_by:
+                object.route = route_index
+
+    def reset_camera_routes(self, start_at = 0):
+        for route_index in range(start_at, len(self.cameraroutes) ):
+            for object in self.cameraroutes[route_index].used_by:
+                object.route = route_index
+
+    def remove_unused_routes(self):
+        self.remove_unused_object_routes()
+        self.remove_unused_camera_routes()
+
+    def remove_unused_object_routes(self):
+        to_remove = []
+        for i, route in enumerate(self.routes):
+            if len(route.used_by) == 0:
+                to_remove.append(i)
+        to_remove.sort()
+        to_remove.reverse()
+        for rem_index in to_remove:
+            self.routes.pop(rem_index)
+        self.reset_object_routes()
+
+    def remove_unused_camera_routes(self):
+
+        to_remove = []
+        for i, route in enumerate(self.cameraroutes):
+            if len(route.used_by) == 0:
+                to_remove.append(i)
+        to_remove.sort()
+        to_remove.reverse()
+        for rem_index in to_remove:
+            self.cameraroutes.pop(rem_index)
+        self.reset_camera_routes()
 with open("lib/mkwiiobjects.json", "r") as f:
     tmp = json.load(f)
     OBJECTNAMES = {}

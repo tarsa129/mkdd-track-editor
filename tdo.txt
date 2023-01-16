@@ -8,10 +8,11 @@ ktpt
 
 enemy/item/checkpoint
 - pointgroups: add helper function for getting the absolute index of a point (for area) and enemy point from an absolute index
+- checkpoints: fix concave checkpoints
 
 gobj:
 - manually improve all descriptions / settings / and add default values
-- line drawing for item boxes
+- line drawing for item boxes via "i"
 
 poti:
 - show splines (talk to zatchi)
@@ -35,14 +36,5 @@ before release: match lorenzis with colors
 general:
 error analyzer - i'll figure this out when i get to it
 refactor options code to move stuff to libkmp
-add an option for "cleanup"
-- parse areas, remove areas with invalid connections
-generation
-- create checkpoints from enemyroutes
-- copy enemypoints to itempoints
-- create respawns from checkpoints
-- add opening cams
-- add goal camera
-- add replay cams
 
 
