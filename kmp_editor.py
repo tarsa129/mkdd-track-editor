@@ -134,6 +134,9 @@ class GenEditor(QMainWindow):
 
         self.update_3d()
 
+        if self.editorconfig.get("default_view") == "3dview":
+            self.change_to_3dview(True)
+
         self.undo_history.append(self.generate_undo_entry())
 
     def save_geometry(self):
@@ -558,6 +561,13 @@ class GenEditor(QMainWindow):
         self.paste_action.setShortcut(QtGui.QKeySequence('Ctrl+V'))
         self.paste_action.triggered.connect(self.on_paste_action_triggered)
 
+        self.edit_menu.addSeparator()
+
+        self.rotation_mode = QAction("Rotate Positions around Pivot", self)
+        self.rotation_mode.setCheckable(True)
+        self.rotation_mode.setChecked(True)
+        self.edit_menu.addAction(self.rotation_mode)
+
         self.visibility_menu = mkwii_widgets.FilterViewMenu(self)
         self.visibility_menu.filter_update.connect(self.on_filter_update)
         filters = self.editorconfig["filter_view"].split(",")
@@ -586,31 +596,16 @@ class GenEditor(QMainWindow):
         self.choose_bco_area = QAction("Collision Areas (KCL)")
         self.choose_bco_area.triggered.connect(self.action_choose_kcl_flag)
         self.collision_menu.addAction(self.choose_bco_area)
-        self.choose_bco_area.setShortcut("Ctrl+3")
+        self.choose_bco_area.setShortcut("Ctrl+K")
 
         # Misc
         self.misc_menu = QMenu(self.menubar)
         self.misc_menu.setTitle("Misc")
-        #self.spawnpoint_action = QAction("Set startPos/Dir", self)
-        #self.spawnpoint_action.triggered.connect(self.action_open_rotationedit_window)
-        #self.misc_menu.addAction(self.spawnpoint_action)
-        self.rotation_mode = QAction("Rotate Positions around Pivot", self)
-        self.rotation_mode.setCheckable(True)
-        self.rotation_mode.setChecked(True)
-        #self.goto_action.triggered.connect(self.do_goto_action)
-        #self.goto_action.setShortcut("Ctrl+G")
 
         self.frame_action = QAction("Frame Selection/All", self)
         self.frame_action.triggered.connect(
             lambda _checked: self.frame_selection(adjust_zoom=True))
         self.frame_action.setShortcut("F")
-
-        self.misc_menu.addAction(self.rotation_mode)
-        self.misc_menu.addAction(self.frame_action)
-        self.analyze_action = QAction("Analyze for common mistakes", self)
-        self.analyze_action.triggered.connect(self.analyze_for_mistakes)
-        self.misc_menu.addAction(self.analyze_action)
-
 
         self.misc_menu.aboutToShow.connect(
             lambda: self.frame_action.setText(
@@ -633,10 +628,30 @@ class GenEditor(QMainWindow):
         self.change_to_3dview_action.setCheckable(True)
         self.change_to_3dview_action.setShortcut("Ctrl+2")
 
+        self.choose_default_view = QMenu("Choose Default View")
+        self.load_as_topdown = self.choose_default_view.addAction("Topdown View")
+        self.load_as_topdown.setCheckable(True)
+        self.load_as_topdown.setChecked( self.editorconfig.get("default_view") == "topdownview" )
+        self.load_as_topdown.triggered.connect( lambda: self.on_default_view_changed("topdownview") )
+        self.load_as_3dview = self.choose_default_view.addAction("3D View")
+        self.load_as_3dview.setCheckable(True)
+        self.load_as_3dview.setChecked( self.editorconfig.get("default_view") == "3dview" )
+        self.load_as_3dview.triggered.connect( lambda: self.on_default_view_changed("3dview") )
+        if self.editorconfig.get("default_view") not in ("topdownview", "3dview"):
+            self.on_default_view_changed("topdownview")
+        self.misc_menu.addMenu(self.choose_default_view)
+        self.misc_menu.addSeparator()
+
         self.do_auto_qol = QAction("Run Auto QOL")
         self.do_auto_qol.triggered.connect(self.auto_qol)
         self.misc_menu.addAction(self.do_auto_qol)
         self.do_auto_qol.setShortcut("Ctrl+4")
+
+        self.misc_menu.addAction(self.frame_action)
+        self.analyze_action = QAction("Analyze for common mistakes", self)
+        self.analyze_action.triggered.connect(self.analyze_for_mistakes)
+        self.misc_menu.addAction(self.analyze_action)
+
 
         self.menubar.addAction(self.file_menu.menuAction())
         self.menubar.addAction(self.edit_menu.menuAction())
@@ -938,6 +953,16 @@ class GenEditor(QMainWindow):
             if self.first_time_3dview:
                 self.first_time_3dview = False
                 self.frame_selection(adjust_zoom=True)
+
+    def on_default_view_changed(self, view_string):
+        self.editorconfig["default_view"] = view_string
+        save_cfg(self.configuration)
+
+        view_actions = [self.load_as_topdown, self.load_as_3dview]
+        view_options = ("topdownview", "3dview")
+
+        for i, option in enumerate(view_options):
+            view_actions[i].setChecked(option == view_string)
 
     def setup_ui_toolbar(self):
         # self.toolbar = QtWidgets.QToolBar("Test", self)
