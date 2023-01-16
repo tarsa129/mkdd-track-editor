@@ -1384,9 +1384,6 @@ class KartStartPoint(object):
         self.rotation = Rotation.default()
         self.playerid = 0xFF
 
-
-
-
     @classmethod
     def new(cls):
         return cls(Vector3(0.0, 0.0, 0.0))
@@ -1485,6 +1482,7 @@ class Area(object):
 
         area.shape = shape
         area.type = type
+
         area.camera_index = camera
         area.priority = priority
         #print(rotation)
@@ -1507,7 +1505,9 @@ class Area(object):
 
     def write(self, f):
         f.write(pack(">B", self.shape) ) #shape
-        f.write(pack(">B", self.type ) )
+        type = self.type if self.type >= 0 and self.type <= 10 else 11
+        f.write(pack(">B", type ) )
+
         f.write(pack(">b", self.camera_index) )
         f.write(pack(">B", self.priority & 0xFF) ) #priority
 
@@ -1629,6 +1629,8 @@ class Camera(object):
     def from_file(cls, f):
 
         type = read_uint8(f)
+
+        type = min(type, 10)
 
         next_cam = read_int8(f)
         shake = read_uint8(f)

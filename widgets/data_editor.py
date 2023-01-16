@@ -289,18 +289,20 @@ class DataEditor(QWidget):
         #create the combobox
         combobox = QComboBox(self)
         for val in keyval_dict:
-            combobox.addItem(val)
-
+            if val != "INVALID":
+                combobox.addItem(val)
+        max_value = max( keyval_dict.values()  )
         #create the layout and label
         layout = self.create_labeled_widget(self, text, combobox)
 
         def item_selected(item):
-            val = keyval_dict[item]
+            if item in keyval_dict:
+                val = keyval_dict[item]
+            else:
+                val = max_value + 1
             #print("selected", item)
             setattr(self.bound_to, attribute, val)
         combobox.currentTextChanged.connect(item_selected)
-
-       
 
         #print("created for", text, attribute)
 
@@ -1081,7 +1083,6 @@ class AreaEdit(DataEditor):
         self.rotation = self.add_rotation_input()
 
         self.area_type = self.add_dropdown_input("Area Type", "type", AREA_Type)
-
 
         self.shape = self.add_dropdown_input("Shape", "shape", AREA_Shape)
 
