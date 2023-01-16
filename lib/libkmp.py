@@ -250,8 +250,7 @@ class PointGroup(object):
         group.id = new_id
         for point in self.points:
             new_point = deepcopy(point)
-            new_point.group = new_id
-            group.points.append(new_point)
+            group.points.append(point)
 
         group.prevgroup = self.prevgroup.copy()
         group.nextgroup = self.nextgroup.copy()
@@ -265,9 +264,7 @@ class PointGroup(object):
         # Check if the element is the last element
         if not len(self.points)-1 == pos:
             for point in self.points[pos+1:]:
-                new_point = deepcopy(point)
-                new_point.group = new_id
-                group.points.append(new_point)
+                group.points.append(point)
 
         group.nextgroup = self.nextgroup.copy()
         group.prevgroup = [self.id] + [-1] * 5
@@ -283,7 +280,7 @@ class PointGroup(object):
 
     def copy_into_group(self, group):
         for point in group.points:
-            self.points.append(deepcopy(point))
+            self.points.append(point)
 
     def num_prev(self):
         return sum ( [1 for id in self.prevgroup if id != -1]  )
@@ -490,6 +487,23 @@ class PointGroups(object):
     def num_total_points(self):
         return sum( [len(group.points) for group in self.groups]  )
 
+    def get_point_from_index(self, idx):
+        for group in self.groups:
+            points_in_group = len(group.points)
+            if idx < points_in_group:
+                return group.points[idx]
+            idx -= points_in_group
+        return None
+
+    def get_index_from_point(self, point):
+        id = 0
+        for group in self.groups:
+            for curr_point in group.points:
+                if point == curr_point:
+                    return id
+                id += 1
+        return -1
+
 # Section 1
 # Enemy/Item Route Code Start
 class EnemyPoint(KMPPoint):
@@ -582,6 +596,7 @@ class EnemyPointGroup(PointGroup):
          f.write(pack(">H",  0) )
 
 class EnemyPointGroups(PointGroups):
+    level_file = None
     def __init__(self):
         super().__init__()
 
@@ -592,33 +607,21 @@ class EnemyPointGroups(PointGroups):
         return EnemyPointGroup.new()
 
     def remove_point(self, del_point):
-        """
-        type_4_areas= [ area for area in areas if area.type == 4]
-        groupslen = [ len(group.points) for group in self.groups ]
-        points_before = sum(groupslen[0:del_group.id])
-        points_includ = sum(groupslen[0:del_group.id + 1])
-
+        type_4_areas = __class__.level_file.areas.get_type(4)
         for area in type_4_areas:
-            if area.enemypointid > points_before and area.enemypointid < points_includ:
+            if area.enemypoint == del_point:
+                area.enemypoint = None
                 area.enemypointid = -1
-            elif area.enemypointid > points_includ:
-                area.enemypointid -= ( points_includ - points_before )
-        """
+
         super().remove_point(del_point)
 
     def remove_group(self, del_group, merge = True):
-        """
-        type_4_areas= [ area for area in areas if area.type == 4]
-        groupslen = [ len(group.points) for group in self.groups ]
-        points_before = sum(groupslen[0:del_group.id])
-        points_includ = sum(groupslen[0:del_group.id + 1])
-
+        type_4_areas = __class__.level_file.areas.get_type(4)
         for area in type_4_areas:
-            if area.enemypointid > points_before and area.enemypointid < points_includ:
+            if area.enemypoint in del_group.points:
+                area.enemypoint = None
                 area.enemypointid = -1
-            elif area.enemypointid > points_includ:
-                area.enemypointid -= ( points_includ - points_before )
-        """
+
         super().remove_group(del_group, merge = True)
 
     @classmethod
@@ -1442,7 +1445,8 @@ class Area(object):
     def __init__(self, position):
         self.shape = 0
         self.type = 0
-        self.camera_index = -1
+        self.cameraid = -1
+        self.camera = None
         self.priority = 0
 
         self.position = position
@@ -1453,7 +1457,10 @@ class Area(object):
         self.setting2 = 0
 
         self.route = 0
+        self.route_obj = None
+
         self.enemypointid = 0
+        self.enemypoint = None
 
         self.widget = None
 
@@ -1467,7 +1474,6 @@ class Area(object):
         area.scale = Vector3(1, .5, 1)
         area.type = type
         return area
-
 
     @classmethod
     def from_file(cls, f):
@@ -1483,7 +1489,7 @@ class Area(object):
         area.shape = shape
         area.type = type
 
-        area.camera_index = camera
+        area.cameraid = camera
         area.priority = priority
         #print(rotation)
         area.rotation = Rotation.from_file(f)
@@ -1508,14 +1514,16 @@ class Area(object):
         type = self.type if self.type >= 0 and self.type <= 10 else 11
         f.write(pack(">B", type ) )
 
-        f.write(pack(">b", self.camera_index) )
+        f.write(pack(">b", self.cameraid) )
         f.write(pack(">B", self.priority & 0xFF) ) #priority
 
         f.write(pack(">fff", self.position.x, self.position.y, self.position.z))
         self.rotation.write(f)
         f.write(pack(">fff", self.scale.x, self.scale.y, self.scale.z))
 
-        f.write(pack(">HHBBH", self.setting1, self.setting2, self.route, self.enemypointid, 0 ) )
+        self.set_enemypointid()
+        enemypointid = 255 if self.enemypointid < 0 else self.enemypointid
+        f.write(pack(">HHBBH", self.setting1, self.setting2, self.route, enemypointid, 0 ) )
         return 1
 
     def copy(self):
@@ -1525,18 +1533,37 @@ class Area(object):
         new_area.scale = Vector3(self.scale.x, self.scale.y, self.scale.z)
         new_area.shape = self.shape
         new_area.type = self.type
-        new_area.camera_index = self.camera_index
+        new_area.cameraid = self.cameraid
         new_area.setting1 = self.setting1
         new_area.setting2 = self.setting2
         new_area.route = self.route
         new_area.enemypointid = self.enemypointid
 
         return new_area
+
+    def set_enemypointid(self):
+        if self.type == 4:
+            point_idx = __class__.level_file.enemypointgroups.get_index_from_point(self.enemypoint)
+            self.enemypointid = point_idx
+            return point_idx
+
+    def find_closest_enemypoint(self):
+        enemygroups = __class__.level_file.enemypointgroups.groups
+        min_distance = 9999999999999
+        pointid = 0
+        for group in enemygroups:
+            for point in group.points:
+                distance = self.position.distance( point.position)
+                if distance < min_distance:
+                    self.enemypointid = pointid
+                    self.enemypoint = point
+                    min_distance = distance
+
+                pointid += 1
+
 class Areas(object):
     def __init__(self):
         self.areas = []
-
-
 
     @classmethod
     def from_file(cls, f, count):
@@ -1562,6 +1589,9 @@ class Areas(object):
         f.seek(area_count_off)
         f.write(pack(">H", num_written) )
         f.seek(end_sec)
+
+    def get_type(self, area_type):
+        return [area for area in self.areas if area.type == area_type]
 # Section 8
 # Cameras
 class FOV:
@@ -1842,7 +1872,6 @@ class MissionPoint(object):
         self.rotation.write(f)
         f.write(pack(">HH", count, self.unk) )
 
-
 class KMP(object):
     def __init__(self):
         self.lap_count = 3
@@ -1871,6 +1900,9 @@ class KMP(object):
 
         self.missionpoints = ObjectContainer()
 
+        Area.level_file = self
+        EnemyPointGroups.level_file = self
+
         self.set_assoc()
 
     def set_assoc(self):
@@ -1879,7 +1911,6 @@ class KMP(object):
         self.respawnpoints.assoc = JugemPoint
         self.cannonpoints.assoc = CannonPoint
         self.missionpoints.assoc = MissionPoint
-
 
     @classmethod
     def make_useful(cls):
@@ -1977,7 +2008,6 @@ class KMP(object):
         objects.extend(self.missionpoints)
 
         return objects
-
 
     @classmethod
     def from_file(cls, f):
@@ -2094,6 +2124,7 @@ class KMP(object):
         kmp.set_assoc()
 
         Area.level_file = kmp
+        EnemyPointGroups.level_file = kmp
 
         return kmp
 
@@ -2110,8 +2141,8 @@ class KMP(object):
             else:
                 camera.route = -1
         for area in self.areas.areas:
-            if area.camera_index != -1 and area.camera_index < len(self.cameras):
-                self.cameras[area.camera_index].used_by.append(area)
+            if area.cameraid != -1 and area.cameraid < len(self.cameras):
+                self.cameras[area.cameraid].used_by.append(area)
             if area.type == 3 and area.route != -1 and area.route < len(self.routes):
                 self.routes[area.route].used_by.append(area)
 
@@ -2193,10 +2224,21 @@ class KMP(object):
 
             grouped_things.sort( key = lambda h: (h.id)   )
 
-
         self.cannonpoints.sort( key = lambda h: h.id)
 
-        #sequentialize the ids of respawn points, cannon ids, and mission success points
+        #assign cameras
+        num_cams = len(self.cameras)
+        for area in self.areas.get_type(0):
+            if area.cameraid < num_cams:
+                area.camera = self.cameras[area.cameraid]
+
+        num_routes = len(self.routes)
+        for area in self.areas.get_type(3):
+            if area.routeid < num_routes:
+                area.route_obj = self.routes[area.routeid]
+
+        for area in self.areas.get_type(4):
+            area.enemypoint = self.enemypointgroups.get_point_from_index(area.enemypointid)
 
     @classmethod
     def from_bytes(cls, data: bytes) -> 'KMP':
@@ -2396,10 +2438,9 @@ class KMP(object):
                 next_cam = next_camera.nextcam
 
         #now iterate through area
-        for area in self.areas.areas:
-            if area.camera_index != -1 and area.camera_index < len(self.cameras):
-                used.append( self.cameras[area.camera_index]  )
-
+        for area in self.areas.get_type(0):
+            if area.cameraid != -1 and area.cameraid < len(self.cameras):
+                used.append( self.cameras[area.cameraid]  )
 
         #deleting stuff
         for i in range( len(self.cameras) -1, -1, -1):
@@ -2411,7 +2452,7 @@ class KMP(object):
 
         for i, camera in enumerate (self.cameras):
             for area in camera.used_by:
-                area.camera_index = i
+                area.cameraid = i
 
         #deal with starting cams
         curr_cam = opening_cams[0]

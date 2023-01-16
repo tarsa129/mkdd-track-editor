@@ -20,13 +20,16 @@ poti:
 
 area:
 - highlight camera / route point when relevant. (ALSO APPLIES TO MKDD)
+-- bold and have circles for cams and their routes (for consistency)
 - deal/check with area type 3 routes
-- deal with area connections in general
-- type four: refactor enemypoint so that it stores the actual enemy point itself. then in data_editor, use the index. 
+-- bold and have circles around each point
+- type four: refactor enemypoint so that it stores the actual enemy point itself. then in data_editor, use the index.
 -- ONLY have to worry about deletions, as additions will preserve the existence of the point
-- add helper functions in areas to get all areas of a specific type
-- add 'c' linking for areas 
+- add 'c' linking for areas
 - render area connections in a consistent color
+- improve side button options for individual areas
+-- remove the "all areas" side button optiosn for individual areas
+-- when an area with a connection is highlighted, have special functions (like assign)
 
 came:
 - camera replaying (long shot)
@@ -35,6 +38,8 @@ before release: match lorenzis with colors
 
 general:
 error analyzer - i'll figure this out when i get to it
+add "stuff fixed at lauch" based on errors found during fix_file
 refactor options code to move stuff to libkmp
+do not ground on invisible triangles (mkdd as well)
 
 

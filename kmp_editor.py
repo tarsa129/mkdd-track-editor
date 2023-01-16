@@ -2109,6 +2109,9 @@ class GenEditor(QMainWindow):
 
             elif isinstance(object, libkmp.Area):
                 self.level_file.areas.areas.append(placeobject)
+                if placeobject.type == 4:
+                    placeobject.find_closest_enemypoint()
+                    #assign to closest enemypoint
             elif isinstance(object, libkmp.Camera):
                 self.level_file.cameras.append(placeobject)
             else:
@@ -2218,7 +2221,7 @@ class GenEditor(QMainWindow):
 
             if isinstance(object, libkmp.Area):
                 if object.type == 0:
-                    object.camera_index = len(self.level_file.cameras) - 1
+                    object.cameraid = len(self.level_file.cameras) - 1
                     self.level_file.cameras[-1].used_by.append(object)
                 elif object.type == 9:
                     object.position.z += 300
@@ -2463,8 +2466,8 @@ class GenEditor(QMainWindow):
                 self.level_file.remove_respawn(obj)
                 #self.level_file.respawnpoints.remove(obj)
             elif isinstance(obj, libkmp.Area):
-                if obj.camera_index != -1 and obj.camera_index < len(self.level_file.cameras):
-                    self.level_file.cameras[obj.camera_index].used_by.remove(obj)
+                if obj.cameraid != -1 and obj.cameraid < len(self.level_file.cameras):
+                    self.level_file.cameras[obj.cameraid].used_by.remove(obj)
 
 
                 self.level_file.areas.areas.remove(obj)

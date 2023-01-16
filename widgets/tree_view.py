@@ -264,7 +264,7 @@ class AreaEntry(NamedItem):
         area_type_string = AREA_TYPES[self.bound_to.type] if self.bound_to.type < len(AREA_TYPES) else "INVALID"
         disp_string = "Area (Type: {0}, {1})".format(self.bound_to.type, area_type_string)
         if self.bound_to.type == 0:
-            disp_string += ", (Cam: {0})".format(self.bound_to.camera_index)
+            disp_string += ", (Cam: {0})".format(self.bound_to.cameraid)
         self.setText(0, disp_string)
 
 class CameraEntry(NamedItem):

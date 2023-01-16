@@ -1066,7 +1066,8 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                 selected_groups = [False] * len(all_groups) #used to determine if a group should be selected - use instead of group_selected
 
                 #figure out based on area type 4:
-                indices_to_circle = [ area.enemypointid for area in self.level_file.areas.areas if area.type == 4 and (area in select_optimize)  ]
+                type_4_areas = self.level_file.areas.get_type(4)
+                indices_to_circle = [ area.set_enemypointid() for area in type_4_areas if (area in select_optimize)  ]
 
                 point_index = 0
 

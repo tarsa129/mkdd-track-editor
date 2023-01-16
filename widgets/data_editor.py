@@ -587,7 +587,6 @@ def choose_data_editor(obj):
         return KartStartPointsEdit
     elif isinstance(obj, Area):
         return AreaEdit
-
     elif isinstance(obj, Camera):
         return CameraEdit
     elif isinstance(obj, JugemPoint):
@@ -1089,7 +1088,7 @@ class AreaEdit(DataEditor):
         self.priority = self.add_integer_input("Priority", "priority",
                                            MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
 
-        self.camera_index, self.camera_index_label = self.add_integer_input_hideable("Camera Index", "camera_index",
+        self.camera_index, self.camera_index_label = self.add_integer_input_hideable("Camera Index", "cameraid",
                                                    MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
 
         self.setting1, self.setting1_label = self.add_integer_input_hideable("Setting 1", "setting1", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
@@ -1116,13 +1115,16 @@ class AreaEdit(DataEditor):
 
         self.shape.setCurrentIndex( obj.shape )
         self.area_type.setCurrentIndex( obj.type )
-        self.camera_index.setText(str(obj.camera_index))
+        self.camera_index.setText(str(obj.cameraid))
         self.priority.setText(str(obj.priority))
 
         self.setting1.setText(str(obj.setting1))
         self.setting2.setText(str(obj.setting2))
         self.routeid.setText(str(obj.route))
+
+        obj.set_enemypointid()
         self.enemypointid.setText(str(obj.enemypointid))
+
         self.set_settings_visible()
 
     def set_settings_visible(self):
@@ -1158,10 +1160,10 @@ class AreaEdit(DataEditor):
     def update_camera_used(self):
         #print('update route used', self.bound_to.route)
         #emit signal with old and new route numbers, for easier changing
-        self.emit_camera_update.emit(self.bound_to, self.bound_to.camera_index, int(self.camera_index.text()) )
+        self.emit_camera_update.emit(self.bound_to, self.bound_to.cameraid, int(self.camera_index.text()) )
 
         #now update the value
-        self.bound_to.camera_index = int(self.camera_index.text())
+        self.bound_to.cameraid = int(self.camera_index.text())
 
         #update the name, may be needed
         self.update_name()
