@@ -13,14 +13,14 @@
         ".brres file needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        37,
+        30,
+        70,
+        1,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": 2,
     "Description": "Truck from Moonview Highway.<br>[[KMP (File Format)#POTI|Route Setting 1]] is used for blinking (1 = Left, 2 = Right).<br>[[KMP (File Format)#POTI|Route Setting 2]] selects the speed (0 or 1)."

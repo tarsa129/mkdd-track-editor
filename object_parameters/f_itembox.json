@@ -13,14 +13,14 @@
         ".brres file needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        20,
+        0,
+        0,
+        0,
+        8,
+        0,
+        0,
+        0
     ],
     "Route Info": 2,
     "Description": "Route controlled item box. If any [[KMP (File Format)#POTI|Route Setting 2]] = 1, the box breaks at that point."

@@ -13,14 +13,14 @@
         ".breff/.breft files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        670,
+        5567,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Really, really big fire geyser without a base from N64 Bowser's Castle.<br>Time outside the lava is regulated by S1 if S3 = 1, if not it stays outside the lava for 5 seconds independently form the valuse of S1."

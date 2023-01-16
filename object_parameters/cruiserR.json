@@ -14,14 +14,14 @@
         ".breff/.breft files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        102,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": 2,
     "Description": "Route-following boat from Daisy Circuit and Koopa Cape."

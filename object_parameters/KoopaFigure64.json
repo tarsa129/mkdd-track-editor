@@ -14,14 +14,14 @@
         ".breff/.breft files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        8000,
+        0,
+        188,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Bowser statue from N64 Bowser's Castle; it spits fire for 5 seconds, then doesn't nothing for 3 seconds, then spits fire again.<br>In GP and VS Race the object is activated by the proximity of a player."

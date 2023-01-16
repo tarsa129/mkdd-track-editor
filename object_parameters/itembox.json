@@ -13,14 +13,14 @@
         ".brres file needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        3,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        44
     ],
     "Route Info": null,
     "Description": "Spinning box with a question mark inside it. If touched, it snaps and an item lottery begins; after the lottery, the item shown is retrieved."

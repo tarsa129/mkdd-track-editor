@@ -13,14 +13,14 @@
         ".brres file needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        0,
+        1,
+        8000,
+        6000,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Green Noki from GCN Peach Peach."

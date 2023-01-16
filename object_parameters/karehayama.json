@@ -14,14 +14,14 @@
         ".breff/.breft files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        0,
+        4,
+        50,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Leaf pile from Maple Treeway. Its SFX is exclusive to certain slot(s)."

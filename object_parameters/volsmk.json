@@ -13,14 +13,14 @@
         ".breff/.breft files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        0,
+        58,
+        11,
+        66,
+        11,
+        73,
+        11,
+        0
     ],
     "Route Info": null,
     "Description": "Smoke used by the trembling rocks from Grumble Volcano."

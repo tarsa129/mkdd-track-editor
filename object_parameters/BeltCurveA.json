@@ -13,14 +13,14 @@
         ".brres file needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        0,
+        0,
+        70,
+        130,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Third set of belts from Toad's Factory. Object is not scalable.<br/> For more information, see the [[Moving Terrain#Moving Road (KCL 0x15)|Moving Terrain]] page."

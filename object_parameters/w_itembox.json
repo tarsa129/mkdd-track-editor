@@ -13,14 +13,14 @@
         ".brres file needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        24,
+        0,
+        0,
+        0,
+        70,
+        202,
+        3,
+        0
     ],
     "Route Info": 2,
     "Description": "Multiple item boxes that follow a route from a starting point to an ending point."

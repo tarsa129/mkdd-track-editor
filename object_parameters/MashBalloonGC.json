@@ -13,14 +13,14 @@
         ".brres file needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        12,
+        500,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": 2,
     "Description": "Air balloon as seen in <small>GCN</small> Mario Circuit. It has an assigned route but also floats from Y to Y. It turns to face the direction it is traveling in."

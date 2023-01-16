@@ -14,14 +14,14 @@
         ".brasd files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        2,
+        5,
+        1690,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": 2,
     "Description": "Master cow following a route followed by some more cows (from Moo Moo Meadows).<br>The master cow starts at the first point of the route, all other cows around the object position."

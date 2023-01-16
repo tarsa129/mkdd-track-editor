@@ -14,14 +14,14 @@
         ".kcl files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        5616,
+        1000,
+        17,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Fence gate from Delfino Pier. Slot [[Slot#battle1.2|A1.2]] enables its SFX. Using multiple of this object appears to cause all of them to rise simultaneously."

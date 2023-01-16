@@ -14,14 +14,14 @@
         ".breff/.breft files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        120,
+        193,
+        180,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": 2,
     "Description": "Truck from Wario's Gold Mine.<br>[[KMP (File Format)#POTI|Route Setting 1]] changes the speed (if 0 it uses the speed setting in S1).<br/>[[KMP (File Format)#POTI|Route Setting 2]]: 0x0: Normal behavior<br/> 0x1: Truck sways left and right harder and wont change back until the end of the route.<br/> 0x2: Truck sways left and right."

@@ -13,14 +13,14 @@
         ".breff/.breft files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Generates a leaf splash effect when a player touches [[KCL flag#Effect Trigger (0x1A)|KCL flag 0x1A]] with variant 2. Only the Y coordinate is used. Only works on slots [[Slot#4.2|4.2]] and arena slot [[Slot#battle2.5|2.5]] with group Y KCL index set to 5."

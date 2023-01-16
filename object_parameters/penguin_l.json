@@ -14,14 +14,14 @@
         ".breff/.breft files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        10,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": 2,
     "Description": "Large penguin from <small>N64</small> Sherbet Land."

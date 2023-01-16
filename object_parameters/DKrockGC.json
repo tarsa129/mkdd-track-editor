@@ -14,14 +14,14 @@
         ".breff/.breft files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        462,
+        695,
+        37,
+        64,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": 2,
     "Description": "Falling rock from GCN DK Mountain, it respawns only if its Route's header has Cycle set to 1. [[Slot#8.3|Slot 8.3]] enables its SFX."

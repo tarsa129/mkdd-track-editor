@@ -14,14 +14,14 @@
         ".kcl files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        40,
+        360,
+        600,
+        600,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Drawbridge from DS Delfino Square; the bridge in DS Delfino Square is created using two of these objects face to face. Regardless of Y-rotation, the object will always rotate on the Z-axis of the stage when the bridge is being lifted or lowered."

@@ -15,14 +15,14 @@
         ".brasd files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        2,
+        3583,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Cataquack from GCN Peach Beach. It flings players into the air. In GP and VS race, it looks for players. In Time Trials, it flings only if touched. It is likely possible to add further colors by modifying the Pat0. <br>"

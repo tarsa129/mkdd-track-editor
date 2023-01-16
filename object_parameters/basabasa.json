@@ -13,14 +13,14 @@
         ".brres file needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        35,
+        377,
+        4,
+        585,
+        155,
+        3485,
+        105,
+        0
     ],
     "Route Info": 2,
     "Description": "Swoops that follow a route. When touched, they act like a wall. They are released as groups which can be edited in any way."

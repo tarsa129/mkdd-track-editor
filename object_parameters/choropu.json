@@ -14,14 +14,14 @@
         ".breff/.breft files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        27,
+        540,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": 2,
     "Description": "Moving Monty Mole from Moo Moo Meadows.<br>Can't be used together with {{obj-ref|choropu2}}.<br>[[KMP (File Format)#POTI|Route Setting 2]]: 0 = Burrow, 1 = Pop out. "

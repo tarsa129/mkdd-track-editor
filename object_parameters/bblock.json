@@ -14,14 +14,14 @@
         ".kcl files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        5,
+        86,
+        3,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Block parts from Block Plaza, with statues. The normal KCL file is active until block starts shaking, KCL b activates when the block starts shaking and falls with the block.<br> Slot [[Slot#battle1.1|A1.1]] uses 150cc timing settings unlike other battle slots."

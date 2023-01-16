@@ -11,14 +11,14 @@
     ],
     "Assets": [],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        0,
+        39,
+        28,
+        15,
+        0,
+        0,
+        0,
+        29507
     ],
     "Route Info": null,
     "Description": "Enemy line controller. Multiple controllers can be chained together. The timer of the next controller in a chain begins after the end of the previous controller.<br>Controller ID 0 is reserved to indicate the end of a controller chain. Enemies can choose to not obey a controller unless the next ENPH Section is set to -1.<br>Found in slots [[Slot#1.4|1.4]], [[Slot#2.2|2.2]], [[Slot#3.4|3.4]], [[Slot#4.1|4.1]], and arena slot [[Slot#battle1.2|1.2]]."

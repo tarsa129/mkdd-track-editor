@@ -14,14 +14,14 @@
         ".breff/.breft files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        0,
+        38962,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Present within all battle arenas in Coin Runners mode and in some tournaments. When touched, it disappears and the player gets one coin.<br>Some coins do not appear at the start of the battle but show up later on. See [[Object/coin]] for details."

@@ -29,6 +29,11 @@ def build_assets_string( bool_array ):
 with open("objects.txt", "r") as f:
     lines = f.readlines()
 
+with open( "default_settings.json", "r") as f:
+    default_settings = json.load(f)
+
+
+
 current_object = mapobject()
 all_objects = []   
 
@@ -61,10 +66,15 @@ for line in lines:
         current_object = mapobject()
             
 for current_object in all_objects:
+    settings = [None] * 8
+    if str(current_object.id) in default_settings:
+        settings = default_settings[str(current_object.id)]
+        if sum(settings) == 0:
+            settings = [None] * 8
     object_dictionary = {  
         "Object Parameters" : current_object.settings,
         "Assets" : build_assets_string(current_object.assets),
-        "Default Values" : [None] * 8,
+        "Default Values" : settings,
         "Route Info": current_object.route,
         "Description" : current_object.description
         }

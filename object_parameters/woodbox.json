@@ -14,14 +14,14 @@
         ".breff/.breft files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        0,
+        6,
+        100,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Wooden box. When touched, the player slows down and the box drops an item. The wooden boxes respawn after five seconds, drop from 5000 units above the origin and drop onto the first face they touch.<br>In Time Trials, it becomes an unbreakable {{obj-ref|ironbox}}."

@@ -13,14 +13,14 @@
         ".brres file needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        0,
+        0,
+        2000,
+        32743,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Asteroids from Rainbow Road."

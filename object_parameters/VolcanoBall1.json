@@ -14,14 +14,14 @@
         ".breff/.breft files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        200,
+        3755,
+        900,
+        630,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": 2,
     "Description": "Fiery rock from Grumble Volcano.<br>When created, a volcano explosion occurs and it follows the route until it touches a solid part, then it becomes a fire; slot [[Slot#3.4|3.4]] enables its SFX."

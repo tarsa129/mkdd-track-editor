@@ -14,14 +14,14 @@
         ".breff/.breft files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Generates a lava splash effect when a player touches [[KCL flag#Fall Boundary (0x10)|KCL flag 0x10]] with variant 2. Only the Y coordinate is used."

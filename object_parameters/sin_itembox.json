@@ -13,14 +13,14 @@
         ".brres file needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        290,
+        0,
+        0,
+        0,
+        27,
+        0,
+        0,
+        0
     ],
     "Route Info": 2,
     "Description": "Item box following a route back and forth; speed is like a sine function.<br>[[KMP (File Format)#POTI|Route Setting 2]]: 0 = Asymetric; 1 = Symetric."

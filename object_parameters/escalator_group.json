@@ -14,14 +14,14 @@
         ".kcl files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        0,
+        32768,
+        62,
+        32768,
+        117,
+        32768,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "2 Time Escalators from Coconut Mall. One of the two escalators uses the given speed, the other uses a multiplied speed of -1 (negative speed), so they always run in opposite directions.<br/> For more information, see the [[Moving Terrain#Usage in Coconut Mall|Moving Terrain]] page."

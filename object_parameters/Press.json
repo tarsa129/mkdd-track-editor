@@ -14,14 +14,14 @@
         ".breff/.breft files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        0,
+        96,
+        138,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Press from Toad's Factory (over the belts).<br>The entered position is the sleeping position, so must be placed over the ground (600 is the default value); the total cycle time depends on the sleep time and the falling height."

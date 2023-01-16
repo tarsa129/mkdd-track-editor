@@ -15,14 +15,14 @@
         ".kcl files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        3102,
+        103,
+        3374,
+        3610,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Falling pillar from Dry Dry Ruins."

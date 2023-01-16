@@ -15,14 +15,14 @@
         ".brasd files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        10,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": 2,
     "Description": "Pokey from Dry Dry Desert and DS Desert Hills.<br>[[KMP (File Format)#POTI|Route Setting 1]] sets the time in 1/60 seconds to stop at that point. Some of its SFX may be exclusive to certain slots. Requires the bones '''joint1''', '''joint2''', '''joint3''', and '''joint4''' in the [[BRRES (File Format)|BRRES]]."

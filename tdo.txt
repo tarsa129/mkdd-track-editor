@@ -31,7 +31,6 @@ before release: match lorenzis with colors
 general:
 error analyzer - i'll figure this out when i get to it
 refactor options code to move stuff to libkmp
-for stuff with types (area / camera / object), make sure that proper handling is done for invalid ids
 add an option for "cleanup"
 - merge enemy groups, and removed unused groups
 - remove unused respawns

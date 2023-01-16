@@ -15,14 +15,14 @@
         ".brasd files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        30,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": 2,
     "Description": "Wiggler from Maple Treeway. It shows up on the minimap in non-racing modes. <br>[[KMP (File Format)#POTI|Route Setting 1]] sets the time in 1/60 seconds of stop in that point.<br>Define the route heights carefully. If the Wiggler has issues with the body segments, move the route to a more flat area."

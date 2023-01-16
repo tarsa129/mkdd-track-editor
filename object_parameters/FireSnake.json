@@ -14,14 +14,14 @@
         ".breff/.breft files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        17,
+        2400,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Grounded Podoboo from DS Desert Hills. It bounces casually around its position point.<br>It works with the object {{obj-ref|sunDS}}, so it only works on slots [[Slot#3.1|3.1]], [[Slot#4.2|4.2]], [[Slot#6.2|6.2]] and [[Slot#7.1|7.1]]."

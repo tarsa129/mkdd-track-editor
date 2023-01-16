@@ -14,14 +14,14 @@
         ".kcl files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        40,
+        60,
+        15,
+        2666,
+        1566,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Horizontal moving Piranha Plant wall from <small>GCN</small> Waluigi Stadium. It moves like a sine function (inside \u00e2\u2020\u2019 outside \u00e2\u2020\u2019 inside); normally combined with {{obj-ref|WLdokanGC}}."

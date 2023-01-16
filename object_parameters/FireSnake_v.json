@@ -14,14 +14,14 @@
         ".breff/.breft files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        2840,
+        1400,
+        2960,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Grounded Podoboo from Grumble Volcano. It jump from its position point describing a parabola and after landing bounces casually around the arrival point for 10 seconds until it vanishes."

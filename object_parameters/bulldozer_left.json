@@ -14,14 +14,14 @@
         ".kcl files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        0,
+        1300,
+        480,
+        140,
+        240,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Moving bulldozer from Toad's Factory. Regardless of Y-rotation, it moves eastward from its current position."

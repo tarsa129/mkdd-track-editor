@@ -14,14 +14,14 @@
         ".breff/.breft files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        19,
+        94,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Cannonball landing area that explodes after three seconds, shot by {{obj-ref|HeyhoShipGBA}}; in Grand Prix and VS races, it explodes if touched.<br>The object's scale does not affect the explosion effect's dimension. Generally, CPUs do not go against this object as they try to avoid them.<br>This objects requires {{obj-ref|HeyhoShipGBA}}, and therefore, it can only be used on slot [[Slot#6.2|6.2]]. Note that no more than 59 of this object can be used."

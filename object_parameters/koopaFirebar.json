@@ -13,14 +13,14 @@
         ".brres file needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        3,
+        43684,
+        6,
+        3,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Rotating firebar from Bowser's Castle. Specific object rotation values cause strange behavior, such as 0,90,0.<br/>Can't be used together with {{obj-ref|WLfirebarGC}}."

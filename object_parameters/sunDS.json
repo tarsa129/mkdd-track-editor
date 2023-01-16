@@ -13,14 +13,14 @@
         ".brres file needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        600,
+        2400,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": 2,
     "Description": "The Angry Sun from <small>DS</small> Desert Hills. It changes point of view and rotation of the crown according to player's position.<br>[[KMP (File Format)#POTI|Route Setting 2]] controls the behavior depending on the value X:<br>X < 30 (1E in hex) \u00e2\u2020\u2019 Stays for X/60 seconds<br>X \u00e2\u2030\u00a5 30 (1E in hex) \u00e2\u2020\u2019 Drops a {{obj-ref|FireSnake}} staying for X/60 seconds.<br>In both cases, the dropping animation is viewed; if the route start point is set to drop, it will drop at the second \"lap\" of the route.<br>Only slots [[Slot#3.1|3.1]], [[Slot#4.2|4.2]], [[Slot#6.2|6.2]], and [[Slot#7.1|7.1]] support this object."

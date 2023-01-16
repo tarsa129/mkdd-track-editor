@@ -15,14 +15,14 @@
         ".kcl files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        5616,
+        3,
+        21,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Bridge from Delfino Pier. Slot [[Slot#battle1.2|A1.2]] enables its SFX (includes a bell sound).<br/> Animation capped at 30 frames. S3 might be a relic of old animation length."

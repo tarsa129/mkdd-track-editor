@@ -14,14 +14,14 @@
         ".brasd files needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        198,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": null,
     "Description": "Piranha Plant from GCN Mario Circuit, normally combined with {{obj-ref|pakkun_dokan}}."

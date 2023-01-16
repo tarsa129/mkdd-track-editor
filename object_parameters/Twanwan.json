@@ -13,14 +13,14 @@
         ".brres file needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        50,
+        1,
+        1500,
+        300,
+        600,
+        660,
+        0,
+        0
     ],
     "Route Info": 2,
     "Description": "Rolling Chain Chomp from Chain Chomp Wheel.<br>The object has two different kind of movements; one being a route and one relative to its current location based on a sine wave, whereby the wave is controlled by s3 and s4.<br>It appears on the minimap when playing on arena slot 1.4."

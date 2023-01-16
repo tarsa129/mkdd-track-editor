@@ -13,14 +13,14 @@
         ".brres file needed"
     ],
     "Default Values": [
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null
+        20,
+        4,
+        30,
+        0,
+        0,
+        0,
+        0,
+        0
     ],
     "Route Info": 2,
     "Description": "Moving car from Coconut Mall. It moves exactly like {{obj-ref|WLwallGC}} but instead left \u00e2\u2020\u2019 right."
