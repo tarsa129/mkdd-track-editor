@@ -2246,6 +2246,13 @@ class GenEditor(QMainWindow):
                 if object.type == 0:
                     object.cameraid = len(self.level_file.cameras) - 1
                     self.level_file.cameras[-1].used_by.append(object)
+                elif object.type == 3:
+                    object.route = len(self.level_file.routes) - 1
+                    self.level_file.routes[object.route].used_by.append(object)
+                    for point in self.level_file.routes[object.route].points:
+                        point.position = point.position + object.position
+                        self.action_ground_spec_object(point)
+                    object.route_obj = self.level_file.routes[-1]
                 elif object.type == 9:
                     object.position.z += 300
             if isinstance(object, Route):
