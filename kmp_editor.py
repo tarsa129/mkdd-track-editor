@@ -2924,7 +2924,11 @@ class GenEditor(QMainWindow):
                         self.level_file.cameraroutes[self.connect_start.route].used_by.remove(self.connect_start)
                     self.connect_start.route = self.level_file.get_index_of_route(  endpoint.partof  )
                     endpoint.partof.used_by.append(self.connect_start)
-
+            elif isinstance(self.connect_start, Area):
+                if self.connect_start.type == 3 and isinstance(endpoint, RoutePoint):
+                    self.connect_start.route_obj = endpoint.partof
+                elif self.connect_start.type == 4 and isinstance(endpoint, EnemyPoint):
+                    self.connect_start.enemypoint = endpoint
 
         self.connect_start = None
 

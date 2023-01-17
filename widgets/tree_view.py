@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem
-from lib.libkmp import KMP,  get_kmp_name, KMPPoint
+from lib.libkmp import KMP,  get_kmp_name, KMPPoint, Area
 from widgets.data_editor_options import AREA_TYPES, CAME_TYPES, routed_cameras
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QAction, QMenu
@@ -261,10 +261,21 @@ class AreaEntry(NamedItem):
         bound_to.widget = self
 
     def update_name(self):
-        area_type_string = AREA_TYPES[self.bound_to.type] if self.bound_to.type < len(AREA_TYPES) else "INVALID"
-        disp_string = "Area (Type: {0}, {1})".format(self.bound_to.type, area_type_string)
-        if self.bound_to.type == 0:
-            disp_string += ", (Cam: {0})".format(self.bound_to.cameraid)
+        area : Area = self.bound_to
+        area_type_string = AREA_TYPES[area.type] if area.type < len(AREA_TYPES) else "INVALID"
+        disp_string = "Area (Type: {0}, {1})".format(area.type, area_type_string)
+        if area.type == 0:
+            disp_string += ", (Cam: {0})".format(area.cameraid)
+        elif area.type == 2:
+            disp_string += ", (BFG: {0})".format(area.setting1)
+        elif area.type == 3:
+            disp_string += ", (Route: {0})".format(area.route)
+        elif area.type == 4:
+            disp_string += ", (Enemy point ID: {0})".format(area.set_enemypointid())
+        elif area.type == 6:
+            disp_string += ", (BBLM: {0})".format(area.setting1)
+        elif area.type in (8, 9):
+            disp_string += ", (Group: {0})".format(area.setting1)
         self.setText(0, disp_string)
 
 class CameraEntry(NamedItem):

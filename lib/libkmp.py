@@ -8,6 +8,7 @@ from io import BytesIO
 from copy import deepcopy
 from scipy.spatial.transform import Rotation as R
 
+
 import numpy
 
 def read_uint8(f):
@@ -868,8 +869,9 @@ class Checkpoint(KMPPoint):
     def assign_to_closest(self, respawns):
         mid = (self.start + self.end) / 2
         distances = [ respawn.position.distance_2d( mid  ) for respawn in respawns ]
-        smallest = [ i for i, x in enumerate(distances) if x == min(distances)]
-        self.respawn = smallest[0]
+        if len(distances) > 0:
+            smallest = [ i for i, x in enumerate(distances) if x == min(distances)]
+            self.respawn = smallest[0]
 
 
     @classmethod
@@ -1501,10 +1503,14 @@ class Area(object):
         area.scale.y = area.scale.y
         area.scale.z = area.scale.z
 
-        area.setting1= read_int16(f) #unk1
+        area.setting1 = read_int16(f) #unk1
         area.setting2 = read_int16(f) #unk2
         area.route = read_uint8(f) #route
+        if area.type != 3:
+            area.route = -1
         area.enemypointid = read_uint8(f) #enemy
+        if area.type != 4:
+            area.enemypointid = -1
 
         f.read(2)
 
@@ -1524,7 +1530,9 @@ class Area(object):
 
         self.set_enemypointid()
         enemypointid = 255 if self.enemypointid < 0 else self.enemypointid
-        f.write(pack(">HHBBH", self.setting1, self.setting2, self.route, enemypointid, 0 ) )
+        self.set_route()
+        route = 255 if self.route < 0 else self.route
+        f.write(pack(">HHBBH", self.setting1, self.setting2, route, enemypointid, 0 ) )
         return 1
 
     def copy(self):
@@ -1541,7 +1549,20 @@ class Area(object):
         new_area.enemypointid = self.enemypointid
 
         return new_area
+    #type 3 - moving road
+    def set_route(self):
+        if self.type == 3:
+            routes = __class__.level_file.routes
+            if self.route < len( routes ) and routes[self.route] == self.route_obj:
+                return self.route
 
+            for i, route in enumerate(__class__.level_file.routes):
+                if route == self.route_obj:
+                    self.route = i
+                    return i
+            self.route = -1
+            return -1
+    #type 4 - force recalc
     def set_enemypointid(self):
         if self.type == 4:
             point_idx = __class__.level_file.enemypointgroups.get_index_from_point(self.enemypoint)
@@ -1565,6 +1586,9 @@ class Area(object):
     def remove_self(self):
         if self.cameraid != -1 and self.cameraid < len(__class__.level_file.cameras):
             __class__.level_file.cameras[self.cameraid].used_by.remove(self)
+        if self.route != -1 and self.route < len(__class__.level_file.routes):
+            __class__.level_file.routes[self.route].used_by.remove(self)
+
 
 class Areas(object):
     def __init__(self):
@@ -2156,7 +2180,7 @@ class KMP(object):
             else:
                 camera.route = -1
         for area in self.areas.areas:
-            if area.cameraid != -1 and area.cameraid < len(self.cameras):
+            if area.type == 0 and area.cameraid != -1 and area.cameraid < len(self.cameras):
                 self.cameras[area.cameraid].used_by.append(area)
             if area.type == 3 and area.route != -1 and area.route < len(self.routes):
                 self.routes[area.route].used_by.append(area)
@@ -2179,8 +2203,8 @@ class KMP(object):
             # we know that these have both objects and cameras
             new_route = route.copy()
 
-            new_route.used_by = filter(lambda thing: isinstance(thing, Camera), route.used_by)
-            route.used_by = filter(lambda thing: isinstance(thing, MapObject), route.used_by)
+            new_route.used_by = [ thing for thing in route.used_by if isinstance(thing, Camera)  ]
+            route.used_by = [ thing for thing in route.used_by if isinstance(thing, (MapObject, Area))  ]
 
             self.routes.append(new_route)
             for obj in new_route.used_by:
@@ -2203,7 +2227,6 @@ class KMP(object):
 
         #set used by again:
         for i, route in enumerate(self.routes):
-            route.type = 0
             for object in route.used_by:
                 object.route = i
             for point in route.points:
@@ -2249,8 +2272,8 @@ class KMP(object):
 
         num_routes = len(self.routes)
         for area in self.areas.get_type(3):
-            if area.routeid < num_routes:
-                area.route_obj = self.routes[area.routeid]
+            if area.route < num_routes:
+                area.route_obj = self.routes[area.route]
 
         for area in self.areas.get_type(4):
             area.enemypoint = self.enemypointgroups.get_point_from_index(area.enemypointid)
@@ -2415,35 +2438,23 @@ class KMP(object):
         """
             - add opening cams
             - add replay cams"""
-        print("create checkpoints from enemy")
+        self.copy_enemy_to_item()
         self.create_checkpoints_from_enemy()
-        print("set key checkpoints")
         self.checkpoints.set_key_cps()
         self.create_respawns()
         self.cameras.add_goal_camera()
 
     def auto_cleanup(self):
-        print("merge enemypointgroups")
         self.enemypointgroups.merge_groups()
-        print("merge item point groups")
         self.itempointgroups.merge_groups()
-        print("merge checkpoints")
         self.checkpoints.merge_groups()
 
-        print("remove unused routes")
         self.remove_unused_routes()
-
-        print("remove unused cameras")
         self.remove_unused_cameras()
-
-        print("remove unused respawns")
         self.remove_unused_respawns()
 
-        print('remove invalid cameras')
         self.remove_invalid_cameras()
-        print('remove invalid areas')
         self.areas.remove_invalid()
-        print("remove invalid objects")
         self.remove_invalid_objects()
 
     #respawn code

@@ -50,7 +50,7 @@ AREA_Type["Group Unloading"] = 9
 AREA_Type["Fall Boundary"] = 10
 AREA_Type["INVALID"] = 11
 
-AREA_TYPES = [ "Camera","Environment Effort","BFG Swapper", "Moving Road", "Destination Point" , "Minimap Control",
+AREA_TYPES = [ "Camera","Environment Effect","BFG Swapper", "Moving Road", "Destination Point" , "Minimap Control",
                "BBLM Swapper", "Flying Boos", "Object Grouper", "Group Unloading", "Fall Boundary", "INVALID"]
 
 AREA_Shape = OrderedDict()

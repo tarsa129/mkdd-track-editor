@@ -995,6 +995,9 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
             if vismenu.objectroutes.is_visible():
                 routes_to_highlight = set()
 
+                type_3_areas = self.level_file.areas.get_type(3)
+                routes_to_circle = [ area.set_route() for area in type_3_areas if (area in select_optimize)  ]
+
                 for obj in self.level_file.objects.objects:
                     if obj.route >= 0 and obj in select_optimize:
                         routes_to_highlight.add(obj.route)
@@ -1014,6 +1017,11 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                             point_selected = point in select_optimize
                             self.models.render_generic_position_colored(point.position, point_selected, "unusedpoint")
                             selected = selected or point_selected
+
+                    if i in routes_to_circle:
+                        for point in route.points:
+                            glColor3f(0.0, 0.0, 1.0)
+                            self.models.draw_sphere(point.position, 600)
 
                     if selected:
                         glLineWidth(3.0)

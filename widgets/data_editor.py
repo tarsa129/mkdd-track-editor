@@ -1073,6 +1073,7 @@ class KartStartPointEdit(DataEditor):
 
 class AreaEdit(DataEditor):
     emit_camera_update = pyqtSignal("PyQt_PyObject", "int", "int")
+    emit_route_update = pyqtSignal("PyQt_PyObject", "int", "int")
 
     def setup_widgets(self):
         self.position = self.add_multiple_decimal_input("Position", "position", ["x", "y", "z"],
@@ -1100,6 +1101,8 @@ class AreaEdit(DataEditor):
         self.area_type.currentIndexChanged.connect(self.update_name)
         self.camera_index.editingFinished.disconnect()
         self.camera_index.editingFinished.connect(self.update_camera_used)
+        self.routeid.editingFinished.disconnect()
+        self.routeid.editingFinished.connect(self.update_route_used)
 
     def update_data(self):
         obj: Area = self.bound_to
@@ -1120,6 +1123,8 @@ class AreaEdit(DataEditor):
 
         self.setting1.setText(str(obj.setting1))
         self.setting2.setText(str(obj.setting2))
+
+        obj.set_route()
         self.routeid.setText(str(obj.route))
 
         obj.set_enemypointid()
@@ -1156,6 +1161,15 @@ class AreaEdit(DataEditor):
     def update_name(self):
         self.set_settings_visible()
         super().update_name()
+
+    def update_route_used(self):
+        self.emit_route_update.emit(self.bound_to, self.bound_to.route, int(self.route.text()) )
+
+        #now update the value
+        self.bound_to.route = int(self.route.text())
+
+        #update the name, may be needed
+        self.update_name()
 
     def update_camera_used(self):
         #print('update route used', self.bound_to.route)
