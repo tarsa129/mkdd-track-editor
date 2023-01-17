@@ -2201,7 +2201,7 @@ class KMP(object):
 
         for route in to_split :
             # we know that these have both objects and cameras
-            new_route = route.copy()
+            new_route = route.to_camera()
 
             new_route.used_by = [ thing for thing in route.used_by if isinstance(thing, Camera)  ]
             route.used_by = [ thing for thing in route.used_by if isinstance(thing, (MapObject, Area))  ]

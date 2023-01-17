@@ -17,6 +17,7 @@ gobj:
 poti:
 - show splines (talk to zatchi)
 - camera auto route - make it based on the total length (parse all files to find average distance / speed)
+- fix splitting (not actually splitting?)
 
 area:
 - refactor type 0 to store the cameras as well
