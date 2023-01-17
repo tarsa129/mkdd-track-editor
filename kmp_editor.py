@@ -2046,6 +2046,10 @@ class GenEditor(QMainWindow):
                 self.leveldatatreeview.set_objects(self.level_file)
 
                 self.select_tree_item_bound_to(placeobject)
+
+                to_deal_with = self.level_file.get_to_deal_with(object)
+                if to_deal_with.num_total_points() == 255:
+                    self.button_stop_adding()
             else:
                 self.last_position_clicked = [(x, y, z)]
 
@@ -2466,16 +2470,9 @@ class GenEditor(QMainWindow):
                 self.level_file.remove_respawn(obj)
                 #self.level_file.respawnpoints.remove(obj)
             elif isinstance(obj, libkmp.Area):
-                if obj.cameraid != -1 and obj.cameraid < len(self.level_file.cameras):
-                    self.level_file.cameras[obj.cameraid].used_by.remove(obj)
-
-
-                self.level_file.areas.areas.remove(obj)
+                self.level_file.areas.remove_area(obj)
             elif isinstance(obj, libkmp.Camera):
-                if obj.route != -1 and obj.route < len(self.level_file.cameraroutes):
-                    self.level_file.cameraroutes[obj.route].used_by.remove(obj)
-
-                self.level_file.cameras.remove(obj)
+                self.level_file.remove_camera(obj)
             elif isinstance(obj, PointGroup ):
                 self.level_file.remove_group(obj)
 

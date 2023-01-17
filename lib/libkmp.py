@@ -1561,6 +1561,10 @@ class Area(object):
 
                 pointid += 1
 
+    def remove_self(self):
+        if self.cameraid != -1 and self.cameraid < len(__class__.level_file.cameras):
+            __class__.level_file.cameras[self.cameraid].used_by.remove(self)
+
 class Areas(object):
     def __init__(self):
         self.areas = []
@@ -1592,6 +1596,16 @@ class Areas(object):
 
     def get_type(self, area_type):
         return [area for area in self.areas if area.type == area_type]
+
+    def remove_area(self, area : Area):
+        area.remove_self()
+        self.areas.remove(area)
+
+    def remove_invalid(self):
+        invalid_areas = [area for area in self.areas if area.type < 0 or area.type > 10]
+        for area in invalid_areas:
+            self.areas.remove_area( area )
+
 # Section 8
 # Cameras
 class FOV:
@@ -2403,6 +2417,7 @@ class KMP(object):
 
         self.create_checkpoints_from_enemy()
         self.create_checkpoints_from_enemy()
+        self.checkpoints.set_key_cps()
         self.create_respawns()
         self.cameras.add_goal_camera()
 
@@ -2415,51 +2430,6 @@ class KMP(object):
         self.remove_unused_cameras()
 
         self.remove_unused_respawns()
-
-    def remove_unused_cameras(self):
-        used = []
-        opening_cams = []
-
-        #type 8 stays
-
-        for camera in self.cameras:
-            if camera.type == 0:
-                used.append(camera)
-
-        if self.cameras.startcam != -1 and (self.cameras.startcam < len(self.cameras)):
-            opening_cams.append(self.cameras[self.cameras.startcam])
-
-            while next_cam != -1 and next_cam < len(self.cameras):
-                next_camera = self.cameras[next_cam]
-                if next_camera in used:
-                    break
-                used.append(next_camera)
-                opening_cams.append(next_camera)
-                next_cam = next_camera.nextcam
-
-        #now iterate through area
-        for area in self.areas.get_type(0):
-            if area.cameraid != -1 and area.cameraid < len(self.cameras):
-                used.append( self.cameras[area.cameraid]  )
-
-        #deleting stuff
-        for i in range( len(self.cameras) -1, -1, -1):
-            cam_to_del = self.cameras[i]
-            if not cam_to_del in used:
-                if cam_to_del.route != -1 and cam_to_del.route < len(self.cameraroutes):
-                    self.cameraroutes[cam_to_del.route].used_by.remove(cam_to_del)
-                self.cameras.remove(cam_to_del)
-
-        for i, camera in enumerate (self.cameras):
-            for area in camera.used_by:
-                area.cameraid = i
-
-        #deal with starting cams
-        curr_cam = opening_cams[0]
-        for i in range(1, len(opening_cams)):
-            next_idx = self.cameras.index( opening_cams[i] )
-            curr_cam.nextcam = next_idx
-            curr_cam = self.cameras[next_idx]
 
     #respawn code
     def create_respawns(self):
@@ -2732,6 +2702,63 @@ class KMP(object):
         for rem_index in to_remove:
             self.cameraroutes.pop(rem_index)
         self.reset_camera_routes()
+
+    #cameras
+    def remove_unused_cameras(self):
+        used = []
+        opening_cams = []
+
+        #type 8 stays
+
+        for camera in self.cameras:
+            if camera.type == 0:
+                used.append(camera)
+
+        if self.cameras.startcam != -1 and (self.cameras.startcam < len(self.cameras)):
+            opening_cams.append(self.cameras[self.cameras.startcam])
+
+            while next_cam != -1 and next_cam < len(self.cameras):
+                next_camera = self.cameras[next_cam]
+                if next_camera in used:
+                    break
+                used.append(next_camera)
+                opening_cams.append(next_camera)
+                next_cam = next_camera.nextcam
+
+        #now iterate through area
+        for area in self.areas.get_type(0):
+            if area.cameraid != -1 and area.cameraid < len(self.cameras):
+                used.append( self.cameras[area.cameraid]  )
+
+        #deleting stuff
+        for i in range( len(self.cameras) -1, -1, -1):
+            cam_to_del = self.cameras[i]
+            if not cam_to_del in used:
+                if cam_to_del.route != -1 and cam_to_del.route < len(self.cameraroutes):
+                    self.cameraroutes[cam_to_del.route].used_by.remove(cam_to_del)
+                self.cameras.remove(cam_to_del)
+
+        for i, camera in enumerate (self.cameras):
+            for area in camera.used_by:
+                area.cameraid = i
+
+        #deal with starting cams
+        curr_cam = opening_cams[0]
+        for i in range(1, len(opening_cams)):
+            next_idx = self.cameras.index( opening_cams[i] )
+            curr_cam.nextcam = next_idx
+            curr_cam = self.cameras[next_idx]
+
+    def remove_camera(self, cam : Camera):
+        if cam.route != -1 and cam.route < len(self.cameraroutes):
+            self.cameraroutes[cam.route].used_by.remove(cam)
+
+        self.objects.objects.remove(cam)
+
+    def remove_invalid_cameras(self):
+        invalid_cams = [camera for camera in self.cameras if camera.type < 0 or camera.type > 10]
+        for cam in invalid_cams:
+            self.remove_camera(cam)
 with open("lib/mkwiiobjects.json", "r") as f:
     tmp = json.load(f)
     OBJECTNAMES = {}

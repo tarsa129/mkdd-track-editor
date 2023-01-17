@@ -9,6 +9,7 @@ ktpt
 enemy/item/checkpoint
 - pointgroups: add helper function for getting the absolute index of a point (for area) and enemy point from an absolute index
 - checkpoints: fix concave checkpoints
+- checkpoints: better handling of split route key cps
 
 gobj:
 - manually improve all descriptions / settings / and add default values
@@ -25,6 +26,7 @@ area:
 -- bold and have circles around each point
 - type four: refactor enemypoint so that it stores the actual enemy point itself. then in data_editor, use the index.
 -- ONLY have to worry about deletions, as additions will preserve the existence of the point
+-- do the same for cameras and routes
 - add 'c' linking for areas
 - render area connections in a consistent color
 - improve side button options for individual areas
