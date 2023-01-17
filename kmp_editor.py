@@ -2266,20 +2266,6 @@ class GenEditor(QMainWindow):
                 if i != j and pos[i] == pos[j]:
                     print("What the fuck")
         for pos in self.level_view.selected_positions:
-            """obj.x += deltax
-            obj.z += deltaz
-            obj.x = round(obj.x, 6)
-            obj.z = round(obj.z, 6)
-            obj.position_x = obj.x
-            obj.position_z = obj.z
-            obj.offset_x = 0
-            obj.offset_z = 0
-
-            if self.editorconfig.getboolean("GroundObjectsWhenMoving") is True:
-                if self.pikmin_gen_view.collision is not None:
-                    y = self.pikmin_gen_view.collision.collide_ray_downwards(obj.x, obj.z)
-                    obj.y = obj.position_y = round(y, 6)
-                    obj.offset_y = 0"""
             pos.x += deltax
             pos.y += deltay
             pos.z += deltaz
