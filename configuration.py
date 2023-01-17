@@ -31,7 +31,7 @@ def make_default_config():
         "hidden_collision_type_groups": "",
         "filter_view": "",
         "default_view": "topdownview",
-        "addi_file_on_load": "Choose",
+        "addi_file_on_load": "BCO",
     }
 
     with open("editor_config.ini", "w") as f:

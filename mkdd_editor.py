@@ -1707,7 +1707,7 @@ class GenEditor(QMainWindow):
             verts.append(vert)
 
         for v1, v2, v3, collision_type, rest in bco_coll.triangles:
-            faces.append(((v1 + 1, None), (v2 + 1, None), (v3 + 1, None)))
+            faces.append(((v1 + 1, None), (v2 + 1, None), (v3 + 1, None), collision_type))
         model = CollisionModel(bco_coll)
         self.setup_collision(verts, faces, arcfilepath, alternative_mesh=model)
 
