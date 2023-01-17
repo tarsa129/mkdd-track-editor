@@ -356,11 +356,10 @@ class PointGroups(object):
                     return i, group, j
         return None, None, None
     def merge_groups(self):
-
+        #print("new merge cycle")
         if len(self.groups) < 2:
             return
 
-        restart = True
         i = 0
         while i < len(self.groups):
             if len(self.groups) < 2:
@@ -388,13 +387,12 @@ class PointGroups(object):
                 group.nextgroup = del_group.nextgroup.copy()
 
                 #around the deleted groups:
-
                 for this_group in self.groups:
                     if this_group.id > del_group.id:
                         this_group.id -= 1
                 for this_group in self.groups:
                     #replace links to the deleted group with the group it was merged into
-                    this_group.prevgroup = [ id if id != del_group.id else this_group.id for id in this_group.prevgroup]
+                    this_group.prevgroup = [ id if id != del_group.id else group.id for id in this_group.prevgroup]
 
                     #this_group.nextgroup = [ id if id != del_group.id else this_group.id for id in group.nextgroup]
 
@@ -1040,20 +1038,23 @@ class CheckpointGroups(PointGroups):
         #assume that checkpoint 0 is always the first one
         to_visit = [0]
         splits = [0]
+        visited = []
 
         while len(to_visit) > 0:
-            i = to_visit[0]
+            i = to_visit.pop(0)
+
+            if i in visited:
+                continue
+            visited.append(i)
             checkgroup = self.groups[i]
 
-            #print(splits)
-
             if len(splits) == 1:
-                checkgroup.points[0].unk2 = 1
+                checkgroup.points[0].type = 1
 
                 for i in range(10, len(checkgroup.points), 10):
-                    checkgroup.points[i].unk2 = 1
+                    checkgroup.points[i].type = 1
 
-                checkgroup.points[-1].unk2 = 1
+                checkgroup.points[-1].type = 1
 
             actual_next = [x for x in checkgroup.nextgroup if x != -1]
 
@@ -1063,7 +1064,6 @@ class CheckpointGroups(PointGroups):
 
             to_visit.extend(actual_next)
             to_visit = [*set(to_visit)]
-            to_visit.pop(0)
 
     def get_used_respawns(self):
         used_respawns = []
@@ -2415,8 +2415,9 @@ class KMP(object):
         """
             - add opening cams
             - add replay cams"""
-
+        print("create checkpoints from enemy")
         self.create_checkpoints_from_enemy()
+        print("set key checkpoints")
         self.checkpoints.set_key_cps()
         self.create_respawns()
         self.cameras.add_goal_camera()
@@ -2598,8 +2599,11 @@ class KMP(object):
             checkgroup.points.clear()
         self.checkpoints.groups.clear()
 
+        #enemy_to_check = {-1 : -1}
+
         #create checkpoints from enemy points
         for i, group in enumerate( self.enemypointgroups.groups ):
+
             new_cp_group = CheckpointGroup()
             new_cp_group.id = i
             new_cp_group.prevgroup = group.prevgroup
@@ -2638,6 +2642,13 @@ class KMP(object):
                     new_checkpoint.start = Vector3( *first_point)
                     new_checkpoint.end = Vector3(*second_point)
                     new_cp_group.points.append( new_checkpoint)
+        #post processing:
+        while i < len(self.checkpoints.groups) and len(self.checkpoints.groups) > 1:
+            group = self.checkpoints.groups[i]
+            if len(group.points) == 0:
+                self.checkpoints.remove_group(group)
+            else:
+                i += 1
 
     def copy_enemy_to_item(self):
         self.itempointgroups = ItemPointGroups()
