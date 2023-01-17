@@ -2227,19 +2227,21 @@ class GenEditor(QMainWindow):
 
         for object in placed_objects:
             if isinstance(object, libkmp.Camera):
-
+                object.position.y += 3000
                 if added_area:
                     object.position.x += 3000
-                object.position.y += 3000
+                    if object.type in routed_cameras:
+                        object.route = len(self.level_file.cameraroutes) - 1
+                        self.level_file.cameraroutes[object.route].used_by.append(object)
 
-
-                if object.type in [2, 5, 6]:
+                        self.level_file.cameraroutes[object.route].points[0].position = Vector3( object.position.x, object.position.y, object.position.z + 3500)
+                        self.level_file.cameraroutes[object.route].points[1].position = Vector3( object.position.x, object.position.y, object.position.z - 3500)
+                elif object.type in routed_cameras:
                     object.route = len(self.level_file.cameraroutes) - 1
                     self.level_file.cameraroutes[object.route].used_by.append(object)
-
-                    self.level_file.cameraroutes[object.route].points[0].position = Vector3( object.position.x, object.position.y, object.position.z + 3500)
-                    self.level_file.cameraroutes[object.route].points[1].position = Vector3( object.position.x, object.position.y, object.position.z - 3500)
-
+                    for point in self.level_file.cameraroutes[object.route].points:
+                        point.position = point.position + object.position
+                        self.action_ground_spec_object(point)
             if isinstance(object, libkmp.Area):
                 if object.type == 0:
                     object.cameraid = len(self.level_file.cameras) - 1
@@ -2253,12 +2255,6 @@ class GenEditor(QMainWindow):
             if isinstance(object, libkmp.MapObject):
 
                 object.route = len(self.level_file.routes) - 1
-
-
-                object.route = len(self.level_file.routes) - 1
-
-
-
                 self.level_file.routes[object.route].used_by.append(object)
 
                 for point in self.level_file.routes[object.route].points:
@@ -3010,15 +3006,18 @@ class GenEditor(QMainWindow):
     def copy_current_obj(self):
         if self.obj_to_copy is not None:
             self.object_to_be_added = None
+            map_check = isinstance(self.obj_to_copy, MapObject) and self.obj_to_copy.route_info is not None
+            cam_check = isinstance(self.obj_to_copy, Camera) and self.obj_to_copy.type in routed_cameras
+            area_check = isinstance(self.obj_to_copy, Area) and self.obj_to_copy.type == 3
             #if isinstance(self.obj_to_copy, libkmp.MapObject) and self.obj_to_copy.route_info == 2:
-            if isinstance(self.obj_to_copy, (libkmp.MapObject, Camera) ) and self.obj_to_copy.route_info is not None :
+            if map_check or cam_check or area_check:
 
                 self.objects_to_be_added = []
-
-                new_route = libkmp.Route()
+                new_route = self.level_file.get_route_for_obj(self.obj_to_copy)
+                route_container = self.level_file.get_route_container(self.obj_to_copy)
 
                 if self.obj_to_copy.route != -1 :
-                    for point in self.level_file.routes[self.obj_to_copy.route].points:
+                    for point in route_container[self.obj_to_copy.route].points:
                         new_point = libkmp.RoutePoint.new()
                         new_point.partof = new_route
                         new_point.position = point.position - self.obj_to_copy.position
@@ -3030,8 +3029,6 @@ class GenEditor(QMainWindow):
                         new_route.points.append(point)
 
                 self.objects_to_be_added.append( [new_route, None, None ]  )
-
-
                 new_object = self.obj_to_copy.copy()
                 self.objects_to_be_added.append( [new_object, None, None ]  )
 

@@ -2207,9 +2207,10 @@ class KMP(object):
             route.used_by = [ thing for thing in route.used_by if isinstance(thing, (MapObject, Area))  ]
 
             self.routes.append(new_route)
+            """
             for obj in new_route.used_by:
                 obj.route = new_route_idx
-                new_route_idx += 1
+                new_route_idx += 1"""
 
         #now that everything is split, we can spilt into cam routes and non cam routes
         object_routes = ObjectContainer()
