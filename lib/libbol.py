@@ -2072,7 +2072,7 @@ class BOL(object):
             return self.routes
 
     def get_route_for_obj(self, obj):
-        if isinstance(obj, CameraRoute):
+        if isinstance(obj, (CameraRoute, Camera)):
             return CameraRoute()
         else:
             return ObjectRoute()

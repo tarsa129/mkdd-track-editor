@@ -2769,18 +2769,22 @@ class GenEditor(QMainWindow):
 
         for object in placed_objects:
             if isinstance(object, libbol.Camera):
-
+                object.position.y += 3000
                 if added_area:
                     object.position.x += 3000
-                object.position.y += 3000
+                    if object.camtype in [1, 4, 5]:
+                        object.route = len(self.level_file.cameraroutes) - 1
+                        self.level_file.cameraroutes[object.route].used_by.append(object)
 
-                if object.camtype in [1, 4, 5]:
+                        self.level_file.cameraroutes[object.route].points[0].position = Vector3( object.position.x, object.position.y, object.position.z + 3500)
+                        self.level_file.cameraroutes[object.route].points[1].position = Vector3( object.position.x, object.position.y, object.position.z - 3500)
+                elif object.camtype in [1, 4, 5]:
+                    print( len(self.level_file.cameraroutes) )
                     object.route = len(self.level_file.cameraroutes) - 1
                     self.level_file.cameraroutes[object.route].used_by.append(object)
-
-                    self.level_file.cameraroutes[object.route].points[0].position = Vector3( object.position.x, object.position.y, object.position.z + 3500)
-                    self.level_file.cameraroutes[object.route].points[1].position = Vector3( object.position.x, object.position.y, object.position.z - 3500)
-
+                    for point in self.level_file.cameraroutes[object.route].points:
+                        point.position = point.position + object.position
+                        self.action_ground_spec_object(point)
             if isinstance(object, libbol.Area):
                 object.camera_index = len(self.level_file.cameras) - 1
                 self.level_file.cameras[-1].used_by.append(object)
@@ -3451,11 +3455,11 @@ class GenEditor(QMainWindow):
             if isinstance(self.obj_to_copy, (Camera, MapObject)) and self.obj_to_copy.route_info is not None :
 
                 self.objects_to_be_added = []
-
-                new_route = libbol.Route()
+                new_route = self.level_file.get_route_for_obj(self.obj_to_copy)
+                route_container = self.level_file.get_route_container(self.obj_to_copy)
 
                 if self.obj_to_copy.route != -1 :
-                    for point in self.level_file.routes[self.obj_to_copy.route].points:
+                    for point in route_container[self.obj_to_copy.route].points:
                         new_point = libbol.RoutePoint.new()
                         new_point.partof = new_route
                         new_point.position = point.position - self.obj_to_copy.position
