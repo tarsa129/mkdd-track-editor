@@ -651,7 +651,7 @@ class GenEditor(QMainWindow):
         self.do_generation.setShortcut("Ctrl+3")
 
         self.do_cleanup = QAction("Run Cleanup")
-        self.do_cleanup.triggered.connect(self.auto_generation)
+        self.do_cleanup.triggered.connect(self.auto_cleanup)
         self.misc_menu.addAction(self.do_cleanup)
         self.do_cleanup.setShortcut("Ctrl+4")
 
@@ -2446,10 +2446,7 @@ class GenEditor(QMainWindow):
                 self.level_file.checkpoints.remove_point(obj)
 
             elif isinstance(obj, libkmp.MapObject):
-                if obj.route != -1 and obj.route < len(self.level_file.routes):
-                    self.level_file.routes[obj.route].used_by.remove(obj)
-
-                self.level_file.objects.objects.remove(obj)
+                self.level_file.remove_object(obj)
             elif isinstance(obj, libkmp.KartStartPoint):
                 self.level_file.kartpoints.positions.remove(obj)
             elif isinstance(obj, libkmp.JugemPoint):

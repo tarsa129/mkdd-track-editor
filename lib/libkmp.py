@@ -1490,8 +1490,9 @@ class Area(object):
         area.type = type
 
         area.cameraid = camera
+        if type != 0:
+            area.cameraid = -1
         area.priority = priority
-        #print(rotation)
         area.rotation = Rotation.from_file(f)
 
 
@@ -1604,7 +1605,7 @@ class Areas(object):
     def remove_invalid(self):
         invalid_areas = [area for area in self.areas if area.type < 0 or area.type > 10]
         for area in invalid_areas:
-            self.areas.remove_area( area )
+            self.remove_area( area )
 
 # Section 8
 # Cameras
@@ -2416,20 +2417,33 @@ class KMP(object):
             - add replay cams"""
 
         self.create_checkpoints_from_enemy()
-        self.create_checkpoints_from_enemy()
         self.checkpoints.set_key_cps()
         self.create_respawns()
         self.cameras.add_goal_camera()
 
     def auto_cleanup(self):
+        print("merge enemypointgroups")
         self.enemypointgroups.merge_groups()
+        print("merge item point groups")
         self.itempointgroups.merge_groups()
+        print("merge checkpoints")
         self.checkpoints.merge_groups()
 
+        print("remove unused routes")
         self.remove_unused_routes()
+
+        print("remove unused cameras")
         self.remove_unused_cameras()
 
+        print("remove unused respawns")
         self.remove_unused_respawns()
+
+        print('remove invalid cameras')
+        self.remove_invalid_cameras()
+        print('remove invalid areas')
+        self.areas.remove_invalid()
+        print("remove invalid objects")
+        self.remove_invalid_objects()
 
     #respawn code
     def create_respawns(self):
@@ -2713,10 +2727,10 @@ class KMP(object):
         for camera in self.cameras:
             if camera.type == 0:
                 used.append(camera)
-
         if self.cameras.startcam != -1 and (self.cameras.startcam < len(self.cameras)):
-            opening_cams.append(self.cameras[self.cameras.startcam])
-
+            first_cam : Camera = self.cameras[self.cameras.startcam]
+            opening_cams.append(first_cam)
+            next_cam = first_cam.nextcam
             while next_cam != -1 and next_cam < len(self.cameras):
                 next_camera = self.cameras[next_cam]
                 if next_camera in used:
@@ -2759,6 +2773,18 @@ class KMP(object):
         invalid_cams = [camera for camera in self.cameras if camera.type < 0 or camera.type > 10]
         for cam in invalid_cams:
             self.remove_camera(cam)
+
+    #objects
+    def remove_object(self, obj: MapObject):
+        if obj.route != -1 and obj.route < len(self.routes):
+            self.routes[obj.route].used_by.remove(obj)
+
+        self.objects.objects.remove(obj)
+
+    def remove_invalid_objects(self):
+        invalid_objs = [obj for obj in self.objects.objects if obj.objectid not in OBJECTNAMES]
+        for obj in invalid_objs:
+            self.remove_object(obj)
 with open("lib/mkwiiobjects.json", "r") as f:
     tmp = json.load(f)
     OBJECTNAMES = {}
