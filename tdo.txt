@@ -23,6 +23,7 @@ area:
 - highlight camera / route point when relevant. (ALSO APPLIES TO MKDD)
 -- bold and have circles for cams and their routes (for consistency)
 -- if used by an area and a route, have both 
+- bugfix copy with route
 - add 'c' linking for areas
 - render area connections in a consistent color
 - improve side button options for individual areas
