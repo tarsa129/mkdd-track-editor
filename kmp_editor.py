@@ -946,6 +946,16 @@ class GenEditor(QMainWindow):
         self.level_view.cull_faces = bool(checked)
         self.level_view.do_redraw()
 
+    def on_default_geometry_changed(self, default_filetype):
+        self.editorconfig["addi_file_on_load"] = default_filetype
+        save_cfg(self.configuration)
+
+        collision_actions = [self.auto_load_bco, self.auto_load_bmd, self.auto_load_none, self.auto_load_choose]
+        collision_options = ("BCO", "BMD", "None", "Choose")
+
+        for i, option in enumerate(collision_options):
+            collision_actions[i].setChecked(option == default_filetype)
+
     def change_to_topdownview(self, checked):
         if checked:
             self.level_view.change_from_3d_to_topdown()
@@ -1227,7 +1237,14 @@ class GenEditor(QMainWindow):
             self.update_3d()
 
 
-    def load_collision_file(self, collisionfile):
+    def load_optional_bmd(self, bmdfile):
+        alternative_mesh = load_textured_bmd(bmdfile)
+        with open("lib/temp/temp.obj", "r") as f:
+            verts, faces, normals = py_obj.read_obj(f)
+
+        self.setup_collision(verts, faces, bmdfile, alternative_mesh)
+
+    def load_optional_bco(self, collisionfile):
         bco_coll = RacetrackCollision()
         verts = []
         faces = []
