@@ -1676,8 +1676,8 @@ class BOL(object):
         for route in to_split :
             # we know that these have both objects and cameras
             new_route = route.copy()
-            new_route.used_by = filter(lambda thing: isinstance(thing, Camera), route.used_by)
-            route.used_by = filter(lambda thing: isinstance(thing, MapObject), route.used_by)
+            new_route.used_by = [ thing for thing in route.used_by if isinstance(thing, Camera)  ]
+            route.used_by = [ thing for thing in route.used_by if isinstance(thing, MapObject)  ]
 
             bol.routes.append(new_route)
             for obj in new_route.used_by:
