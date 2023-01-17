@@ -704,6 +704,31 @@ class GenEditor(QMainWindow):
         cull_faces_action.setCheckable(True)
         cull_faces_action.setChecked(self.editorconfig.get("cull_faces") == "True")
         cull_faces_action.triggered.connect(self.on_cull_faces_triggered)
+        self.collision_menu.addSeparator()
+        self.choose_default_collision = QMenu("Choose Autoloaded Geometry", self)
+        self.collision_menu.addMenu(self.choose_default_collision)
+        self.auto_load_choose = self.choose_default_collision.addAction("Always Ask")
+        self.auto_load_choose.setCheckable(True)
+        self.auto_load_choose.setChecked(self.editorconfig.get("addi_file_on_load") == "Choose")
+        self.auto_load_choose.triggered.connect(lambda: self.on_default_geometry_changed("Choose"))
+        self.auto_load_bco = self.choose_default_collision.addAction("BCO")
+        self.auto_load_bco.setCheckable(True)
+        self.auto_load_bco.setChecked(self.editorconfig.get("addi_file_on_load") == "BCO")
+        self.auto_load_bco.triggered.connect(lambda: self.on_default_geometry_changed("BCO"))
+        self.auto_load_bmd = self.choose_default_collision.addAction("BMD")
+        self.auto_load_bmd.setCheckable(True)
+        self.auto_load_bmd.setChecked(self.editorconfig.get("addi_file_on_load") == "BMD")
+        self.auto_load_bmd.triggered.connect(lambda: self.on_default_geometry_changed("BMD"))
+        self.auto_load_none = self.choose_default_collision.addAction("Nothing")
+        self.auto_load_none.setCheckable(True)
+        self.auto_load_none.setChecked(self.editorconfig.get("addi_file_on_load") == "None")
+        self.auto_load_none.triggered.connect(lambda: self.on_default_geometry_changed("None"))
+        if self.editorconfig.get("addi_file_on_load") not in ("BCO", "BMD", "None", "Choose"):
+            self.on_default_geometry_changed("Choose")
+        self.collision_menu.addSeparator()
+        self.clear_current_collision = QAction("Clear Current Model", self)
+        self.clear_current_collision.triggered.connect(self.clear_collision)
+        self.collision_menu.addAction(self.clear_current_collision)
 
         self.minimap_menu = QMenu(self.menubar)
         self.minimap_menu.setTitle("Minimap")
@@ -1239,6 +1264,16 @@ class GenEditor(QMainWindow):
         self.level_view.cull_faces = bool(checked)
         self.level_view.do_redraw()
 
+    def on_default_geometry_changed(self, default_filetype):
+        self.editorconfig["addi_file_on_load"] = default_filetype
+        save_cfg(self.configuration)
+
+        collision_actions = [self.auto_load_bco, self.auto_load_bmd, self.auto_load_none, self.auto_load_choose]
+        collision_options = ("BCO", "BMD", "None", "Choose")
+
+        for i, option in enumerate(collision_options):
+            collision_actions[i].setChecked(option == default_filetype)
+
     def change_to_topdownview(self, checked):
         if checked:
             self.level_view.change_from_3d_to_topdown()
@@ -1501,6 +1536,10 @@ class GenEditor(QMainWindow):
                         self.loaded_archive_file = None
                         return
 
+                bmdfile = get_file_safe(self.loaded_archive.root, "_course.bmd")
+                collisionfile = get_file_safe(self.loaded_archive.root, "_course.bco")
+
+                if self.editorconfig["addi_file_on_load"] == "Choose":
                     try:
                         collisionfile = get_file_safe(self.loaded_archive.root, "_course.bco")
                         if collisionfile is not None:
@@ -1509,12 +1548,10 @@ class GenEditor(QMainWindow):
                         print("Error appeared while loading:", error)
                         traceback.print_exc()
                         open_error_dialog(str(error), self)
-                    """
+
 
                     try:
                         additional_files = []
-                        bmdfile = get_file_safe(self.loaded_archive.root, "_course.bmd")
-                        collisionfile = get_file_safe(self.loaded_archive.root, "_course.bco")
 
                         if bmdfile is not None:
                             additional_files.append(os.path.basename(bmdfile.name) + " (3D Model)")
@@ -1524,11 +1561,19 @@ class GenEditor(QMainWindow):
                         if len(additional_files) > 0:
                             additional_files.append("None")
                             self.load_optional_3d_file_arc(additional_files, bmdfile, collisionfile, filepath)
+                        else:
+                            self.clear_collision()
                     except Exception as error:
                         print("Error appeared while loading:", error)
                         traceback.print_exc()
                         open_error_dialog(str(error), self)
-                    """
+                elif bmdfile is not None and self.editorconfig["addi_file_on_load"] == "BMD":
+                    self.load_bmd_from_arc(bmdfile, filepath)
+                elif collisionfile is not None and self.editorconfig["addi_file_on_load"] == "BCO":
+                    self.load_bco_from_arc(collisionfile, filepath)
+                elif self.editorconfig["addi_file_on_load"] == "None":
+                    self.clear_collision()
+
             else:
                 with open(filepath, "rb") as f:
                     try:
@@ -1537,16 +1582,20 @@ class GenEditor(QMainWindow):
                         self.leveldatatreeview.set_objects(bol_file)
                         self.leveldatatreeview.bound_to_group(bol_file)
                         self.current_gen_path = filepath
+                    except Exception as error:
+                        print("Error appeared while loading:", error)
+                        traceback.print_exc()
+                        open_error_dialog(str(error), self)
 
-                        if filepath.endswith("_course.bol"):
-                            filepath_base = filepath[:-11]
-                            collisionfile = filepath_base+"_course.bco"
-                            if os.path.exists(collisionfile):
-                                self.load_collision_file(collisionfile)
-                            """
+                    if filepath.endswith("_course.bol"):
+                        filepath_base = filepath[:-11]
+                        bmdfile = filepath_base+"_course.bmd"
+                        collisionfile = filepath_base+"_course.bco"
+
+                        if self.editorconfig["addi_file_on_load"] == "Choose":
+
                             additional_files = []
-                            bmdfile = filepath_base+"_course.bmd"
-                            collisionfile = filepath_base+"_course.bco"
+
                             if os.path.exists(bmdfile):
                                 additional_files.append(os.path.basename(bmdfile) + " (3D Model)")
                             if os.path.exists(collisionfile):
@@ -1555,11 +1604,14 @@ class GenEditor(QMainWindow):
                             if len(additional_files) > 0:
                                 additional_files.append("None")
                                 self.load_optional_3d_file(additional_files, bmdfile, collisionfile)
-                            """
-                    except Exception as error:
-                        print("Error appeared while loading:", error)
-                        traceback.print_exc()
-                        open_error_dialog(str(error), self)
+                            else:
+                                self.clear_collision()
+                        elif bmdfile is not None and self.editorconfig["addi_file_on_load"] == "BMD":
+                            self.load_optional_bmd(bmdfile)
+                        elif collisionfile is not None and self.editorconfig["addi_file_on_load"] == "BCO":
+                            self.load_optional_bco(collisionfile)
+                        elif self.editorconfig["addi_file_on_load"] == "None":
+                            self.clear_collision()
 
             self.update_3d()
 
@@ -1590,16 +1642,19 @@ class GenEditor(QMainWindow):
             return
 
         if choice.endswith("(3D Model)"):
-            alternative_mesh = load_textured_bmd(bmdfile)
-            with open("lib/temp/temp.obj", "r") as f:
-                verts, faces, normals = py_obj.read_obj(f)
-
-            self.setup_collision(verts, faces, bmdfile, alternative_mesh)
+            self.load_optional_bmd(bmdfile)
 
         elif choice.endswith("(3D Collision)"):
-            self.load_collision_file(collisionfile)
+            self.load_optional_bco(collisionfile)
 
-    def load_collision_file(self, collisionfile):
+    def load_optional_bmd(self, bmdfile):
+        alternative_mesh = load_textured_bmd(bmdfile)
+        with open("lib/temp/temp.obj", "r") as f:
+            verts, faces, normals = py_obj.read_obj(f)
+
+        self.setup_collision(verts, faces, bmdfile, alternative_mesh)
+
+    def load_optional_bco(self, collisionfile):
         bco_coll = RacetrackCollision()
         verts = []
         faces = []
@@ -1625,30 +1680,36 @@ class GenEditor(QMainWindow):
             return
 
         if choice.endswith("(3D Model)"):
-            with open("lib/temp/temp.bmd", "wb") as f:
-                f.write(bmdfile.getvalue())
-
-            bmdpath = "lib/temp/temp.bmd"
-            alternative_mesh = load_textured_bmd(bmdpath)
-            with open("lib/temp/temp.obj", "r") as f:
-                verts, faces, normals = py_obj.read_obj(f)
-
-            self.setup_collision(verts, faces, arcfilepath, alternative_mesh)
+            self.load_bco_from_arc(bmdfile, arcfilepath)
 
         elif choice.endswith("(3D Collision)"):
-            bco_coll = RacetrackCollision()
-            verts = []
-            faces = []
+            self.load_bco_from_arc(collisionfile, arcfilepath)
 
-            bco_coll.load_file(collisionfile)
+    def load_bmd_from_arc(self, bmdfile, arcfilepath):
+        with open("lib/temp/temp.bmd", "wb") as f:
+            f.write(bmdfile.getvalue())
 
-            for vert in bco_coll.vertices:
-                verts.append(vert)
+        bmdpath = "lib/temp/temp.bmd"
+        alternative_mesh = load_textured_bmd(bmdpath)
+        with open("lib/temp/temp.obj", "r") as f:
+            verts, faces, normals = py_obj.read_obj(f)
 
-            for v1, v2, v3, collision_type, rest in bco_coll.triangles:
-                faces.append(((v1 + 1, None), (v2 + 1, None), (v3 + 1, None), collision_type))
-            model = CollisionModel(bco_coll)
-            self.setup_collision(verts, faces, arcfilepath, alternative_mesh=model)
+        self.setup_collision(verts, faces, arcfilepath, alternative_mesh)
+
+    def load_bco_from_arc(self, collisionfile, arcfilepath):
+        bco_coll = RacetrackCollision()
+        verts = []
+        faces = []
+
+        bco_coll.load_file(collisionfile)
+
+        for vert in bco_coll.vertices:
+            verts.append(vert)
+
+        for v1, v2, v3, collision_type, rest in bco_coll.triangles:
+            faces.append(((v1 + 1, None), (v2 + 1, None), (v3 + 1, None)))
+        model = CollisionModel(bco_coll)
+        self.setup_collision(verts, faces, arcfilepath, alternative_mesh=model)
 
     def load_file(self, filepath, additional=None):
         if filepath.endswith('.bol'):
