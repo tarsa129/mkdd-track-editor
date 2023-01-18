@@ -37,11 +37,6 @@ class MoreButtons(QWidget):
             new_enemy_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(0) )
             self.vbox.addWidget(new_enemy_group)
 
-            copy_from_item = QPushButton(self)
-            copy_from_item.setText("Copy To Item Groups")
-            copy_from_item.clicked.connect(lambda: self.parent.button_add_from_addi_options(24) )
-            self.vbox.addWidget(copy_from_item)
-
         elif isinstance(option.bound_to, EnemyPointGroup): #enemy point group select
             all_options = False
             new_enemy_group = QPushButton(self)
