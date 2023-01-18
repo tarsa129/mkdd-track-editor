@@ -28,7 +28,7 @@ area:
 
 came:
 - camera replaying (long shot)
-- if a camera/area is invalid, it does not matter what the actual type is, so remove its display in the treeview
+
 
 before release: match lorenzis with colors
 

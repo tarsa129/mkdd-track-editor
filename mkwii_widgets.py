@@ -1036,9 +1036,19 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         glLineWidth(1.0)
             if vismenu.cameraroutes.is_visible():
                 routes_to_highlight = set()
-                for camera in self.level_file.cameras:
+                routes_to_circle = set()
+
+                type_0_areas = self.level_file.areas.get_type(0)
+                cameras_to_circle = [ area.set_camera() for area in type_0_areas if (area in select_optimize)  ]
+
+                for i, camera in enumerate(self.level_file.cameras):
                     if camera.route >= 0 and camera in select_optimize:
                         routes_to_highlight.add(camera.route)
+                    if i in cameras_to_circle and camera.route >= 0 :
+                        routes_to_circle.add(camera.route)
+                        routes_to_highlight.add(camera.route)
+
+
 
                 for i, route in enumerate(self.level_file.cameraroutes):
                     selected = i in routes_to_highlight
@@ -1050,6 +1060,9 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         for point in route.points:
                             point_selected = point in select_optimize
                             self.models.render_generic_position_colored(point.position, point_selected, "camerapoint")
+                            if i in routes_to_circle:
+                                glColor3f(0.0, 0.0, 1.0)
+                                self.models.draw_sphere(point.position, 600)
                             selected = selected or point_selected
                     else:
                         for point in route.points:
