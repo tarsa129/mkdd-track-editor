@@ -1878,6 +1878,8 @@ class GenEditor(QMainWindow):
             self.level_view.do_redraw()
         elif option == 26: #remove unused respawns:
             self.level_file.remove_unused_respawns()
+        elif option == 27:
+            obj.find_closest_enemypoint()
         self.leveldatatreeview.set_objects(self.level_file)
 
     @catch_exception
@@ -1965,7 +1967,6 @@ class GenEditor(QMainWindow):
             if obj.route == -1:
                 self.add_points_around_obj(obj,5,True)
 
-
     def add_points_around_obj(self, obj, num = 2, create = False):
         if num == 0:
             return
@@ -1988,7 +1989,6 @@ class GenEditor(QMainWindow):
             route_collec[obj.route].used_by.append(obj)
         #create new points around the object
         self.place_points(obj, num, set_speed)
-
 
     def place_points(self, obj, num, set_speed = False):
         new_point = libkmp.RoutePoint.new()

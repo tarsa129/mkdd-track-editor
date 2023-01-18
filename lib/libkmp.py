@@ -1168,6 +1168,12 @@ class ObjectRoute(Route):
     def new(cls):
         return cls()
 
+    def has_area(self):
+        for obj in self.used_by:
+            if isinstance(obj, Area):
+                return True
+        return False
+
 class CameraRoute(Route):
     def __init__(self):
         super().__init__()
@@ -1615,7 +1621,6 @@ class Area(object):
             __class__.level_file.cameras[self.cameraid].used_by.remove(self)
         if self.route != -1 and self.route < len(__class__.level_file.routes):
             __class__.level_file.routes[self.route].used_by.remove(self)
-
 
 class Areas(object):
     def __init__(self):
@@ -2224,15 +2229,12 @@ class KMP(object):
             if has_camera and has_object:
                 to_split.append(route)
 
-        new_route_idx = len(self.routes)
-
         for route in to_split :
             # we know that these have both objects and cameras
             new_route = route.to_camera()
 
             new_route.used_by = [ thing for thing in route.used_by if isinstance(thing, Camera)  ]
             route.used_by = [ thing for thing in route.used_by if isinstance(thing, (MapObject, Area))  ]
-
             self.routes.append(new_route)
             """
             for obj in new_route.used_by:

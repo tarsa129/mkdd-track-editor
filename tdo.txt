@@ -19,16 +19,8 @@ poti:
 - camera auto route - make it based on the total length (parse all files to find average distance / speed)
 - fix splitting (not actually splitting?)
 
-area:
-- highlight camera / route point when relevant. (ALSO APPLIES TO MKDD)
--- bold and have circles for cams and their routes (for consistency)
--- if used by an area and a route, have both colors
-- improve side button options for individual areas
--- when an area with a connection is highlighted, have special functions (like assign)
-
 came:
 - camera replaying (long shot)
-
 
 before release: match lorenzis with colors
 

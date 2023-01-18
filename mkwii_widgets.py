@@ -1007,16 +1007,16 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     if route in self.selected:
                         selected = True
 
-                    if route.used_by:
-                        for point in route.points:
-                            point_selected = point in select_optimize
-                            self.models.render_generic_position_colored(point.position, point_selected, "objectpoint")
-                            selected = selected or point_selected
-                    else:
-                        for point in route.points:
-                            point_selected = point in select_optimize
-                            self.models.render_generic_position_colored(point.position, point_selected, "unusedpoint")
-                            selected = selected or point_selected
+                    render_type = "objectpoint"
+                    if route.has_area():
+                        render_type = "areapoint"
+                    elif not route.used_by:
+                        render_type = "unusedpoint"
+
+                    for point in route.points:
+                        point_selected = point in select_optimize
+                        self.models.render_generic_position_colored(point.position, point_selected, render_type)
+                        selected = selected or point_selected
 
                     if i in routes_to_circle:
                         for point in route.points:
