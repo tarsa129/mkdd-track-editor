@@ -187,7 +187,7 @@ class MoreButtons(QWidget):
             self.vbox.addWidget(new_area_2)
 
             new_area_3 = QPushButton(self)
-            new_area_3.setText("Add Moving Road Area (Type 3)")
+            new_area_3.setText("Add Moving Road Area With Route (Type 3)")
             new_area_3.clicked.connect(lambda: self.parent.button_add_from_addi_options(7, 3) )
             self.vbox.addWidget(new_area_3)
 

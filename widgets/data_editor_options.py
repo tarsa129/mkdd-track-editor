@@ -51,7 +51,7 @@ AREA_Type["Fall Boundary"] = 10
 AREA_Type["INVALID"] = 11
 
 AREA_TYPES = [ "Camera","Environment Effect","BFG Swapper", "Moving Road", "Destination Point" , "Minimap Control",
-               "BBLM Swapper", "Flying Boos", "Object Grouper", "Group Unloading", "Fall Boundary", "INVALID"]
+               "BBLM Swapper", "Flying Boos", "Object Grouper", "Group Unloading", "Fall Boundary"]
 
 AREA_Shape = OrderedDict()
 AREA_Shape["Box"] = 0
@@ -71,7 +71,7 @@ CAME_Type["MSPT"] = 9
 CAME_Type["INVALID"] = 10
 
 CAME_TYPES = ["Goal", "FixSearch (R)", "PathSearch (R)", "KartFollow (R)", "KartPathFollow (R/O)",
-                "OP_FixMoveAt(O)", "OP_PathMoveAt (R)", "MiniGame", "MissionSuccess", "MSPT", "INVALID"]
+                "OP_FixMoveAt(O)", "OP_PathMoveAt (R)", "MiniGame", "MissionSuccess", "MSPT"]
 
 routed_cameras = [2, 5, 6]
 

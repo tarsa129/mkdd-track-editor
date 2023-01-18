@@ -1458,10 +1458,10 @@ class Area(object):
         self.setting1 = 0
         self.setting2 = 0
 
-        self.route = 0
+        self.route = -1
         self.route_obj = None
 
-        self.enemypointid = 0
+        self.enemypointid = -1
         self.enemypoint = None
 
         self.widget = None
@@ -1548,7 +1548,7 @@ class Area(object):
         new_area.route = self.route
         new_area.enemypointid = self.enemypointid
 
-        return new_area
+        return new_areainvalid
 
     #type 0 - camera
     def set_camera(self):
@@ -1572,7 +1572,7 @@ class Area(object):
     def set_route(self):
         if self.type == 3:
             routes = __class__.level_file.routes
-            if self.route < len( routes ) and routes[self.route] == self.route_obj:
+            if self.route != -1 and self.route < len( routes ) and routes[self.route] == self.route_obj:
                 return self.route
 
             for i, route in enumerate(routes):
@@ -2821,10 +2821,10 @@ class KMP(object):
         if cam.route != -1 and cam.route < len(self.cameraroutes):
             self.cameraroutes[cam.route].used_by.remove(cam)
 
-        self.objects.objects.remove(cam)
+        self.cameras.remove(cam)
 
     def remove_invalid_cameras(self):
-        invalid_cams = [camera for camera in self.cameras if camera.type < 0 or camera.type > 10]
+        invalid_cams = [camera for camera in self.cameras if camera.type < 0 or camera.type > 9]
         for cam in invalid_cams:
             self.remove_camera(cam)
 

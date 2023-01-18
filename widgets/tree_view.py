@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem
-from lib.libkmp import KMP,  get_kmp_name, KMPPoint, Area
+from lib.libkmp import KMP,  get_kmp_name, KMPPoint, Area, Camera
 from widgets.data_editor_options import AREA_TYPES, CAME_TYPES, routed_cameras
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QAction, QMenu
@@ -232,9 +232,6 @@ class ObjectEntry(NamedItem):
         bound_to.widget = self
 
     def update_name(self):
-
-
-
         text_descrip = get_kmp_name(self.bound_to.objectid)
 
         if self.bound_to.route != -1:
@@ -262,20 +259,22 @@ class AreaEntry(NamedItem):
 
     def update_name(self):
         area : Area = self.bound_to
-        area_type_string = AREA_TYPES[area.type] if area.type < len(AREA_TYPES) else "INVALID"
-        disp_string = "Area (Type: {0}, {1})".format(area.type, area_type_string)
-        if area.type == 0:
-            disp_string += ", (Cam: {0})".format(area.cameraid)
-        elif area.type == 2:
-            disp_string += ", (BFG: {0})".format(area.setting1)
-        elif area.type == 3:
-            disp_string += ", (Route: {0})".format(area.route)
-        elif area.type == 4:
-            disp_string += ", (Enemy point ID: {0})".format(area.set_enemypointid())
-        elif area.type == 6:
-            disp_string += ", (BBLM: {0})".format(area.setting1)
-        elif area.type in (8, 9):
-            disp_string += ", (Group: {0})".format(area.setting1)
+        if area.type < len(AREA_TYPES) and area.type >= 0:
+            disp_string = "Type: {0}, {1}".format(area.type, AREA_TYPES[area.type])
+            if area.type == 0:
+                disp_string += ", (Cam: {0})".format(area.cameraid)
+            elif area.type == 2:
+                disp_string += ", (BFG: {0})".format(area.setting1)
+            elif area.type == 3:
+                disp_string += ", (Route: {0})".format(area.route)
+            elif area.type == 4:
+                disp_string += ", (Enemy point ID: {0})".format(area.set_enemypointid())
+            elif area.type == 6:
+                disp_string += ", (BBLM: {0})".format(area.setting1)
+            elif area.type in (8, 9):
+                disp_string += ", (Group: {0})".format(area.setting1)
+        else:
+            disp_string = "INVALID"
         self.setText(0, disp_string)
 
 class CameraEntry(NamedItem):
@@ -284,11 +283,14 @@ class CameraEntry(NamedItem):
         bound_to.widget = self
 
     def update_name(self):
-        came_type_string = CAME_TYPES[self.bound_to.type] if self.bound_to.type < len(CAME_TYPES) else "INVALID"
-        text_descrip = "Camera {0}: (Type: {1} - {2})".format(self.index, self.bound_to.type, came_type_string)
-        if self.bound_to.type in routed_cameras:
-            text_descrip +=  ", (Route: {0})".format(self.bound_to.route)
-
+        text_descrip = "Camera {0}: ".format(self.index)
+        camera : Camera = self.bound_to
+        if camera.type < len(CAME_TYPES) and camera.type >= 0:
+            text_descrip += "(Type: {0} - {1})".format( camera.type, CAME_TYPES[camera.type])
+            if camera.type in routed_cameras:
+                text_descrip +=  ", (Route: {0})".format(camera.route)
+        else:
+            text_descrip += "INVALID"
         self.setText(0, text_descrip)
 
 class RespawnEntry(NamedItem):

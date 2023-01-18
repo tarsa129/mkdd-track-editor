@@ -1940,26 +1940,27 @@ class GenEditor(QMainWindow):
 
     def auto_route_obj(self, obj):
         #do object route
-        route_collec = self.level_file.routes if isinstance(obj, MapObject) else self.level_file.cameraroutes
+        route_collec = self.level_file.get_route_container(obj)
         if isinstance(obj, MapObject):
             route_data = load_route_info(get_kmp_name(obj.objectid))
-            #print("route_data",  route_data )
         elif isinstance(obj, Camera):
             if obj.has_route() :
                 route_data = 2
             else:
                 route_data = -1
+        elif isinstance(obj, Area):
+            if obj.type == 3:
+                route_data = 2
+            else:
+                route_data = -1
 
         if route_data == 2:
-
             if obj.route == -1:
                 self.add_points_around_obj(obj,route_data,True)
             elif  obj.route > len(route_collec) - 1 :
                 self.add_points_around_obj(obj,route_data,True)
             elif  len(route_collec[obj.route].points) < 2:
                 self.add_points_around_obj(obj,2 - len(route_collec[obj.route].points),False)
-
-
         elif route_data == 3:
             if obj.route == -1:
                 self.add_points_around_obj(obj,5,True)
@@ -1969,15 +1970,16 @@ class GenEditor(QMainWindow):
         if num == 0:
             return
 
-        route_collec = self.level_file.routes if isinstance(obj, MapObject) else self.level_file.cameraroutes
+        route_collec = self.level_file.get_route_container(obj)
         set_speed = False
         if create:
-            if isinstance(obj, MapObject):
+            if isinstance(obj, (MapObject, Area) ):
                 new_route_group = libkmp.ObjectRoute.new()
 
             elif isinstance(obj, Camera):
                 set_speed = True
                 new_route_group = libkmp.CameraRoute.new()
+
             route_collec.append(new_route_group)
             obj.route = len(route_collec) - 1
 
@@ -1992,8 +1994,8 @@ class GenEditor(QMainWindow):
         new_point = libkmp.RoutePoint.new()
         if set_speed:
             new_point.unk1 = 50
-
-        new_point.partof = self.level_file.routes[obj.route] if isinstance(obj, MapObject) else self.level_file.cameraroutes[obj.route]
+        route_collec = self.level_file.get_route_container(obj)
+        new_point.partof = route_collec[obj.route]
         self.object_to_be_added = [new_point, obj.route, -1]
 
 
@@ -2003,7 +2005,7 @@ class GenEditor(QMainWindow):
         self.action_add_object(*first_point)
 
         new_point = libkmp.RoutePoint.new()
-        new_point.partof = self.level_file.routes[obj.route] if isinstance(obj, MapObject) else self.level_file.cameraroutes[obj.route]
+        new_point.partof = route_collec[obj.route]
         self.object_to_be_added = [new_point, obj.route, -1]
 
         if num > 1:
@@ -2130,7 +2132,10 @@ class GenEditor(QMainWindow):
 
             elif isinstance(object, libkmp.Area):
                 self.level_file.areas.areas.append(placeobject)
-                if placeobject.type == 4:
+                if placeobject.type == 3:
+                    self.auto_route_obj(placeobject)
+                    self.object_to_be_added = [object, group, position]
+                elif placeobject.type == 4:
                     placeobject.find_closest_enemypoint()
                     #assign to closest enemypoint
             elif isinstance(object, libkmp.Camera):
