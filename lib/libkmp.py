@@ -1549,6 +1549,25 @@ class Area(object):
         new_area.enemypointid = self.enemypointid
 
         return new_area
+
+    #type 0 - camera
+    def set_camera(self):
+        if self.type == 0:
+            cameras = __class__.level_file.cameras
+            if self.cameraid < len(cameras) and cameras[self.cameraid] == self.cameraid:
+                return self.cameraid
+
+            for i, camera in enumerate(cameras):
+                if camera == self.camera:
+                    self.cameraid = i
+                    return i
+
+    def set_cam_from_id(self):
+        if self.type == 0:
+            cameras = __class__.level_file.cameras
+            if self.cameraid < len(cameras):
+                self.camera = cameras[self.cameraid]
+
     #type 3 - moving road
     def set_route(self):
         if self.type == 3:
@@ -1556,18 +1575,26 @@ class Area(object):
             if self.route < len( routes ) and routes[self.route] == self.route_obj:
                 return self.route
 
-            for i, route in enumerate(__class__.level_file.routes):
+            for i, route in enumerate(routes):
                 if route == self.route_obj:
                     self.route = i
                     return i
-            self.route = -1
-            return -1
+
+    def set_route_from_id(self):
+        if self.type == 3:
+            routes = __class__.level_file.routes
+            if self.route < len( routes ):
+                self.camera = routes[self.route]
+
     #type 4 - force recalc
     def set_enemypointid(self):
         if self.type == 4:
             point_idx = __class__.level_file.enemypointgroups.get_index_from_point(self.enemypoint)
             self.enemypointid = point_idx
             return point_idx
+
+    def set_enemypoint_from_id(self):
+        self.enemypoint = __class__.level_file.enemypointgroups.get_point_from_index(self.enemypointid)
 
     def find_closest_enemypoint(self):
         enemygroups = __class__.level_file.enemypointgroups.groups
@@ -2139,7 +2166,7 @@ class KMP(object):
         count = read_uint16(f)
         f.read(2)
         for i in range(count):
-            kmp.missionpoints.append( MPoint.from_file(f)  )
+            kmp.missionpoints.append( MissionPoint.from_file(f)  )
 
         f.seek(stgi_offset + header_len)
         assert f.read(4) == b"STGI"
@@ -2270,7 +2297,6 @@ class KMP(object):
         for area in self.areas.get_type(0):
             if area.cameraid < num_cams:
                 area.camera = self.cameras[area.cameraid]
-
         num_routes = len(self.routes)
         for area in self.areas.get_type(3):
             if area.route < num_routes:
@@ -2754,6 +2780,7 @@ class KMP(object):
                 used.append(camera)
         if self.cameras.startcam != -1 and (self.cameras.startcam < len(self.cameras)):
             first_cam : Camera = self.cameras[self.cameras.startcam]
+            used.append(first_cam)
             opening_cams.append(first_cam)
             next_cam = first_cam.nextcam
             while next_cam != -1 and next_cam < len(self.cameras):

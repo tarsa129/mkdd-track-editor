@@ -24,7 +24,6 @@ area:
 - highlight camera / route point when relevant. (ALSO APPLIES TO MKDD)
 -- bold and have circles for cams and their routes (for consistency)
 -- if used by an area and a route, have both colors
--- render area connections in a consistent color
 - add 'c' linking for areas
 -- if replacing an old camera / route, remove the area from the old route's used_by list
 - improve side button options for individual areas

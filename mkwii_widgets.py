@@ -1434,7 +1434,6 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     if selected_groups[i]:
                         glLineWidth(normal_width)
 
-
             #draw arrows between groups
             if vismenu.checkpoints.is_visible():
                 all_groups = self.level_file.checkpoints.groups
@@ -1489,11 +1488,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         if selected_groups[i] or selected_groups[group]:
                             glLineWidth(normal_width)
             glPopMatrix()
-
-
             #go between the groups
-
-
             if vismenu.objects.is_visible():
                 for object in self.level_file.objects.objects:
                     self.models.render_generic_position_rotation_colored("objects",
@@ -1523,10 +1518,18 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     else:
                         self.models.draw_wireframe_cylinder(object.position, object.rotation, object.scale*50 * 100)
             if vismenu.cameras.is_visible():
-                for object in self.level_file.cameras:
+                type_0_areas = self.level_file.areas.get_type(0)
+                cameras_to_circle = [ area.set_camera() for area in type_0_areas if (area in select_optimize)  ]
+
+                for i, object in enumerate(self.level_file.cameras):
+
                     self.models.render_generic_position_rotation_colored("camera",
                                                                 object.position, object.rotation,
                                                                  object in select_optimize)
+
+                    if i in cameras_to_circle:
+                        glColor3f(0.0, 0.0, 1.0)
+                        self.models.draw_sphere(object.position, 600)
 
                     if object in select_optimize and object.type in [0, 1, 4, 5]:
                         glColor3f(0.0, 1.0, 0.0)

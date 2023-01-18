@@ -1118,6 +1118,8 @@ class AreaEdit(DataEditor):
 
         self.shape.setCurrentIndex( obj.shape )
         self.area_type.setCurrentIndex( obj.type )
+
+        obj.set_camera()
         self.camera_index.setText(str(obj.cameraid))
         self.priority.setText(str(obj.priority))
 
@@ -1162,25 +1164,37 @@ class AreaEdit(DataEditor):
         self.set_settings_visible()
         super().update_name()
 
-    def update_route_used(self):
-        self.emit_route_update.emit(self.bound_to, self.bound_to.route, int(self.route.text()) )
-
-        #now update the value
-        self.bound_to.route = int(self.route.text())
-
-        #update the name, may be needed
-        self.update_name()
-
     def update_camera_used(self):
+        area : Area = self.bound_to
         #print('update route used', self.bound_to.route)
         #emit signal with old and new route numbers, for easier changing
         self.emit_camera_update.emit(self.bound_to, self.bound_to.cameraid, int(self.camera_index.text()) )
 
         #now update the value
-        self.bound_to.cameraid = int(self.camera_index.text())
+        area.cameraid = int(self.camera_index.text())
+        area.set_cam_from_id()
 
         #update the name, may be needed
         self.update_name()
+
+    def update_route_used(self):
+        area : Area = self.bound_to
+        self.emit_route_update.emit(self.bound_to, self.bound_to.route, int(self.route.text()) )
+
+        #now update the value
+        area.route = int(self.route.text())
+        area.set_route_from_id()
+
+        #update the name, may be needed
+        self.update_name()
+
+    def update_enemypoint_used(self):
+        area : Area = self.bound_to
+        area.enemypointid = int(self.enemypointid.text())
+        area.set_enemypoint_from_id()
+        self.update_name()
+
+
 
 class CamerasEdit(DataEditor):
     def setup_widgets(self):
