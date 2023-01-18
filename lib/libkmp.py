@@ -2281,7 +2281,9 @@ class KMP(object):
 
     @classmethod
     def from_bytes(cls, data: bytes) -> 'KMP':
-        return KMP.from_file(BytesIO(data))
+        KMP = cls.from_file(BytesIO(data))
+        KMP.fix_file()
+        return KMP
 
     def write(self, f):
          f.write(b"RKMD") #file magic
