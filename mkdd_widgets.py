@@ -809,10 +809,10 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                                                                                     id + (offset + i) * 4)
                 offset = len(objlist)
                 if vismenu.lightparams.is_selectable():
-                   
+
                     obj = self.level_file
-                    
-                    objlist.append( 
+
+                    objlist.append(
                                 ObjectSelectionEntry(obj=obj,
                                                  pos1=obj.lightsource,
                                                  pos2=None,
@@ -850,7 +850,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                                                     rotation=None))
                             self.models.render_generic_position_colored_id(obj.position, id + (offset + i) * 4 )
                 for entry in objlist:
-                    assert isinstance(entry, ObjectSelectionEntry)                                                               
+                    assert isinstance(entry, ObjectSelectionEntry)
                 len_objlist = len(objlist)
                 assert len_objlist*4 < id
                 print("We queued up", len_objlist)
@@ -869,7 +869,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                         index = (upper << 16) | (pixels[i * 3 + 1] << 8) | pixels[i * 3 + 2]
                         indexes.add(index)
 
-                
+
                 for index in indexes:
                     try:
                         entry: ObjectSelectionEntry = objlist[index // 4]
@@ -1055,8 +1055,16 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                         glLineWidth(1.0)
             if vismenu.cameraroutes.is_visible():
                 routes_to_highlight = set()
-                for camera in self.level_file.cameras:
+                routes_to_circle = set()
+
+                type_1_areas = self.level_file.areas.get_type(1)
+                cameras_to_circle = [ area.camera_index for area in type_1_areas if (area in select_optimize)  ]
+
+                for i, camera in enumerate( self.level_file.cameras ) :
                     if camera.route >= 0 and camera in select_optimize:
+                        routes_to_highlight.add(camera.route)
+                    if i in cameras_to_circle and camera.route >= 0 :
+                        routes_to_circle.add(camera.route)
                         routes_to_highlight.add(camera.route)
 
                 for i, route in enumerate(self.level_file.cameraroutes):
@@ -1098,7 +1106,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                 point_index = 0
                 for group in self.level_file.enemypointgroups.groups:
                     if len(group.points) == 0:
-                        continue 
+                        continue
 
                     group_selected = False
                     for point in group.points:
@@ -1308,10 +1316,17 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                     else:
                         self.models.draw_wireframe_cube(object.position, object.rotation, object.scale*100)
             if vismenu.cameras.is_visible():
-                for object in self.level_file.cameras:
+                type_1_areas = self.level_file.areas.get_type(1)
+                cameras_to_circle = [ area.camera_index for area in type_1_areas if (area in select_optimize)  ]
+
+                for i, object in enumerate(self.level_file.cameras):
                     self.models.render_generic_position_rotation_colored("camera",
                                                                 object.position, object.rotation,
                                                                  object in select_optimize)
+
+                    if i in cameras_to_circle:
+                        glColor3f(0.0, 0.0, 1.0)
+                        self.models.draw_sphere(object.position, 600)
 
                     if object in select_optimize and object.camtype in [4, 5, 6]:
                         glColor3f(0.0, 1.0, 0.0)
@@ -1328,7 +1343,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                     self.models.render_generic_position_colored(object.position, object in select_optimize, "lightparam")
                 object = self.level_file
                 self.models.render_generic_position_colored(object.lightsource, object in select_optimize, "lightsource")
-            
+
             if self.minimap is not None and self.minimap.is_available() and vismenu.minimap.is_visible():
                 self.models.render_generic_position(self.minimap.corner1, self.minimap.corner1 in positions)
                 self.models.render_generic_position(self.minimap.corner2, self.minimap.corner2 in positions)
@@ -1550,17 +1565,17 @@ class FilterViewMenu(QMenu):
         self.enemyroute = ObjectViewSelectionToggle("Enemy Routes", self)
         self.checkpoints = ObjectViewSelectionToggle("Checkpoints", self)
         self.respawnpoints = ObjectViewSelectionToggle("Respawn Points", self)
-        
+
         self.objects = ObjectViewSelectionToggle("Objects", self)
         self.objectroutes = ObjectViewSelectionToggle("Object Paths", self)
-        
+
         self.areas = ObjectViewSelectionToggle("Areas", self)
         self.cameras = ObjectViewSelectionToggle("Cameras", self)
         self.cameraroutes = ObjectViewSelectionToggle("Camera Paths", self)
 
         self.lightparams = ObjectViewSelectionToggle("Light Positions", self)
-        
-        
+
+
         self.minimap = ObjectViewSelectionToggle("Minimap", self)
 
         for action in self.get_entries():

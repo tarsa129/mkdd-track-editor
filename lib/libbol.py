@@ -1137,6 +1137,8 @@ class Areas(object):
             areas.areas.append(Area.from_file(f))
 
         return areas
+    def get_type(self, type):
+        return [area for area in self.areas if area.area_type == type]
 
 # Section 8
 # Cameras
