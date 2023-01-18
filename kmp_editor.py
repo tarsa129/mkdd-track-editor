@@ -2855,8 +2855,6 @@ class GenEditor(QMainWindow):
         else:
             self.ready_to_connect = False
 
-
-
     def action_connectedto_final(self):
         if not self.ready_to_connect or self.connect_start is None:
             return
@@ -2930,7 +2928,6 @@ class GenEditor(QMainWindow):
 
                 if to_deal_with is not None:
                     self.connect_two_groups(endpoint, to_deal_with)
-
             elif isinstance(endpoint, JugemPoint) and isinstance(self.connect_start, Checkpoint):
                 self.connect_start.respawn = self.level_file.get_index_of_respawn(endpoint)
             elif isinstance(endpoint, RoutePoint) and isinstance(self.connect_start, (MapObject, Camera)):
@@ -2945,8 +2942,15 @@ class GenEditor(QMainWindow):
                     self.connect_start.route = self.level_file.get_index_of_route(  endpoint.partof  )
                     endpoint.partof.used_by.append(self.connect_start)
             elif isinstance(self.connect_start, Area):
+                area : Area = self.connect_start
+                if self.connect_start.type == 0 and isinstance(endpoint, Camera):
+                    old_camera = area.set_camera()
+                    area.camera = endpoint
+                    self.update_camera_used_by(area, old_camera, area.set_camera() )
                 if self.connect_start.type == 3 and isinstance(endpoint, RoutePoint):
-                    self.connect_start.route_obj = endpoint.partof
+                    old_route = area.set_route()
+                    area.route_obj = endpoint.partof
+                    self.update_route_used_by(area, old_route, area.set_route())
                 elif self.connect_start.type == 4 and isinstance(endpoint, EnemyPoint):
                     self.connect_start.enemypoint = endpoint
 

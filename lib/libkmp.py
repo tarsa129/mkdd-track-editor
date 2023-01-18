@@ -2241,7 +2241,9 @@ class KMP(object):
 
         #now that everything is split, we can spilt into cam routes and non cam routes
         object_routes = ObjectContainer()
+        object_routes.assoc = ObjectRoute
         camera_routes = ObjectContainer()
+        camera_routes.assoc = CameraRoute
         for route in self.routes:
             if len(route.used_by) > 0:
                 if isinstance(route.used_by[0], Camera):

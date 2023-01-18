@@ -1194,8 +1194,6 @@ class AreaEdit(DataEditor):
         area.set_enemypoint_from_id()
         self.update_name()
 
-
-
 class CamerasEdit(DataEditor):
     def setup_widgets(self):
         self.startcam = self.add_integer_input("Starting Camera", "startcam", 0, 255)

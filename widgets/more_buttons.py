@@ -131,7 +131,7 @@ class MoreButtons(QWidget):
             self.vbox.addWidget(new_item_box)
 
             #place several item boxes in a line
-            pass
+
         elif isinstance(option.bound_to, MapObject):
 
             route_stuff = option.bound_to.route_info
@@ -163,7 +163,7 @@ class MoreButtons(QWidget):
                 new_item_copy.clicked.connect(lambda: self.parent.button_add_from_addi_options(4, option.bound_to.copy()) )
                 self.vbox.addWidget(new_item_copy)
 
-        elif isinstance(option.bound_to, Area) or (isinstance(option.bound_to, Areas) ):
+        elif isinstance(option.bound_to, Areas):
             all_options = False
 
             new_camera_cam_route = QPushButton(self)
@@ -221,6 +221,20 @@ class MoreButtons(QWidget):
             new_area_a.clicked.connect(lambda: self.parent.button_add_from_addi_options(7, 10) )
             self.vbox.addWidget(new_area_a)
 
+        elif isinstance(option.bound_to, Area):
+            area : Area = option.bound_to
+            if area.type == 3:
+                create_route = QPushButton(self)
+                create_route.setText("Add Object Route")
+                create_route.clicked.connect(lambda: self.parent.button_add_from_addi_options(16, option.bound_to) )
+                self.vbox.addWidget(create_route)
+            elif area.type == 4:
+                assign_to_closest = QPushButton(self)
+                assign_to_closest.setText("Assign to Closest Enemypoint")
+                assign_to_closest.clicked.connect(lambda: self.parent.button_add_from_addi_options(16, option.bound_to) )
+                self.vbox.addWidget(assign_to_closest)
+                # delete with camera / route
+
 
         elif isinstance(option.bound_to, Camera):
 
@@ -249,7 +263,6 @@ class MoreButtons(QWidget):
                 copy_camera.setText("Copy and Place Camera")
                 copy_camera.clicked.connect(lambda: self.parent.button_add_from_addi_options(4, option.bound_to.copy()) )
                 self.vbox.addWidget(copy_camera)
-
 
         elif isinstance(option.bound_to, Cameras):
 

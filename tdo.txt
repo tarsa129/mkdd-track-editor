@@ -20,14 +20,10 @@ poti:
 - fix splitting (not actually splitting?)
 
 area:
-- refactor type 0 to store the cameras as well
 - highlight camera / route point when relevant. (ALSO APPLIES TO MKDD)
 -- bold and have circles for cams and their routes (for consistency)
 -- if used by an area and a route, have both colors
-- add 'c' linking for areas
--- if replacing an old camera / route, remove the area from the old route's used_by list
 - improve side button options for individual areas
--- remove the "all areas" side button optiosn for individual areas
 -- when an area with a connection is highlighted, have special functions (like assign)
 
 came:
