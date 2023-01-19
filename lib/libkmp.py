@@ -931,10 +931,14 @@ class CheckpointGroup(PointGroup):
     def get_used_respawns(self):
         return set( [checkpoint.respawn for checkpoint in self.points]  )
 
+    def num_key_cps(self):
+        return sum( [1 for ckpt in self.points if ckpt.type > 0]  )
+
     @classmethod
-    def from_file(cls, f, all_points):
+    def from_file(cls, f, all_points, id):
 
         checkpointgroup = cls.new()
+        checkpointgroup.id = id
 
         start_point = read_uint8(f)
         end_point = read_uint8(f)
@@ -959,14 +963,15 @@ class CheckpointGroup(PointGroup):
             for i in range(1, len( self.points) -1 ):
                 key = self.points[i].write(f, i-1 + prev, i + 1 + prev, key)
             key = self.points[-1].write(f, len(self.points) - 2 + prev, -1, key)
-        return len(self.points), key
+        return key
 
     def write_ckph(self, f, index):
-         f.write(pack(">B", index ) )
-         f.write(pack(">B", len(self.points) ) )
-         f.write(pack(">bbbbbb", self.prevgroup[0], self.prevgroup[1], self.prevgroup[2], self.prevgroup[3], self.prevgroup[4], self.prevgroup[5]) )
-         f.write(pack(">bbbbbb", self.nextgroup[0], self.nextgroup[1], self.nextgroup[2], self.nextgroup[3], self.nextgroup[4], self.nextgroup[5]) )
-         f.write(pack(">H",  0) )
+        #print(index, len(self.points), self.prevgroup, self.nextgroup)
+        f.write(pack(">B", index ) )
+        f.write(pack(">B", len(self.points) ) )
+        f.write(pack(">bbbbbb", self.prevgroup[0], self.prevgroup[1], self.prevgroup[2], self.prevgroup[3], self.prevgroup[4], self.prevgroup[5]) )
+        f.write(pack(">bbbbbb", self.nextgroup[0], self.nextgroup[1], self.nextgroup[2], self.nextgroup[3], self.nextgroup[4], self.nextgroup[5]) )
+        f.write(pack(">H",  0) )
 
 class CheckpointGroups(PointGroups):
     def __init__(self):
@@ -979,12 +984,14 @@ class CheckpointGroups(PointGroups):
         return CheckpointGroup.new()
 
     @classmethod
-    def from_file(cls, f):
+    def from_file(cls, f, ckph_offset):
         checkpointgroups = cls()
-
+        print("ckpt offset", hex(f.tell()))
         assert f.read(4) == b"CKPT"
         count = read_uint16(f)
         f.read(2)
+
+        print(count)
 
         all_points = []
         #read the enemy points
@@ -992,41 +999,44 @@ class CheckpointGroups(PointGroups):
             checkpoint = Checkpoint.from_file(f)
             all_points.append(checkpoint)
 
-
+        print("ckph offset", hex(f.tell()))
         assert f.read(4) == b"CKPH"
         count = read_uint16(f)
         f.read(2)
 
         for i in range(count):
-            checkpointpath = CheckpointGroup.from_file(f, all_points)
+            checkpointpath = CheckpointGroup.from_file(f, all_points, i)
             checkpointgroups.groups.append(checkpointpath)
-
 
         return checkpointgroups
 
     def write(self, f):
         f.write(b"CKPT")
-        count_offset = f.tell()
-        f.write(pack(">H", 0) ) # will be overridden later
+        if self.num_total_points() > 255:
+            raise Exception("too many checkpoints")
+
+        f.write(pack(">H", self.num_total_points() ) )
         f.write(pack(">H", 0) )
 
         sum_points = 0
         indices_offset = []
         num_key = 0
 
-        for group in self.groups:
+        #calculate the starting key checkpoint of each group
+        #assume that checkpoint ult index 0 is a lap counter
+        starting_key_cp = [0] * len(self.groups)
+        starting_key_cp[0] = 0
+
+        for i, group in enumerate(self.groups):
             indices_offset.append(sum_points)
-            idx_points, num_key = group.write_ckpt(f, num_key, sum_points)
-            sum_points += idx_points
+            num_key = group.write_ckpt(f, starting_key_cp[i], sum_points)
+
+            for id in group.nextgroup:
+                starting_key_cp[id] = max( starting_key_cp[id], num_key)
+
+            sum_points += len(group.points)
         ckph_offset = f.tell()
 
-        if sum_points > 0xFF:
-            raise Exception("too many checkpoints")
-        else:
-            f.seek(count_offset)
-            f.write(pack(">H", sum_points) )
-
-        f.seek(ckph_offset)
         f.write(b"CKPH")
         f.write(pack(">H", len(self.groups) ) )
         f.write(pack(">H", 0) )
@@ -2123,7 +2133,7 @@ class KMP(object):
 
         #skip itpt
         f.seek(ckpt_offset + header_len)
-        kmp.checkpoints = CheckpointGroups.from_file(f)
+        kmp.checkpoints = CheckpointGroups.from_file(f, ckph_offset)
 
         #bol.checkpoints = CheckpointGroups.from_file(f, sectioncounts[CHECKPOINT])
 
@@ -2272,33 +2282,18 @@ class KMP(object):
                 point.partof = route
 
         #do ids of enemyroutes, itemroutes, and checkgroups so that they are sequential
-        for grouped_things in [self.enemypointgroups.groups, self.itempointgroups.groups, self.checkpoints.groups]:
-            used_ids = [ group.id for group in grouped_things]
-            unused_ids = [ i for i in range(0, len(grouped_things)) if i not in used_ids ]
-            unused_ids.reverse()
-
-            for unused_id in unused_ids:
-                for group in grouped_things:
-                    if group.id > unused_id:
-                        group.id -= 1
-
-                    #decrement thing
-                    group.prevgroup = [ id if id < unused_id or id == -1 else id - 1 for id in group.prevgroup ]
-                    group.nextgroup = [ id if id < unused_id or id == -1 else id - 1 for id in group.nextgroup ]
-
-            #get rid of self-referencing groups at load
-            if len(grouped_things) > 1:
-                for group in grouped_things:
-                    if id in group.prevgroup:
-                        return_string += "Group {0} was self-linked as a previous group. The link has been removed.\n".format(group.id)
-                        group.prevgroup = [ id for id in group.prevgroup if id != group.id ]
-                        group.prevgroup += [-1] * (6-len(group.prevgroup))
-                    if id in group.nextgroup:
-                        return_string += "Group {0} was self-linked as a next group. The link has been removed.\n".format(group.id)
-                        group.nextgroup = [ id for id in group.nextgroup if id != group.id ]
-                        group.nextgroup += [-1] * (6-len(group.nextgroup))
-
-            grouped_things.sort( key = lambda h: (h.id)   )
+        for grouped_things in (self.enemypointgroups.groups, self.itempointgroups.groups, self.checkpoints.groups):
+            if len(grouped_things) < 2:
+                continue
+            for i,group in enumerate(grouped_things):
+                if i in group.prevgroup:
+                    return_string += "Group {0} was self-linked as a previous group. The link has been removed.\n".format(i)
+                    group.prevgroup = [ id for id in group.prevgroup if id != i ]
+                    group.prevgroup += [-1] * (6-len(group.prevgroup))
+                if i in group.nextgroup:
+                    return_string += "Group {0} was self-linked as a next group. The link has been removed.\n".format(i)
+                    group.nextgroup = [ id for id in group.nextgroup if id != i]
+                    group.nextgroup += [-1] * (6-len(group.nextgroup))
 
         self.cannonpoints.sort( key = lambda h: h.id)
 

@@ -8,7 +8,8 @@ ktpt
 
 enemy/item/checkpoint
 - checkpoints: fix concave checkpoints
-- checkpoints: better handling of split route key cps
+- checkpoints: better handling of split route key cps, save as normal, but have it in the checking
+- checkpoints: add lap completion %
 
 gobj:
 - manually improve all descriptions / settings / and add default values
@@ -25,6 +26,5 @@ before release: match lorenzis with colors
 
 general:
 error analyzer - i'll figure this out when i get to it
-add "stuff fixed at lauch" based on errors found during fix_file
 refactor options code to move stuff to libkmp
 
