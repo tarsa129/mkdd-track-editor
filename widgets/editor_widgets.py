@@ -59,6 +59,30 @@ def open_error_dialog(errormsg, self):
     errorbox.critical(self, "Error", errormsg)
     errorbox.setFixedSize(500, 200)
 
+class LoadingFix(QDialog):
+    def __init__(self, kmp, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        font = QFont()
+        font.setFamily("Consolas")
+        font.setStyleHint(QFont.Monospace)
+        font.setFixedPitch(True)
+        font.setPointSize(10)
+
+        self.setWindowTitle("Initial Errors Fixed")
+        self.text_widget = QTextEdit(self)
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.text_widget)
+        self.setMinimumSize(QSize(300, 300))
+        self.text_widget.setFont(font)
+        self.text_widget.setReadOnly(True)
+
+        width = self.text_widget.fontMetrics().averageCharWidth() * 80
+        height = self.text_widget.fontMetrics().height() * 20
+        self.resize(width, height)
+
+    def set_text(self, text):
+        self.text_widget.setText(text)
 
 class ErrorAnalyzer(QDialog):
     @catch_exception

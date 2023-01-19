@@ -36,7 +36,7 @@ import lib.libkmp as libkmp
 from lib.rarc import Archive
 from lib.libkcl import RacetrackCollision
 from lib.model_rendering import TexturedModel, CollisionModel
-from widgets.editor_widgets import ErrorAnalyzer, ErrorAnalyzerButton
+from widgets.editor_widgets import ErrorAnalyzer, ErrorAnalyzerButton, LoadingFix
 from widgets.file_select import FileSelect
 from widgets.data_editor_options import routed_cameras
 from PyQt5.QtWidgets import QTreeWidgetItem
@@ -1222,7 +1222,12 @@ class GenEditor(QMainWindow):
                 try:
                     kmp_file = KMP.from_file(f)
                     error_string = kmp_file.fix_file() #will do a popup for 'stuff fixed at load'
-                    print(error_string)
+
+                    if len(error_string) > 0:
+                        initial_errors = LoadingFix(self.level_file, parent=self)
+                        initial_errors.set_text(error_string)
+                        initial_errors.exec_()
+                        initial_errors.deleteLater()
 
                     self.setup_kmp_file(kmp_file, filepath)
                     self.leveldatatreeview.set_objects(kmp_file)

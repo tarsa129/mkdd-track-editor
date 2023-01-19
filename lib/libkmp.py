@@ -2238,7 +2238,7 @@ class KMP(object):
         for i, route in to_split :
             # we know that these have both objects and cameras
             new_route = route.copy()
-            return_string += "Route {0} is used by an object and camera. It will be split\n".format(i)
+            return_string += "Route {0} is used by an object and camera. It has been split.\n".format(i)
             new_route.used_by = [ thing for thing in route.used_by if isinstance(thing, Camera)  ]
             route.used_by = [ thing for thing in route.used_by if isinstance(thing, (MapObject, Area))  ]
             self.routes.append(new_route)
@@ -2290,11 +2290,11 @@ class KMP(object):
             if len(grouped_things) > 1:
                 for group in grouped_things:
                     if id in group.prevgroup:
-                        return_string += "Group {0} was self-linked as a previous group. It has been removed.\n".format(group.id)
+                        return_string += "Group {0} was self-linked as a previous group. The link has been removed.\n".format(group.id)
                         group.prevgroup = [ id for id in group.prevgroup if id != group.id ]
                         group.prevgroup += [-1] * (6-len(group.prevgroup))
                     if id in group.nextgroup:
-                        return_string += "Group {0} was self-linked as a next group. It has been removed.\n".format(group.id)
+                        return_string += "Group {0} was self-linked as a next group. The link has been removed.\n".format(group.id)
                         group.nextgroup = [ id for id in group.nextgroup if id != group.id ]
                         group.nextgroup += [-1] * (6-len(group.nextgroup))
 
