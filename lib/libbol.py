@@ -696,29 +696,32 @@ class Route(object):
     def copy(self):
         this_class = self.__class__
         obj = this_class.new()
-        obj.points = self.points.copy()
-        obj._pointcount = len(obj.points)
-        obj.unk1 = self.unk1
-        obj.unk2 = self.unk2
-
-        return obj
+        return self.copy_params_to_child(obj)
 
     def to_object(self):
         object_route = ObjectRoute()
-        self.copy_params_to_child(object_route)
+        self.copy_params_to_child(object_route, deep_copy = False)
         return object_route
 
     def to_camera(self):
         camera_route = CameraRoute()
-        self.copy_params_to_child(camera_route)
+        self.copy_params_to_child(camera_route, deep_copy = False)
         return camera_route
 
-    def copy_params_to_child(self, new_route):
+    def copy_params_to_child(self, new_route, deep_copy = True):
+        if deep_copy:
+            for point in self.points:
+                new_point = point.copy()
+                new_point.partof = new_route
+                new_route.points.append(new_point)
+            new_route.used_by = []
+        else:
+            new_route.points = self.points
+            new_route.used_by = self.used_by
+
         new_route.points = self.points
         new_route.unk1 = self.unk1
         new_route.unk2 = self.unk2
-        new_route.used_by = self.used_by
-
         return new_route
 
     @classmethod
@@ -798,6 +801,7 @@ class RoutePoint(object):
     def copy(self):
         this_class = self.__class__
         obj = this_class.new()
+        obj.position = Vector3(self.position.x, self.position.y, self.position.z)
         obj.partof = self.partof
         obj.unk = self.unk
         obj.unk2 = self.unk2
