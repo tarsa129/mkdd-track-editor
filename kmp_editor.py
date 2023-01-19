@@ -1222,6 +1222,7 @@ class GenEditor(QMainWindow):
                 try:
                     kmp_file = KMP.from_file(f)
                     error_string = kmp_file.fix_file() #will do a popup for 'stuff fixed at load'
+                    print(error_string)
 
                     self.setup_kmp_file(kmp_file, filepath)
                     self.leveldatatreeview.set_objects(kmp_file)

@@ -28,6 +28,4 @@ general:
 error analyzer - i'll figure this out when i get to it
 add "stuff fixed at lauch" based on errors found during fix_file
 refactor options code to move stuff to libkmp
-do not ground on invisible triangles (mkdd as well)
-
 

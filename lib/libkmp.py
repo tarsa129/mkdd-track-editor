@@ -1093,28 +1093,32 @@ class Route(object):
     def copy(self):
         this_class = self.__class__
         obj = this_class.new()
-        obj.points = self.points.copy()
-        obj._pointcount = len(obj.points)
-        obj.smooth = self.smooth
-        obj.cyclic = self.cyclic
-
-        return obj
+        return self.copy_params_to_child(obj)
 
     def to_object(self):
         object_route = ObjectRoute()
-        self.copy_params_to_child(object_route)
+        self.copy_params_to_child(object_route, False)
         return object_route
 
     def to_camera(self):
         camera_route = CameraRoute()
-        self.copy_params_to_child(camera_route)
+        self.copy_params_to_child(camera_route, False)
         return camera_route
 
-    def copy_params_to_child(self, new_route):
-        new_route.points = self.points
+    def copy_params_to_child(self, new_route, deep_copy = True):
+        if deep_copy:
+            for point in self.points:
+                new_point = point.copy()
+                new_point.partof = new_route
+                new_route.points.append(new_point)
+        else:
+            new_route.points = self.points
         new_route.smooth = self.smooth
         new_route.cyclic = self.cyclic
-        new_route.used_by = self.used_by
+        if deep_copy:
+            new_route.used_by = []
+        else:
+            new_route.used_by = self.used_by
 
         return new_route
 
@@ -1216,8 +1220,8 @@ class RoutePoint(object):
 
 
     def copy(self):
-        this_class = self.__class__
-        obj = this_class.new()
+        obj = self.__class__.new()
+        obj.position = Vector3(self.position.x, self.position.y, self.position.z)
         obj.partof = self.partof
         obj.unk1 = self.unk1
         obj.unk2 = self.unk2
@@ -2200,6 +2204,8 @@ class KMP(object):
         return kmp
 
     def fix_file(self):
+        return_string = ""
+
         #set all the used by stuff
         for object in self.objects.objects:
             object.set_route_info()
@@ -2218,7 +2224,7 @@ class KMP(object):
                 self.routes[area.route].used_by.append(area)
 
         to_split = []
-        for route in self.routes:
+        for i, route in enumerate(self.routes):
             has_object = False
             has_camera = False
             for object in route.used_by:
@@ -2227,19 +2233,15 @@ class KMP(object):
                 elif isinstance(object, Camera):
                     has_camera = True
             if has_camera and has_object:
-                to_split.append(route)
+                to_split.append((i, route))
 
-        for route in to_split :
+        for i, route in to_split :
             # we know that these have both objects and cameras
-            new_route = route.to_camera()
-
+            new_route = route.copy()
+            return_string += "Route {0} is used by an object and camera. It will be split\n".format(i)
             new_route.used_by = [ thing for thing in route.used_by if isinstance(thing, Camera)  ]
             route.used_by = [ thing for thing in route.used_by if isinstance(thing, (MapObject, Area))  ]
             self.routes.append(new_route)
-            """
-            for obj in new_route.used_by:
-                obj.route = new_route_idx
-                new_route_idx += 1"""
 
         #now that everything is split, we can spilt into cam routes and non cam routes
         object_routes = ObjectContainer()
@@ -2287,10 +2289,14 @@ class KMP(object):
             #get rid of self-referencing groups at load
             if len(grouped_things) > 1:
                 for group in grouped_things:
-                    group.prevgroup = [ id for id in group.prevgroup if id != group.id ]
-                    group.prevgroup += [-1] * (6-len(group.prevgroup))
-                    group.nextgroup = [ id for id in group.nextgroup if id != group.id ]
-                    group.nextgroup += [-1] * (6-len(group.nextgroup))
+                    if id in group.prevgroup:
+                        return_string += "Group {0} was self-linked as a previous group. It has been removed.\n".format(group.id)
+                        group.prevgroup = [ id for id in group.prevgroup if id != group.id ]
+                        group.prevgroup += [-1] * (6-len(group.prevgroup))
+                    if id in group.nextgroup:
+                        return_string += "Group {0} was self-linked as a next group. It has been removed.\n".format(group.id)
+                        group.nextgroup = [ id for id in group.nextgroup if id != group.id ]
+                        group.nextgroup += [-1] * (6-len(group.nextgroup))
 
             grouped_things.sort( key = lambda h: (h.id)   )
 
@@ -2308,6 +2314,8 @@ class KMP(object):
 
         for area in self.areas.get_type(4):
             area.enemypoint = self.enemypointgroups.get_point_from_index(area.enemypointid)
+
+        return return_string
 
     @classmethod
     def from_bytes(cls, data: bytes) -> 'KMP':
