@@ -185,49 +185,6 @@ class GenEditor(QMainWindow):
 
     def save_geometry(self):
         if "geometry" not in self.configuration:
-            self.configuration["geometry"] = geo_config = {}
-        else:
-            geo_config = self.configuration["geometry"]
-
-        def to_base64(byte_array: QtCore.QByteArray) -> str:
-            return bytes(byte_array.toBase64()).decode(encoding='ascii')
-
-        geo_config["window_geometry"] = to_base64(self.saveGeometry())
-        geo_config["window_state"] = to_base64(self.saveState())
-        geo_config["window_splitter"] = to_base64(self.horizontalLayout.saveState())
-
-        if self.collision_area_dialog is not None:
-            geo_config["collision_window_geometry"] = to_base64(
-                self.collision_area_dialog.saveGeometry())
-
-        save_cfg(self.configuration)
-
-    def restore_geometry(self):
-        if "geometry" not in self.configuration:
-            return
-        geo_config = self.configuration["geometry"]
-
-        def to_byte_array(byte_array: str) -> QtCore.QByteArray:
-            return QtCore.QByteArray.fromBase64(byte_array.encode(encoding='ascii'))
-
-        self.restoreGeometry(to_byte_array(geo_config["window_geometry"]))
-        self.restoreState(to_byte_array(geo_config["window_state"]))
-        self.horizontalLayout.restoreState(to_byte_array(geo_config["window_splitter"]))
-
-    def closeEvent(self, event: QtGui.QCloseEvent):
-        self.save_geometry()
-
-        super().closeEvent(event)
-
-
-        self.first_time_3dview = True
-
-        self.restore_geometry()
-
-        self.undo_history.append(self.generate_undo_entry())
-
-    def save_geometry(self):
-        if "geometry" not in self.configuration:
             self.configuration["geometry"] = {}
         geo_config = self.configuration["geometry"]
 
@@ -1168,6 +1125,9 @@ class GenEditor(QMainWindow):
             self.configuration["editor"]["hidden_collision_type_groups"] = \
                 ",".join(str(t) for t in collision_model.hidden_collision_type_groups)
 
+            if self.level_view.collision is not None:
+                self.level_view.collision.hidden_coltypes = target_set
+
             save_cfg(self.configuration)
             self.update_3d()
 
@@ -2029,6 +1989,8 @@ class GenEditor(QMainWindow):
             set(int(t) for t in editor_config.get("hidden_collision_types", "").split(",") if t)
         alternative_mesh.hidden_collision_type_groups = \
             set(int(t) for t in editor_config.get("hidden_collision_type_groups", "").split(",") if t)
+        self.level_view.collision.hidden_coltypes = \
+            set(int(t) for t in editor_config.get("hidden_collision_types", "").split(",") if t)
         save_cfg(self.configuration)
 
     def action_close_edit_startpos_window(self):

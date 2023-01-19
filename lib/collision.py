@@ -1,6 +1,6 @@
 import math
 from .vectors import Vector3, Triangle
-
+from configuration import read_config
 
 def collides(face_v1, face_v2, face_v3, box_mid_x, box_mid_z, box_size_x, box_size_z):
     min_x = min(face_v1[0], face_v2[0], face_v3[0]) - box_mid_x
@@ -164,6 +164,8 @@ class Collision(object):
         print("finished generating triangles")
         print(grid_size_x, grid_size_z)
 
+        self.hidden_coltypes = set()
+
     def collide_ray_downwards(self, x, z, y=99999999):
         grid_x = int((x+MAX_X) // self.cell_size)
         grid_z = int((z+MAX_Z) // self.cell_size)
@@ -221,16 +223,12 @@ class Collision(object):
             else:
                 return result1
 
-    def _collide(self, verts, triangles, x, y, z, dir_y, ground = False):
+    def _collide(self, verts, triangles, x, y, z, dir_y):
         hit = None
         for i, face in triangles:#face in self.faces:#
             #print(face)
             v1index, v2index, v3index = face[:3]
-            col_type = 0x0100
-            if len(face) > 3:
-                col_type = face[3]
-            if (col_type & 0x0A00) != 0 and ground:
-                print("no grounding on this deadzone")
+            if len(face) > 3 and (face[3] in self.hidden_coltypes):
                 continue
 
             v1 = verts[v1index[0]-1]
