@@ -211,7 +211,7 @@ class Collision(object):
             else:
                 return result1
 
-    def _collide(self, verts, triangles, x, y, z, dir_y):
+    def _collide(self, triangles, x, y, z, dir_y):
         hit = None
         for i, face in triangles:#face in self.faces:#
             #print(face)
