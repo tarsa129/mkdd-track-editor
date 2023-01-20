@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem
-from lib.libkmp import KMP,  get_kmp_name, KMPPoint, Area, Camera
+from lib.libkmp import KMP,  get_kmp_name, KMPPoint, Area, Camera, PointGroups
 from widgets.data_editor_options import AREA_TYPES, CAME_TYPES, routed_cameras
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QAction, QMenu
@@ -323,6 +323,7 @@ class LevelDataTreeView(QTreeWidget):
     duplicate = pyqtSignal(ObjectGroup)
     split = pyqtSignal(PointGroup, RoutePoint)
     remove_type = pyqtSignal(NamedItem)
+    remove_all = pyqtSignal(PointGroups)
     #split_checkpoint = pyqtSignal(CheckpointGroup, Checkpoint)
 
     def __init__(self, *args, **kwargs):
@@ -375,7 +376,6 @@ class LevelDataTreeView(QTreeWidget):
             context_menu.exec(self.mapToGlobal(pos))
             context_menu.destroy()
             del context_menu
-
         elif isinstance(item, (EnemyPointGroup, ItemPointGroup, ObjectPointGroup, CameraPointGroup, CheckpointGroup)):
             context_menu = QMenu(self)
             remove_all_type = QAction("Select All", self)
@@ -422,7 +422,17 @@ class LevelDataTreeView(QTreeWidget):
             context_menu.exec(self.mapToGlobal(pos))
             context_menu.destroy()
             del context_menu
+        elif isinstance(item, ObjectGroup) and isinstance( item.bound_to, PointGroups):
+            context_menu = QMenu(self)
+            remove_all = QAction("Delete All", self)
+            def emit_remove_all_points():
+                self.remove_all.emit(item.bound_to)
 
+            remove_all.triggered.connect(emit_remove_all_points)
+            context_menu.addAction(remove_all)
+            context_menu.exec(self.mapToGlobal(pos))
+            context_menu.destroy()
+            del context_menu
 
     def _add_group(self, name, customgroup=None):
         if customgroup is None:

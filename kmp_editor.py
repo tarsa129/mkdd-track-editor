@@ -1054,6 +1054,7 @@ class GenEditor(QMainWindow):
         self.leveldatatreeview.duplicate.connect(self.duplicate_group_from_tree)
         self.leveldatatreeview.split.connect(self.split_group_from_tree)
         self.leveldatatreeview.remove_type.connect(self.remove_all_of_type)
+        self.leveldatatreeview.remove_all.connect(self.remove_all_points)
 
 
 
@@ -1154,6 +1155,12 @@ class GenEditor(QMainWindow):
         self.set_has_unsaved_changes(True)
 
 
+    def remove_all_points(self, pointgroups : PointGroups):
+        pointgroups.remove_all()
+        self.pik_control.update_info()
+        self.level_view.do_redraw()
+        self.leveldatatreeview.set_objects(self.level_file)
+        self.set_has_unsaved_changes(True)
 
     def action_open_rotationedit_window(self):
         if self.edit_spawn_window is None:

@@ -508,6 +508,9 @@ class PointGroups(object):
     def get_idx(self, group):
         return self.groups.index(group)
 
+    def remove_all(self):
+        self.groups = []
+
 # Section 1
 # Enemy/Item Route Code Start
 class EnemyPoint(KMPPoint):
@@ -1017,20 +1020,19 @@ class CheckpointGroups(PointGroups):
 
     def write(self, f):
         f.write(b"CKPT")
-        if self.num_total_points() > 255:
+        tot_points = self.num_total_points()
+        if tot_points > 255:
             raise Exception("too many checkpoints")
-
-        f.write(pack(">H", self.num_total_points() ) )
+        f.write(pack(">H", tot_points ) )
         f.write(pack(">H", 0) )
 
         sum_points = 0
         indices_offset = []
         num_key = 0
-
-        #calculate the starting key checkpoint of each group
-        #assume that checkpoint ult index 0 is a lap counter
         starting_key_cp = [0] * len(self.groups)
-        starting_key_cp[0] = 0
+
+        if len(self.groups) > 0:
+            starting_key_cp[0] = 0
 
         for i, group in enumerate(self.groups):
             indices_offset.append(sum_points)
@@ -1045,7 +1047,6 @@ class CheckpointGroups(PointGroups):
         f.write(b"CKPH")
         f.write(pack(">H", len(self.groups) ) )
         f.write(pack(">H", 0) )
-
 
         for idx, group in enumerate( self.groups ):
             group.write_ckph(f, indices_offset[idx])

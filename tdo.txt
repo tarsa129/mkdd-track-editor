@@ -10,7 +10,6 @@ ktpt
 - on load, sort by playerid
 
 enemy/item/checkpoint
-- add treeview context menu option for delete all
 - add option to set enemy point as first
 - checkpoints: fix concave checkpoints
 - checkpoints: add lap completion %
@@ -31,3 +30,5 @@ before release: match lorenzis with colors
 general:
 error analyzer
 create dialog for auto generation and auto cleanup
+move delete to treeview context menu
+make side buttons vs context tree view consistent (figure out the purpose of each)
