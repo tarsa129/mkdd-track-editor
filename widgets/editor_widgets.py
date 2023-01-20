@@ -107,7 +107,7 @@ class ErrorAnalyzer(QDialog):
         height = self.text_widget.fontMetrics().height() * 20
         self.resize(width, height)
 
-        lines = ErrorAnalyzer.analyze_bol(kmp)
+        lines = ErrorAnalyzer.analyze_kmp(kmp)
         if not lines:
             text = "No known common errors detected!"
         else:
@@ -117,12 +117,44 @@ class ErrorAnalyzer(QDialog):
 
     @classmethod
     @catch_exception
-    def analyze_bol(cls, kmp: libkmp.KMP) -> 'list[str]':
+    def analyze_kmp(cls, kmp: libkmp.KMP) -> 'list[str]':
         lines: list[str] = []
 
         def write_line(line):
             lines.append(line)
 
+        #ktpt testing
+        #check number
+        num_kartpoints = len(kmp.kartpoints.positions)
+        if num_kartpoints == 0:
+            write_line("WARNING: There are no starting points.")
+        elif num_kartpoints > 2 and num_kartpoints < 12:
+            write_line("There are {0} starting points.".format(num_kartpoints))
+        elif num_kartpoints > 12:
+            write_line("There are {0} starting points. Battle stages use 12".format(num_kartpoints))
+
+        player_ids = {}
+        for i, point in enumerate(kmp.kartpoints.positions):
+            id = point.playerid
+            if id in player_ids:
+                player_ids[id].append(i)
+            else:
+                player_ids[id] = [i]
+
+        #check for ids outside of the -1 to 11 range
+        #check for reused ids
+        for id in player_ids:
+            num_with_id = len(player_ids[id])
+            if id == 255 and num_with_id > 2:
+                write_line("There are {0} starting points with id 255 : {1}. Normally there is one, but LE-CODE supports two.".format(num_with_id, player_ids[255]))
+            elif num_with_id > 1 and id != 255:
+                write_line("There are {0} starting points with id {1} : {2}.".format(num_with_id, id, player_ids[id]))
+
+        #check enemy poitns
+        if len(kmp.enemypointgroups.groups) == 0:
+            write_line("You need at least one enemy point group!")
+        #check selfed inked
+        #check for unreachable groups
 
         # Check prev/next groups of checkpoints
         for i, group in enumerate(kmp.checkpoints.groups):
@@ -148,27 +180,6 @@ class ErrorAnalyzer(QDialog):
                 write_line("Map object {0} uses path id {1} that does not exist".format(
                     get_kmp_name(object.objectid), object.route
                 ))
-
-        # Validate Kart start positions
-        if len(kmp.kartpoints.positions) == 0:
-            write_line("Map contains no kart start points")
-        else:
-            exist = [False for x in range(8)]
-
-            for i, kartstartpos in enumerate(kmp.kartpoints.positions):
-                if kartstartpos.playerid == 0xFF:
-                    if all(exist):
-                        write_line("Duplicate kart start point for all karts")
-                    exist = [True for x in range(8)]
-                elif kartstartpos.playerid > 8:
-                    write_line("A kart start point with an invalid player id exists: {0}".format(
-                        kartstartpos.playerid
-                    ))
-                elif exist[kartstartpos.playerid]:
-                    write_line("Duplicate kart start point for player id {0}".format(
-                        kartstartpos.playerid))
-                else:
-                    exist[kartstartpos.playerid] = True
 
         # Check camera indices in areas
         for i, area in enumerate(kmp.areas.areas):
@@ -200,8 +211,6 @@ class ErrorAnalyzer(QDialog):
         if len(kmp.checkpoints.groups) == 0:
             write_line("You need at least one checkpoint group!")
 
-        if len(kmp.enemypointgroups.groups) == 0:
-            write_line("You need at least one enemy point group!")
 
         cls.check_checkpoints_convex(kmp, write_line)
 
@@ -312,8 +321,8 @@ class ErrorAnalyzerButton(QtWidgets.QPushButton):
         self.setStyleSheet("QPushButton { border: 0px; padding: 2px; } "
                            f"QPushButton:hover {{ background: {background_color}; }}")
 
-    def analyze_bol(self, bol: libkmp.KMP):
-        lines = ErrorAnalyzer.analyze_bol(bol)
+    def analyze_kmp(self, bol: libkmp.KMP):
+        lines = ErrorAnalyzer.analyze_kmp(bol)
         if lines:
             self.setIcon(self.warning_icon)
             self.setText(str(len(lines)))

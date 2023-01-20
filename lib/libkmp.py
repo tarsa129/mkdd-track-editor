@@ -233,6 +233,7 @@ class ColorRGBA(ColorRGB):
 class KMPPoint(object):
     def __init__(self):
         pass
+
 class PointGroup(object):
     def __init__(self):
         self.points = []
@@ -316,6 +317,7 @@ class PointGroup(object):
         if id in self.nextgroup:
             self.nextgroup.remove(id)
             self.nextgroup.append(-1)
+
 class PointGroups(object):
     def __init__(self):
         self.groups = []
@@ -421,8 +423,6 @@ class PointGroups(object):
     def remove_group(self, del_group, merge = True):
         self.groups.remove(del_group)
 
-        #around the deleted groups:
-
         for group in self.groups :
             if group.id > del_group.id:
                 group.id -= 1
@@ -473,8 +473,6 @@ class PointGroups(object):
 
             to_visit.extend( [id for id in self.groups[idx].nextgroup if id != -1 and id not in visited] )
 
-
-
         unused_groups = [self.groups[i] for i in list( range(1, len(self.groups) )) if i not in visited]
         num_points = [len(group.points) for group in unused_groups]
         for group in unused_groups:
@@ -502,6 +500,13 @@ class PointGroups(object):
                     return id
                 id += 1
         return -1
+
+    def reset_ids(self):
+        for i, group in enumerate(self.groups):
+            group.id = i
+
+    def get_idx(self, group):
+        return self.groups.index(group)
 
 # Section 1
 # Enemy/Item Route Code Start

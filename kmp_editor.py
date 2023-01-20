@@ -274,7 +274,7 @@ class GenEditor(QMainWindow):
 
         if bol_changed:
             self.set_has_unsaved_changes(True)
-            self.error_analyzer_button.analyze_bol(self.level_file)
+            self.error_analyzer_button.analyze_kmp(self.level_file)
 
     def on_undo_action_triggered(self):
         if len(self.undo_history) > 1:
@@ -302,7 +302,7 @@ class GenEditor(QMainWindow):
                 if update_unsaved_changes:
                     self.set_has_unsaved_changes(True)
 
-                self.error_analyzer_button.analyze_bol(self.level_file)
+                self.error_analyzer_button.analyze_kmp(self.level_file)
 
     def update_undo_redo_actions(self):
         self.undo_action.setEnabled(len(self.undo_history) > 1)

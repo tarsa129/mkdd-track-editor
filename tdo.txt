@@ -1,14 +1,18 @@
 mkdd-master to do list:
 drag n drop opening
+refactor libkmp objectcontainers so that all groups are objectcontainers
+refactor options code to move stuff to libkmp
 
 mkwii to do list:
 
 ktpt
 - add 'v' option for addition
+- on load, sort by playerid
 
 enemy/item/checkpoint
+- add treeview context menu option for delete all
+- add option to set enemy point as first
 - checkpoints: fix concave checkpoints
-- checkpoints: better handling of split route key cps, save as normal, but have it in the checking
 - checkpoints: add lap completion %
 
 gobj:
@@ -25,6 +29,5 @@ came:
 before release: match lorenzis with colors
 
 general:
-error analyzer - i'll figure this out when i get to it
-refactor options code to move stuff to libkmp
-
+error analyzer
+create dialog for auto generation and auto cleanup
