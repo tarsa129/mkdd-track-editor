@@ -6,8 +6,7 @@ refactor options code to move stuff to libkmp
 mkwii to do list:
 
 ktpt
-- add 'v' option for addition
-- on load, sort by playerid
+- on load, sort by playerid (and abstract playerid out to index)
 
 enemy/item/checkpoint
 - add option to set enemy point as first

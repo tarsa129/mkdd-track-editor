@@ -949,12 +949,13 @@ class CheckpointGroup(PointGroup):
         checkpointgroup.id = id
 
         start_point = read_uint8(f)
-        end_point = read_uint8(f)
+        length = read_uint8(f)
 
         if len(all_points) > 0:
             assert( all_points[start_point].prev == 0xFF )
-            assert( all_points[start_point + end_point - 1].next == 0xFF)
-        checkpointgroup.points = all_points[start_point: start_point + end_point]
+            if length > 1:
+                assert( all_points[start_point + length - 1].next == 0xFF)
+        checkpointgroup.points = all_points[start_point: start_point + length]
 
         checkpointgroup.prevgroup = list(unpack(">bbbbbb", f.read(6)))
         checkpointgroup.nextgroup = list(unpack(">bbbbbb", f.read(6)))
@@ -970,7 +971,8 @@ class CheckpointGroup(PointGroup):
 
             for i in range(1, len( self.points) -1 ):
                 key = self.points[i].write(f, i-1 + prev, i + 1 + prev, key)
-            key = self.points[-1].write(f, len(self.points) - 2 + prev, -1, key)
+            if len(self.points) > 1:
+                key = self.points[-1].write(f, len(self.points) - 2 + prev, -1, key)
         return key
 
     def write_ckph(self, f, index):
