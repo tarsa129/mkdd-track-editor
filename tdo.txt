@@ -31,3 +31,7 @@ error analyzer
 create dialog for auto generation and auto cleanup
 move delete to treeview context menu
 make side buttons vs context tree view consistent (figure out the purpose of each)
+move srt to bottom of viewer
+add conditional out of bounds?
+when dragging with 'c', display an arrow
+remove detailed treeview for enemy/item/checkpoints
