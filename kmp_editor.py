@@ -451,7 +451,8 @@ class GenEditor(QMainWindow):
         elif isinstance(item, tree_view.KMPHeader) and self.level_file is not None:
             self.level_view.selected = [self.level_file]
 
-        self.pik_control.set_buttons(item)
+        if hasattr(item, "bound_to"):
+            self.pik_control.set_buttons(item.bound_to)
 
         self.level_view.gizmo.move_to_average(self.level_view.selected_positions)
         self.level_view.do_redraw()
@@ -1666,7 +1667,7 @@ class GenEditor(QMainWindow):
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
 
             self.obj_to_copy = obj
-            self.copy_current_obj()
+            self.copy_current_obj(False)
         elif option == 4.5:  #copy with new route
 
             self.objects_to_be_added = []
@@ -2565,6 +2566,9 @@ class GenEditor(QMainWindow):
         object_to_widget = {}
         object_to_usedby = {}
         object_to_partof = {}
+        object_to_routeobj = {}
+        object_to_enemypoint = {}
+        object_to_camera = {}
         pending = list(self.level_view.selected)
         while pending:
             obj = pending.pop(0)
@@ -2577,6 +2581,16 @@ class GenEditor(QMainWindow):
             if hasattr(obj, 'partof'):
                 object_to_partof[obj] = obj.partof
                 obj.partof = None
+            if hasattr(obj, 'route_obj'):
+                object_to_routeobj[obj] = obj.route_obj
+                obj.route_obj = None
+            if hasattr(obj, 'enemypoint'):
+                object_to_enemypoint[obj] = obj.enemypoint
+                obj.enemypoint = None
+            if hasattr(obj, 'camera'):
+                object_to_camera[obj] = obj.camera
+                obj.camera = None
+
             if hasattr(obj, '__dict__'):
                 pending.extend(list(obj.__dict__.values()))
             if isinstance(obj, list):
@@ -2592,6 +2606,12 @@ class GenEditor(QMainWindow):
                 obj.used_by = widget
             for obj, partof in object_to_partof.items():
                 obj.partof = partof
+            for obj, route_obj in object_to_routeobj.items():
+                obj.route_obj = route_obj
+            for obj, enemypoint in object_to_enemypoint.items():
+                obj.enemypoint = enemypoint
+            for obj, camera in object_to_camera.items():
+                obj.camera = camera
         mimedata = QtCore.QMimeData()
         mimedata.setData("application/mkwii-track-editor", QtCore.QByteArray(data))
         QtWidgets.QApplication.instance().clipboard().setMimeData(mimedata)
@@ -2781,7 +2801,7 @@ class GenEditor(QMainWindow):
                 if item is not None:
                     #self._dontselectfromtree = True
                     self.leveldatatreeview.setCurrentItem(item)
-
+                self.pik_control.set_buttons(currentobj)
     @catch_exception
     def action_update_info(self):
 
@@ -2906,6 +2926,7 @@ class GenEditor(QMainWindow):
                 if start_pointind == len(start_group.points) - 1:
                     group_to_add.id = to_deal_with.new_group_id()
                     to_deal_with.groups.append(group_to_add)
+                    start_group.add_new_next(group_to_add.id)
                     self.object_to_be_added = [point_to_add, group_to_add.id, 0 ]
                 else:
                     self.split_group( start_group, self.connect_start )
@@ -3039,14 +3060,15 @@ class GenEditor(QMainWindow):
             self.obj_to_copy = self.level_view.selected[0]
             self.copy_current_obj()
 
-    def copy_current_obj(self):
+    def copy_current_obj(self, new_route = True):
         if self.obj_to_copy is not None:
             self.object_to_be_added = None
+
             map_check = isinstance(self.obj_to_copy, MapObject) and self.obj_to_copy.route_info is not None
             cam_check = isinstance(self.obj_to_copy, Camera) and self.obj_to_copy.type in routed_cameras
             area_check = isinstance(self.obj_to_copy, Area) and self.obj_to_copy.type == 3
             #if isinstance(self.obj_to_copy, libkmp.MapObject) and self.obj_to_copy.route_info == 2:
-            if map_check or cam_check or area_check:
+            if new_route and ( map_check or cam_check or area_check):
 
                 self.objects_to_be_added = []
                 new_route = self.level_file.get_route_for_obj(self.obj_to_copy)

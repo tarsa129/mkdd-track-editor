@@ -479,7 +479,7 @@ class LevelDataTreeView(QTreeWidget):
         routes_expansion_states = self._get_expansion_states(self.cameraroutes)
 
         self.reset()
-
+        """
         for group in kmpdata.enemypointgroups.groups:
             group_item = EnemyPointGroup(self.enemyroutes, group)
 
@@ -503,13 +503,14 @@ class LevelDataTreeView(QTreeWidget):
 
             for point in route.points:
                 point_item = ObjectRoutePoint(route_item, "Object route point", point)
+
         for route in kmpdata.cameraroutes:
             route_item = CameraPointGroup(self.cameraroutes, route)
 
             for point in route.points:
                 point_item = CameraRoutePoint(route_item, "Camera route point", point)
 
-
+        """
 
         for object in kmpdata.objects.objects:
             object_item = ObjectEntry(self.objects, "Object", object)

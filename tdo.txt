@@ -16,6 +16,7 @@ enemy/item/checkpoint
 gobj:
 - manually improve all descriptions / settings / and add default values
 - line drawing for item boxes via "i"
+- copy and place same route is still duplicating the route
 
 poti:
 - show splines (talk to zatchi)
@@ -35,3 +36,4 @@ move srt to bottom of viewer
 add conditional out of bounds?
 when dragging with 'c', display an arrow
 remove detailed treeview for enemy/item/checkpoints
+when enemy point c connects to nothing, make sure that the connections are made

@@ -1268,6 +1268,7 @@ class MapObject(object):
 
 
         self.route = -1
+        self.route_obj = None
         self.userdata = [0 for i in range(8)]
 
         self.single = 1
@@ -1718,6 +1719,7 @@ class Camera(object):
         self.nextcam = -1
         self.shake = 0
         self.route = -1
+        self.route_obj = None
         self.routespeed = 0
         self.zoomspeed = 0
         self.viewspeed = 0
