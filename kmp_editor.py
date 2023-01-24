@@ -2271,6 +2271,7 @@ class GenEditor(QMainWindow):
             if isinstance(object, libkmp.Area):
                 if object.type == 0:
                     object.cameraid = len(self.level_file.cameras) - 1
+                    object.camera = self.level_file.cameras[-1]
                     self.level_file.cameras[-1].used_by.append(object)
                 elif object.type == 3:
                     object.route = len(self.level_file.routes) - 1
