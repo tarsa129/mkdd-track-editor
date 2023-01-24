@@ -2231,10 +2231,13 @@ class KMP(object):
             object.set_route_info()
             if object.route != -1:
                 self.routes[object.route].used_by.append(object)
-        for camera in self.cameras:
+        for i, camera in enumerate(self.cameras):
             #print(camera.route)
             if camera.route != -1 and camera.route < len(self.routes):
                 self.routes[camera.route].used_by.append(camera)
+            elif camera.route > len(self.routes):
+                "Camera {0} references route {1}, which does not exist. The reference will be removed.\n".format(i, camera.route)
+                camera.route = -1
             else:
                 camera.route = -1
         for area in self.areas.areas:
@@ -2283,11 +2286,13 @@ class KMP(object):
         for i, route in enumerate(self.routes):
             for object in route.used_by:
                 object.route = i
+                object.route_obj = route
             for point in route.points:
                 point.partof = route
         for i, route in enumerate(self.cameraroutes):
             for object in route.used_by:
                 object.route = i
+                object.route_obj = route
             for point in route.points:
                 point.partof = route
 
