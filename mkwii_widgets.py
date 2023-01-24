@@ -1007,6 +1007,8 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     if route in self.selected:
                         selected = True
 
+                    last_point = None
+
                     render_type = "objectpoint"
                     if route.has_area():
                         render_type = "areapoint"
@@ -1017,6 +1019,10 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         point_selected = point in select_optimize
                         self.models.render_generic_position_colored(point.position, point_selected, render_type)
                         selected = selected or point_selected
+
+                        if last_point is not None:
+                            self.models.draw_arrow_head(last_point.position, point.position)
+                        last_point = point
 
                     if i in routes_to_circle:
                         for point in route.points:
@@ -1055,7 +1061,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                     if route in self.selected:
                         selected = True
-
+                    last_point = None
                     if route.used_by:
                         for point in route.points:
                             point_selected = point in select_optimize
@@ -1064,11 +1070,17 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                                 glColor3f(0.0, 0.0, 1.0)
                                 self.models.draw_sphere(point.position, 600)
                             selected = selected or point_selected
+                            if last_point is not None:
+                                self.models.draw_arrow_head(last_point.position, point.position)
+                            last_point = point
                     else:
                         for point in route.points:
                             point_selected = point in select_optimize
                             self.models.render_generic_position_colored(point.position, point_selected, "unusedpoint")
                             selected = selected or point_selected
+                            if last_point is not None:
+                                self.models.draw_arrow_head(last_point.position, point.position)
+                            last_point = point
 
                     if selected:
                         glLineWidth(3.0)
