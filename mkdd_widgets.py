@@ -1029,7 +1029,7 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
 
                 for i, route in enumerate(self.level_file.routes):
                     selected = i in routes_to_highlight
-
+                    last_point = None
                     if route in self.selected:
                         selected = True
 
@@ -1038,11 +1038,18 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
                             point_selected = point in select_optimize
                             self.models.render_generic_position_colored(point.position, point_selected, "objectpoint")
                             selected = selected or point_selected
+                            if last_point is not None:
+                                self.models.draw_arrow_head(last_point.position, point.position)
+                            last_point = point
+
                     else:
                         for point in route.points:
                             point_selected = point in select_optimize
                             self.models.render_generic_position_colored(point.position, point_selected, "unusedpoint")
                             selected = selected or point_selected
+                            if last_point is not None:
+                                self.models.draw_arrow_head(last_point.position, point.position)
+                            last_point = point
                     if selected:
                         glLineWidth(3.0)
                     glBegin(GL_LINE_STRIP)
@@ -1072,17 +1079,23 @@ class BolMapViewer(QtWidgets.QOpenGLWidget):
 
                     if route in self.selected:
                         selected = True
-
+                    last_point = None
                     if route.used_by:
                         for point in route.points:
                             point_selected = point in select_optimize
                             self.models.render_generic_position_colored(point.position, point_selected, "camerapoint")
                             selected = selected or point_selected
+                            if last_point is not None:
+                                self.models.draw_arrow_head(last_point.position, point.position)
+                            last_point = point
                     else:
                         for point in route.points:
                             point_selected = point in select_optimize
                             self.models.render_generic_position_colored(point.position, point_selected, "unusedpoint")
                             selected = selected or point_selected
+                            if last_point is not None:
+                                self.models.draw_arrow_head(last_point.position, point.position)
+                            last_point = point
 
                     if selected:
                         glLineWidth(3.0)
