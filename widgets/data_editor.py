@@ -285,7 +285,7 @@ class DataEditor(QWidget):
 
         return line_edit, layout.itemAt(0)
 
-    def add_dropdown_input(self, text, attribute, keyval_dict, return_both):
+    def add_dropdown_input(self, text, attribute, keyval_dict, return_both = False):
         #create the combobox
         combobox = QComboBox(self)
         for val in keyval_dict:

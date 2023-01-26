@@ -140,9 +140,9 @@ class ObjectModels(object):
         glRotatef( euler[1], 0.0, 1.0, 0.0)
         glRotatef( euler[2], 0.0, 0.0, 1.0)
         """
-        
+
         glTranslatef(0, 0, scale.y / 2)
-        glScalef(scale.x, scale.z, scale.y) 
+        glScalef(scale.x, scale.z, scale.y)
         self.wireframe_cylinder.render()
         glPopMatrix()
 
@@ -191,9 +191,9 @@ class ObjectModels(object):
         glTranslatef(position.x, -position.z, position.y)
         #glTranslatef(position.x, position.y, position.z)
 
-        
+
         do_rotation(rotation)
- 
+
         glColor3f(0.0, 0.0, 0.0)
         glBegin(GL_LINE_STRIP)
         glVertex3f(0.0, 0.0, 750.0)
@@ -227,7 +227,7 @@ class ObjectModels(object):
         glTranslatef(position.x, -position.z, position.y)
         #glTranslatef(position.x, position.y, position.z)
 
-        
+
         #mtx = rotation.mtx
         #glMultMatrixf(mtx)
 

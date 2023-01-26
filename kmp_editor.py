@@ -381,7 +381,7 @@ class GenEditor(QMainWindow):
             for item_path in self.level_file.itempointgroups.groups:
                 for item_path_point in item_path.points:
                     extend(item_path_point.position)
-        if self.visibility_menu.objectroutes.is_visible():
+        if self.visibility_menu.objects.is_visible():
             for object_route in self.level_file.routes:
                 for object_route_point in object_route.points:
                     extend(object_route_point.position)
@@ -3021,10 +3021,6 @@ class GenEditor(QMainWindow):
         end_groupind, end_group, end_pointind = to_deal_with.find_group_of_point(endpoint)
 
         start_groupind, start_group, start_pointind = to_deal_with.find_group_of_point(self.connect_start)
-
-        if start_groupind == end_groupind and end_pointind < start_pointind:
-            return
-
         #print( end_groupind, end_group, end_pointind )
         #print( start_groupind, start_group, start_pointind  )
         #make sure that start_group is good to add another

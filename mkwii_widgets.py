@@ -746,7 +746,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                 offset = len(objlist)
 
-                if vismenu.objectroutes.is_selectable():
+                if vismenu.objects.is_selectable():
                     i = 0
                     for route in self.level_file.routes:
                         for obj in route.points:
@@ -994,7 +994,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
             select_optimize = {x:True for x in selected}
 
-            if vismenu.objectroutes.is_visible():
+            if vismenu.objects.is_visible():
                 routes_to_highlight = set()
 
                 type_3_areas = self.level_file.areas.get_type(3)
@@ -1796,7 +1796,7 @@ class FilterViewMenu(QMenu):
         self.respawnpoints = ObjectViewSelectionToggle("Respawn Points", self)
 
         self.objects = ObjectViewSelectionToggle("Objects", self)
-        self.objectroutes = ObjectViewSelectionToggle("Object Paths", self)
+        #self.objectroutes = ObjectViewSelectionToggle("Object Paths", self)
 
         self.areas = ObjectViewSelectionToggle("Areas", self)
         self.cameras = ObjectViewSelectionToggle("Cameras", self)
@@ -1813,11 +1813,11 @@ class FilterViewMenu(QMenu):
     def get_entries(self):
         return (self.enemyroute,
                 self.itemroute,
-                self.objectroutes,
+                #self.objectroutes,
                 self.cameraroutes,
                 self.checkpoints,
                 self.objects,
-                self.objectroutes,
+                #self.objectroutes,
                 self.areas,
                 self.cameras,
                 self.respawnpoints,

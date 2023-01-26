@@ -257,6 +257,8 @@ class RotateCamera3D(ClickDragAction):
 
     def move(self, editor, buttons, event):
         curr_x, curr_y = event.x(), event.y()
+        if self.first_click is None:
+            return
         last_x, last_y = self.first_click.x, self.first_click.y
 
         diff_x = curr_x - last_x

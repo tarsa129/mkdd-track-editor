@@ -10,6 +10,7 @@ ktpt
 
 enemy/item/checkpoint
 - add option to set enemy point as first
+- allow self linked unless it's only one
 - checkpoints: fix concave checkpoints
 - checkpoints: add lap completion %
 
@@ -17,13 +18,28 @@ gobj:
 - manually improve all descriptions / settings / and add default values
 - line drawing for item boxes via "i"
 - copy and place same route is still duplicating the route
+- create side buttons for object placement based on type (create icons)
 
 poti:
 - show splines (talk to zatchi)
 - camera auto route - make it based on the total length (parse all files to find average distance / speed)
+- add radius of route points with areas for multiple point rouetes
+
+jgpt:
+- render unused respawn points differently
+
+area:
+- split up area based on camera vs not camera
+- add tabs for camera editing
+- split area routes to be separate from object routes
 
 came:
 - camera replaying (long shot)
+- split up cameras based on replay and not
+- render unused cameras differently
+- do not render goal camera
+- force camera to route if position unused
+- view start and view end: render correctly and only if used (also affects data editor)
 
 before release: match lorenzis with colors
 
@@ -32,15 +48,14 @@ error analyzer
 create dialog for auto generation and auto cleanup
 add options for stuff to do on load
 move delete to treeview context menu
-make side buttons vs context tree view consistent (figure out the purpose of each)
 move srt to bottom of viewer
 add conditional out of bounds?
 make 'c' work in 3d
-force camera to route if position unused
 when route is highlighted, highlight the objects that are used
 
-level view context menu:
-enemy/item/checkpoint: select/delete group
+level view context menu (should only be stuff related to the *group* it's connected to):
+enemy/item/checkpoint: select/delete group.
 route point: select/delete group
-area: move with route
+area: move with route, select <assoc>
+camera: move with route, select route
 

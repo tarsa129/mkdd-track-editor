@@ -2229,22 +2229,32 @@ class KMP(object):
         #set all the used by stuff
         for object in self.objects.objects:
             object.set_route_info()
-            if object.route != -1:
+            if object.route != -1 and object.route < len(self.routes):
                 self.routes[object.route].used_by.append(object)
+            elif object.route >= len(self.routes):
+                "Object {0} references route {1}, which does not exist. The reference will be removed.\n".format(i, object.route)
+                camera.route = -1
         for i, camera in enumerate(self.cameras):
             #print(camera.route)
             if camera.route != -1 and camera.route < len(self.routes):
                 self.routes[camera.route].used_by.append(camera)
-            elif camera.route > len(self.routes):
+            elif camera.route >= len(self.routes):
                 "Camera {0} references route {1}, which does not exist. The reference will be removed.\n".format(i, camera.route)
                 camera.route = -1
             else:
                 camera.route = -1
-        for area in self.areas.areas:
-            if area.type == 0 and area.cameraid != -1 and area.cameraid < len(self.cameras):
-                self.cameras[area.cameraid].used_by.append(area)
-            if area.type == 3 and area.route != -1 and area.route < len(self.routes):
-                self.routes[area.route].used_by.append(area)
+        for i, area in enumerate(self.areas.areas):
+            if area.type == 0:
+                if area.cameraid != -1 and area.cameraid < len(self.cameras):
+                    self.cameras[area.cameraid].used_by.append(area)
+                elif area.cameraid >= len(self.cameras):
+                    "Area {0} references camera {1}, which does not exist. The reference will be removed.\n".format(i, area.cameraid)
+                    area.cameraid = -1
+            if area.type == 3:
+                if area.route != -1 and area.route < len(self.routes):
+                    self.routes[area.route].used_by.append(area)
+                elif area.route >= len(self.routes):
+                    "Area {0} references route {1}, which does not exist. The reference will be removed.\n".format(i, area.route)
 
         to_split = []
         for i, route in enumerate(self.routes):
@@ -2296,16 +2306,15 @@ class KMP(object):
             for point in route.points:
                 point.partof = route
 
-        #do ids of enemyroutes, itemroutes, and checkgroups so that they are sequential
         for grouped_things in (self.enemypointgroups.groups, self.itempointgroups.groups, self.checkpoints.groups):
             if len(grouped_things) < 2:
                 continue
             for i,group in enumerate(grouped_things):
-                if i in group.prevgroup:
+                if i in group.prevgroup and len(group.points) == 1:
                     return_string += "Group {0} was self-linked as a previous group. The link has been removed.\n".format(i)
                     group.prevgroup = [ id for id in group.prevgroup if id != i ]
                     group.prevgroup += [-1] * (6-len(group.prevgroup))
-                if i in group.nextgroup:
+                if i in group.nextgroup  and len(group.points) == 1:
                     return_string += "Group {0} was self-linked as a next group. The link has been removed.\n".format(i)
                     group.nextgroup = [ id for id in group.nextgroup if id != i]
                     group.nextgroup += [-1] * (6-len(group.nextgroup))
