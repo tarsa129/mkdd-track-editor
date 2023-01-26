@@ -30,10 +30,17 @@ before release: match lorenzis with colors
 general:
 error analyzer
 create dialog for auto generation and auto cleanup
+add options for stuff to do on load
 move delete to treeview context menu
 make side buttons vs context tree view consistent (figure out the purpose of each)
 move srt to bottom of viewer
 add conditional out of bounds?
-when dragging with 'c', display an arrow
-remove detailed treeview for enemy/item/checkpoints
-when enemy point c connects to nothing, make sure that the connections are made
+make 'c' work in 3d
+force camera to route if position unused
+when route is highlighted, highlight the objects that are used
+
+level view context menu:
+enemy/item/checkpoint: select/delete group
+route point: select/delete group
+area: move with route
+

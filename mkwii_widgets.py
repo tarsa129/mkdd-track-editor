@@ -179,6 +179,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
         self.change_height_is_pressed = False
         self.last_mouse_move = None
         self.connecting_mode = False
+        self.connecting_start = None
 
         self.timer = QtCore.QTimer()
         self.timer.setInterval(2)
@@ -508,6 +509,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
         self.spawnpoint = None
         self.rotation_is_pressed = False
         self.connecting_mode = False
+        self.connecting_start = None
 
         self._frame_invalid = False
         self._mouse_pos_changed = False
@@ -647,7 +649,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
         self.mvp_mat = numpy.dot(self.projectionmatrix, self.modelviewmatrix)
         self.modelviewmatrix_inv = numpy.linalg.inv(self.modelviewmatrix)
 
-        campos = Vector3(self.offset_x, self.camera_height, -self.offset_z) #originally -z
+        campos = Vector3(self.offset_x, self.camera_height, -self.offset_z) 
         self.campos = campos
 
         if self.mode == MODE_TOPDOWN:
@@ -1582,6 +1584,19 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     self.models.render_generic_position_rotation_colored("mission",
                                                                 object.position, object.rotation,
                                                                  object in select_optimize)
+
+        #connections?
+        if self.connecting_mode:
+            if self.mode == MODE_TOPDOWN:
+                mouse_pos = self.mapFromGlobal(QCursor.pos())
+                mapx, mapz = self.mouse_coord_to_world_coord(mouse_pos.x(), mouse_pos.y())
+                pos1 : Vector3 = self.connecting_start
+                pos2 = Vector3( mapx, 0, -mapz)
+                glBegin(GL_LINES)
+                glVertex3f(pos1.x, -pos1.z, pos1.y)
+                glVertex3f(pos2.x, -pos2.z, pos2.y)
+                glEnd()
+                self.models.draw_arrow_head(pos1, pos2)
 
         self.gizmo.render_scaled(gizmo_scale, is3d=self.mode == MODE_3D, hover_id=gizmo_hover_id)
 

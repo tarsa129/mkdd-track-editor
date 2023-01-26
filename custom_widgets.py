@@ -67,7 +67,7 @@ class MapViewer(QWidget):
     mouse_dragged = pyqtSignal(QMouseEvent)
     mouse_released = pyqtSignal(QMouseEvent)
     mouse_wheel = pyqtSignal(QWheelEvent)
-    position_update = pyqtSignal(QMouseEvent, tuple)
+     = pyqtSignal(QMouseEvent, tuple)
     select_update = pyqtSignal(QMouseEvent)
     move_points = pyqtSignal(float, float)
     connect_update = pyqtSignal(int, int)

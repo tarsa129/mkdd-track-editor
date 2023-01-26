@@ -285,7 +285,7 @@ class DataEditor(QWidget):
 
         return line_edit, layout.itemAt(0)
 
-    def add_dropdown_input(self, text, attribute, keyval_dict):
+    def add_dropdown_input(self, text, attribute, keyval_dict, return_both):
         #create the combobox
         combobox = QComboBox(self)
         for val in keyval_dict:
@@ -293,7 +293,7 @@ class DataEditor(QWidget):
                 combobox.addItem(val)
         max_value = max( keyval_dict.values()  )
         #create the layout and label
-        layout = self.create_labeled_widget(self, text, combobox)
+        layout, label = self.create_labeled_widget_ret_both(self, text, combobox)
 
         def item_selected(item):
             if item in keyval_dict:
@@ -301,13 +301,18 @@ class DataEditor(QWidget):
             else:
                 val = max_value + 1
             #print("selected", item)
-            setattr(self.bound_to, attribute, val)
+            if "." in attribute:
+                sub_obj, attr = attribute.split('.')
+                setattr( getattr(self.bound_to, sub_obj), attr, val)
+            else:
+                setattr(self.bound_to, attribute, val)
         combobox.currentTextChanged.connect(item_selected)
 
         #print("created for", text, attribute)
 
         self.vbox.addLayout(layout)
-
+        if return_both:
+            return combobox, label
         return combobox
 
     def add_dropdown_lineedit_input(self, text, attribute, keyval_dict, min_val, max_val):
@@ -856,8 +861,8 @@ class ObjectEdit(DataEditor):
         self.objectid.currentTextChanged.disconnect()
         self.objectid_edit.editingFinished.disconnect()
 
-        self.route, self.route_label = self.add_integer_input_hideable("Object Path ID", "route",
-                                             MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
+        #self.route, self.route_label = self.add_integer_input_hideable("Object Path ID", "route",
+        #                                     MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
 
         self.single = self.add_checkbox("Enable in single player mode", "single", 0, 1)
         self.double = self.add_checkbox("Enable in two player mode", "double", 0, 1)
@@ -873,8 +878,17 @@ class ObjectEdit(DataEditor):
         self.objectid.currentTextChanged.connect(self.object_id_combo_changed)
         self.objectid_edit.editingFinished.connect(self.object_id_edit_changed)
 
-        self.route.editingFinished.disconnect()
-        self.route.editingFinished.connect(self.update_route_used)
+        self.smooth, self.smooth_label = self.add_dropdown_input("Sharp/Smooth motion", "route_obj.smooth", POTI_Setting1, return_both = True)
+        self.cyclic, self.cyclic_label = self.add_dropdown_input("Cyclic/Back and forth motion", "route_obj.cyclic", POTI_Setting2, return_both = True)
+
+        if self.bound_to.route_obj is None:
+            self.smooth.setVisible(False)
+            self.smooth_label.setVisible(False)
+            self.cyclic.setVisible(False)
+            self.cyclic_label.setVisible(False)
+
+        #self.route.editingFinished.disconnect()
+        #self.route.editingFinished.connect(self.update_route_used)
 
         if (inthemaking):
             self.set_default_values()
@@ -929,8 +943,8 @@ class ObjectEdit(DataEditor):
 
         #parameter_names = None
         #assets = []
-        self.route.setVisible( route_info is not None)
-        self.route_label.setVisible( route_info is not None)
+        #self.route.setVisible( route_info is not None)
+        #self.route_label.setVisible( route_info is not None)
 
 
         if parameter_names is None:
@@ -940,8 +954,8 @@ class ObjectEdit(DataEditor):
                 self.userdata[i][1].setVisible(True)
             self.assets.setText("Required Assets: Unknown")
 
-            self.route.setVisible(True)
-            self.route_label.setVisible(True)
+            #self.route.setVisible(True)
+            #self.route_label.setVisible(True)
 
         else:
             for i in range(8):
@@ -961,8 +975,8 @@ class ObjectEdit(DataEditor):
             else:
                 self.assets.setText("Required Assets: {0}".format(", ".join(assets)))
 
-            self.route.setVisible(route_info is not None)
-            self.route_label.setVisible(route_info is not None)
+            #self.route.setVisible(route_info is not None)
+            #self.route_label.setVisible(route_info is not None)
 
         if hasattr(self, "in_production") and self.in_production:
             self.set_default_values()
@@ -1008,7 +1022,7 @@ class ObjectEdit(DataEditor):
 
         self.rename_object_parameters( self.get_objectname(obj.objectid) )
 
-        self.route.setText(str(obj.route))
+        #self.route.setText(str(obj.route))
 
         self.single.setChecked( obj.single != 0)
         self.double.setChecked( obj.double != 0)
@@ -1020,6 +1034,17 @@ class ObjectEdit(DataEditor):
         else:
             for i in range(8):
                 self.userdata[i][1].setText(str(obj.userdata[i]))
+
+        obj: Route = self.bound_to.route_obj
+        if obj is not None:
+            self.smooth.setCurrentIndex( min(obj.smooth, 1))
+            self.cyclic.setCurrentIndex( min(obj.cyclic, 1))
+
+        self.smooth.setVisible(obj is not None)
+        self.smooth_label.setVisible(obj is not None)
+        self.cyclic.setVisible(obj is not None)
+        self.cyclic_label.setVisible(obj is not None)
+
     def update_route_used(self):
         #print('update route used', self.bound_to.route)
         #emit signal with old and new route numbers, for easier changing

@@ -996,12 +996,12 @@ class CheckpointGroups(PointGroups):
     @classmethod
     def from_file(cls, f, ckph_offset):
         checkpointgroups = cls()
-        print("ckpt offset", hex(f.tell()))
+        #print("ckpt offset", hex(f.tell()))
         assert f.read(4) == b"CKPT"
         count = read_uint16(f)
         f.read(2)
 
-        print(count)
+        #print(count)
 
         all_points = []
         #read the enemy points
@@ -1009,7 +1009,7 @@ class CheckpointGroups(PointGroups):
             checkpoint = Checkpoint.from_file(f)
             all_points.append(checkpoint)
 
-        print("ckph offset", hex(f.tell()))
+        #print("ckph offset", hex(f.tell()))
         assert f.read(4) == b"CKPH"
         count = read_uint16(f)
         f.read(2)

@@ -1072,6 +1072,7 @@ class GenEditor(QMainWindow):
 
         to_deal_with = self.level_file.get_to_deal_with(point)
         to_deal_with.split_group( group, point  )
+        to_deal_with.reset_ids()
 
         self.leveldatatreeview.set_objects(self.level_file)
         self.update_3d()
@@ -2124,6 +2125,7 @@ class GenEditor(QMainWindow):
                 placeobject.set_route_info()
                 if placeobject.route != -1:
                     self.level_file.routes[placeobject.route].used_by.append(placeobject)
+                    placeobject.route_obj = self.level_file.routes[placeobject.route]
                     if placeobject.route_info == 3:
                         pass
 
@@ -2290,6 +2292,7 @@ class GenEditor(QMainWindow):
 
                 object.route = len(self.level_file.routes) - 1
                 self.level_file.routes[object.route].used_by.append(object)
+                object.route_obj = self.level_file.routes[object.route]
 
                 for point in self.level_file.routes[object.route].points:
                     point.position = point.position + object.position
@@ -2384,6 +2387,7 @@ class GenEditor(QMainWindow):
                 if isinstance( self.level_view.selected[0], (KMPPoint, MapObject, Camera, Area) ):
                     self.connect_start = self.level_view.selected[0]
                     self.level_view.connecting_mode = True
+                    self.level_view.connecting_start = self.connect_start.position
 
     def keyReleaseEvent(self, event: QtGui.QKeyEvent):
         if event.key() == Qt.Key_Shift:
@@ -2408,6 +2412,7 @@ class GenEditor(QMainWindow):
 
         if event.key() == Qt.Key_C:
             self.level_view.connecting_mode = False
+            self.level_view.connecting_start = None
             self.connect_start = None
 
     def reset_move_flags(self):
@@ -2700,6 +2705,8 @@ class GenEditor(QMainWindow):
             # Autonomous objects.
             elif isinstance(obj, libkmp.MapObject):
                 self.level_file.objects.objects.append(obj)
+                if obj.route != -1:
+                    obj.route_obj = self.level_file.routes[obj.route]
             elif isinstance(obj, libkmp.KartStartPoint):
                 self.level_file.kartpoints.positions.append(obj)
             elif isinstance(obj, libkmp.JugemPoint):
@@ -2775,11 +2782,9 @@ class GenEditor(QMainWindow):
                         if item is not None:
                             break
 
-                elif isinstance(currentobj, libkmp.RoutePoint):
+                elif False and isinstance(currentobj, libkmp.RoutePoint):
 
                     to_look_through = self.leveldatatreeview.objectroutes if isinstance(currentobj.partof, libkmp.ObjectRoute) else self.leveldatatreeview.cameraroutes
-
-
                     for i in range(to_look_through.childCount()):
                         child = to_look_through.child(i)
                         item = get_treeitem(child, currentobj)
@@ -2892,6 +2897,7 @@ class GenEditor(QMainWindow):
                     display_string += f" | 📏 {obj_pos.y - height:.2f}"
 
         self.statusbar.showMessage(display_string)
+        self.update_3d()
 
 
     def action_connectedto_end(self):
@@ -3015,6 +3021,10 @@ class GenEditor(QMainWindow):
         end_groupind, end_group, end_pointind = to_deal_with.find_group_of_point(endpoint)
 
         start_groupind, start_group, start_pointind = to_deal_with.find_group_of_point(self.connect_start)
+
+        if start_groupind == end_groupind and end_pointind < start_pointind:
+            return
+
         #print( end_groupind, end_group, end_pointind )
         #print( start_groupind, start_group, start_pointind  )
         #make sure that start_group is good to add another
@@ -3041,18 +3051,25 @@ class GenEditor(QMainWindow):
 
         self.split_group( start_group, self.connect_start )
         group_1 = to_deal_with.groups[-1]
-        self.split_group( end_group, end_group.points[end_pointind - 1])
+
+        if start_groupind == end_groupind and end_pointind > start_pointind:
+            new_idx = end_pointind - 1 - len(group_1.points)
+            self.split_group( group_1, group_1.points[new_idx])
+        else:
+            self.split_group( end_group, end_group.points[end_pointind - 1])
+
         group_2 = to_deal_with.groups[-1]
 
-        #redo connections
-        print(start_group.id)
+        #remove self connections, if they exist
         start_group.remove_next(start_group.id)
         start_group.remove_prev(start_group.id)
 
-        start_group.add_new_next(group_2.id)
-        #group_1.add_new_next(group_2.id)
-        group_2.add_new_prev(start_groupind)
-
+        if start_groupind == end_groupind and end_pointind < start_pointind:
+            group_1.add_new_prev(group_2.id)
+            group_2.add_new_next(group_2.id)
+        else:
+            start_group.add_new_next(group_2.id)
+            group_2.add_new_prev(start_groupind)
 
     def set_and_start_copying(self):
         #print(self.level_view.selected)
