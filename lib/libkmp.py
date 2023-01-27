@@ -1123,6 +1123,11 @@ class Route(object):
         self.copy_params_to_child(camera_route, False)
         return camera_route
 
+    def to_area(self):
+        area_route = AreaRoute()
+        self.copy_params_to_child(area_route, False)
+        return area_route
+
     def copy_params_to_child(self, new_route, deep_copy = True):
         if deep_copy:
             for point in self.points:
@@ -1190,16 +1195,19 @@ class ObjectRoute(Route):
     def new(cls):
         return cls()
 
-    def has_area(self):
-        for obj in self.used_by:
-            if isinstance(obj, Area):
-                return True
-        return False
-
 class CameraRoute(Route):
     def __init__(self):
         super().__init__()
         self.type = 1
+
+    @classmethod
+    def new(cls):
+        return cls()
+
+class AreaRoute(Route):
+    def __init__(self):
+        super().__init__()
+        self.type = 2
 
     @classmethod
     def new(cls):
@@ -1565,19 +1573,25 @@ class Area(object):
         return 1
 
     def copy(self):
-        new_area = self.__class__.new()
-        new_area.position = Vector3(self.position.x, self.position.y, self.position.z)
-        new_area.rotation = self.rotation.copy()
-        new_area.scale = Vector3(self.scale.x, self.scale.y, self.scale.z)
-        new_area.shape = self.shape
-        new_area.type = self.type
-        new_area.cameraid = self.cameraid
-        new_area.setting1 = self.setting1
-        new_area.setting2 = self.setting2
-        new_area.route = self.route
-        new_area.enemypointid = self.enemypointid
+        enemypoint = self.enemypoint
+        camera = self.camera
+        route_obj = self.route_obj
+        widget = self.widget
 
-        return new_areainvalid
+        self.enemypoint = self.camera = self.route_obj = self.widget = None
+
+        new_area = deepcopy(self)
+
+        self.enemypoint = enemypoint
+        self.camera = camera
+        self.route_obj = route_obj
+        self.widget = widget
+
+        new_area.enemypoint = enemypoint
+        new_area.camera = camera
+        new_area.route_obj = route_obj
+
+        return new_area
 
     #type 0 - camera
     def set_camera(self):
@@ -1600,7 +1614,7 @@ class Area(object):
     #type 3 - moving road
     def set_route(self):
         if self.type == 3:
-            routes = __class__.level_file.routes
+            routes = __class__.level_file.arearoutes
             if self.route != -1 and self.route < len( routes ) and routes[self.route] == self.route_obj:
                 return self.route
 
@@ -1645,9 +1659,9 @@ class Area(object):
         if self.route != -1 and self.route < len(__class__.level_file.routes):
             __class__.level_file.routes[self.route].used_by.remove(self)
 
-class Areas(object):
+class Areas(ObjectContainer):
     def __init__(self):
-        self.areas = []
+        super().__init__()
 
     @classmethod
     def from_file(cls, f, count):
@@ -1655,7 +1669,7 @@ class Areas(object):
         for i in range(count):
             new_area = Area.from_file(f)
             if new_area is not None:
-                areas.areas.append(new_area)
+                areas.append(new_area)
 
         return areas
 
@@ -1666,7 +1680,7 @@ class Areas(object):
         f.write(pack(">H", 0) )
 
         num_written = 0
-        for area in self.areas:
+        for area in self:
             num_written += area.write(f)
 
         end_sec = f.tell()
@@ -1675,14 +1689,14 @@ class Areas(object):
         f.seek(end_sec)
 
     def get_type(self, area_type):
-        return [area for area in self.areas if area.type == area_type]
+        return [area for area in self if area.type == area_type]
 
     def remove_area(self, area : Area):
         area.remove_self()
-        self.areas.remove(area)
+        self.remove(area)
 
     def remove_invalid(self):
-        invalid_areas = [area for area in self.areas if area.type < 0 or area.type > 10]
+        invalid_areas = [area for area in self if area.type < 0 or area.type > 10]
         for area in invalid_areas:
             self.remove_area( area )
 
@@ -1987,7 +2001,13 @@ class KMP(object):
         self.objects = MapObjects()
 
         self.areas = Areas()
+        self.arearoutes = ObjectContainer()
+
+        self.replayareas = Areas()
+        self.replaycameras = Cameras()
+
         self.cameras = Cameras()
+
         self.cameraroutes = ObjectContainer()
 
         self.respawnpoints = ObjectContainer()
@@ -2003,6 +2023,7 @@ class KMP(object):
     def set_assoc(self):
         self.routes.assoc = ObjectRoute
         self.cameraroutes.assoc = CameraRoute
+        self.arearoutes.assoc = AreaRoute
         self.respawnpoints.assoc = JugemPoint
         self.cannonpoints.assoc = CannonPoint
         self.missionpoints.assoc = MissionPoint
@@ -2036,6 +2057,9 @@ class KMP(object):
         for route in self.cameraroutes:
             for point in route.points:
                 yield point
+        for route in self.arearoutes:
+            for point in route.points:
+                yield point
 
     def objects_with_2positions(self):
         for group in self.checkpoints.groups:
@@ -2051,9 +2075,17 @@ class KMP(object):
             assert kartpoint is not None
             yield kartpoint
 
-        for area in self.areas.areas:
+        for area in self.areas:
             assert area is not None
             yield area
+
+        for area in self.replayareas:
+            assert area is not None
+            yield area
+
+        for camera in self.cameras:
+            assert camera is not None
+            yield camera
 
         for camera in self.cameras:
             assert camera is not None
@@ -2096,8 +2128,10 @@ class KMP(object):
 
         objects.extend(self.objects.objects)
         objects.extend(self.kartpoints.positions)
-        objects.extend(self.areas.areas)
+        objects.extend(self.areas)
+        objects.extend(self.replayareas)
         objects.extend(self.cameras)
+        objects.extend(self.replaycameras)
         objects.extend(self.respawnpoints)
         objects.extend(self.cannonpoints)
         objects.extend(self.missionpoints)
@@ -2226,7 +2260,7 @@ class KMP(object):
     def fix_file(self):
         return_string = ""
 
-        #set all the used by stuff
+        #set all the used by stuff for routes
         for object in self.objects.objects:
             object.set_route_info()
             if object.route != -1 and object.route < len(self.routes):
@@ -2243,7 +2277,10 @@ class KMP(object):
                 camera.route = -1
             else:
                 camera.route = -1
-        for i, area in enumerate(self.areas.areas):
+
+        #also take care of invalid areas
+        invalid_areas = []
+        for i, area in enumerate(self.areas):
             if area.type == 0:
                 if area.cameraid != -1 and area.cameraid < len(self.cameras):
                     self.cameras[area.cameraid].used_by.append(area)
@@ -2255,56 +2292,68 @@ class KMP(object):
                     self.routes[area.route].used_by.append(area)
                 elif area.route >= len(self.routes):
                     "Area {0} references route {1}, which does not exist. The reference will be removed.\n".format(i, area.route)
+            if area.type < 0 or area.type > 10:
+                invalid_areas.append(area)
+                "Area {0} has type {1}, which is invalid. It will be removed.\n".format(i, area.type)
+
+        #remove invalid areas
+        for area in invalid_areas:
+            self.areas.remove(area)
 
         to_split = []
         for i, route in enumerate(self.routes):
             has_object = False
             has_camera = False
+            has_area = False
             for object in route.used_by:
-                if isinstance(object, (MapObject, Area)):
+                if isinstance(object, MapObject):
                     has_object = True
                 elif isinstance(object, Camera):
                     has_camera = True
-            if has_camera and has_object:
+                elif isinstance(object, Area):
+                    has_area = True
+            if len( [ x for x in (has_object, has_area, has_camera) if x ]  ) > 1:
                 to_split.append((i, route))
 
         for i, route in to_split :
             # we know that these have both objects and cameras
-            new_route = route.copy()
-            return_string += "Route {0} is used by an object and camera. It has been split.\n".format(i)
-            new_route.used_by = [ thing for thing in route.used_by if isinstance(thing, Camera)  ]
-            route.used_by = [ thing for thing in route.used_by if isinstance(thing, (MapObject, Area))  ]
-            self.routes.append(new_route)
+            return_string += "Route {0} is used by more than one of: Camera, Object, Area (Moving Road). It has been split.\n".format(i)
+            cameras_usedby = [ thing for thing in route.used_by if isinstance(thing, Camera)  ]
+            objects_usedby = [ thing for thing in route.used_by if isinstance(thing, MapObject)  ]
+            areas_usedby = [ thing for thing in route.used_by if isinstance(thing, Area)  ]
+            for objs in (cameras_usedby, objects_usedby, areas_usedby):
+                if objs:
+                    new_route = route.copy()
+                    new_route.used_by = objs
+                    self.routes.append(new_route)
+            self.routes.remove(route)
 
         #now that everything is split, we can spilt into cam routes and non cam routes
         object_routes = ObjectContainer()
         object_routes.assoc = ObjectRoute
         camera_routes = ObjectContainer()
         camera_routes.assoc = CameraRoute
+        area_routes = ObjectContainer()
+        area_routes.assoc = AreaRoute
         for route in self.routes:
             if len(route.used_by) > 0:
                 if isinstance(route.used_by[0], Camera):
                     camera_routes.append(route.to_camera())
-                elif isinstance(route.used_by[0], (MapObject, Area) ):
+                elif isinstance(route.used_by[0], MapObject ):
                     object_routes.append(route.to_object())
-            else:
-                object_routes.append(route.to_object())
+                elif isinstance(route.used_by[0], Area ):
+                    area_routes.append(route.to_area())
         self.routes = object_routes
         self.cameraroutes = camera_routes
+        self.arearoutes = area_routes
 
-        #set used by again:
-        for i, route in enumerate(self.routes):
-            for object in route.used_by:
-                object.route = i
-                object.route_obj = route
-            for point in route.points:
-                point.partof = route
-        for i, route in enumerate(self.cameraroutes):
-            for object in route.used_by:
-                object.route = i
-                object.route_obj = route
-            for point in route.points:
-                point.partof = route
+        for objs in (self.routes, self.cameraroutes, self.arearoutes):
+            for i, route in enumerate(objs):
+                for object in route.used_by:
+                    object.route = i
+                    object.route_obj = route
+                for point in route.points:
+                    point.partof = route
 
         for grouped_things in (self.enemypointgroups.groups, self.itempointgroups.groups, self.checkpoints.groups):
             if len(grouped_things) < 2:
@@ -2326,11 +2375,6 @@ class KMP(object):
         for area in self.areas.get_type(0):
             if area.cameraid < num_cams:
                 area.camera = self.cameras[area.cameraid]
-        num_routes = len(self.routes)
-        for area in self.areas.get_type(3):
-            if area.route < num_routes:
-                area.route_obj = self.routes[area.route]
-
         for area in self.areas.get_type(4):
             area.enemypoint = self.enemypointgroups.get_point_from_index(area.enemypointid)
 
@@ -2370,7 +2414,7 @@ class KMP(object):
          offsets.append(f.tell() ) #offset 8 for gobj
          self.objects.write(f)
 
-         routes, cameras = self.combine_routes()
+         routes, cameras, areas = self.combine_routes()
          #print(len(routes), [camera.route for camera in cameras])
 
          offsets.append(f.tell() ) #offset 9 for poti
@@ -2390,7 +2434,7 @@ class KMP(object):
          f.write(pack(">H", count ) )  # will be overridden later
          f.seek(offset)
 
-         self.areas.write(f)
+         areas.write(f)
 
          offsets.append(f.tell() ) # offset 11 for CAME
          f.write(b"CAME")
@@ -2479,20 +2523,28 @@ class KMP(object):
     def combine_routes(self):
         routes = ObjectContainer()
         cameras = Cameras()
+        areas = Areas()
 
         num_obj = len(self.routes)
+        num_objcam = num_obj + len(self.cameraroutes)
 
         for route in self.routes:
             routes.append(route)
-        for route in self.cameraroutes:
-            routes.append(route)
+        routes.extend(self.cameraroutes)
+        routes.extend(self.arearoutes)
+
         for camera in self.cameras:
             new_cam = camera.copy()
             if new_cam.route != -1:
                 new_cam.route += num_obj
             cameras.append(new_cam)
+        for area in self.areas:
+            new_area = area.copy()
+            if new_area.route != -1:
+                new_area.route += num_objcam
+            areas.append(new_area)
 
-        return routes, cameras
+        return routes, cameras, areas
 
     def auto_generation(self):
         """
@@ -2742,12 +2794,16 @@ class KMP(object):
     def get_route_container(self, obj):
         if isinstance(obj, (CameraRoute, Camera)):
             return self.cameraroutes
+        elif isinstance(obj, (AreaRoute, Area)):
+            return self.arearoutes
         else:
             return self.routes
 
     def get_route_for_obj(self, obj):
         if isinstance(obj, (CameraRoute, Camera) ):
             return CameraRoute()
+        elif isinstance(obj, (AreaRoute, Area)):
+            return AreaRoute()
         else:
             return ObjectRoute()
 
@@ -2759,45 +2815,41 @@ class KMP(object):
         return -1
 
     def reset_routes(self, start_at = 0):
-        self.reset_object_routes(start_at)
-        self.reset_camera_routes(start_at)
+        self.reset_general_routes(self.routes, start_at)
+        self.reset_general_routes(self.cameraroutes, start_at)
+        self.reset_general_routes(self.arearoutes, start_at)
 
-    def reset_object_routes(self, start_at = 0):
-        for route_index in range(start_at, len(self.routes) ):
-            for object in self.routes[route_index].used_by:
+    def reset_general_routes(self, container, start_at = 0):
+        for route_index in range(start_at, len(container) ):
+            for object in container[route_index].used_by:
                 object.route = route_index
-
-    def reset_camera_routes(self, start_at = 0):
-        for route_index in range(start_at, len(self.cameraroutes) ):
-            for object in self.cameraroutes[route_index].used_by:
-                object.route = route_index
-
+                object.route_obj = container[route_index]
     def remove_unused_routes(self):
         self.remove_unused_object_routes()
         self.remove_unused_camera_routes()
+        self.remove_unused_area_routes()
+
+    def remove_unused_general_route(self, container):
+        to_remove = []
+        for i, route in enumerate(container):
+            if len(route.used_by) == 0:
+                to_remove.append(i)
+        to_remove.sort()
+        to_remove.reverse()
+        for rem_index in to_remove:
+            container.pop(rem_index)
 
     def remove_unused_object_routes(self):
-        to_remove = []
-        for i, route in enumerate(self.routes):
-            if len(route.used_by) == 0:
-                to_remove.append(i)
-        to_remove.sort()
-        to_remove.reverse()
-        for rem_index in to_remove:
-            self.routes.pop(rem_index)
-        self.reset_object_routes()
+        self.remove_unused_general_route(self.routes)
+        self.reset_general_routes(self.routes)
 
     def remove_unused_camera_routes(self):
+        self.remove_unused_general_route(self.cameraroutes)
+        self.reset_general_routes(self.cameraroutes)
 
-        to_remove = []
-        for i, route in enumerate(self.cameraroutes):
-            if len(route.used_by) == 0:
-                to_remove.append(i)
-        to_remove.sort()
-        to_remove.reverse()
-        for rem_index in to_remove:
-            self.cameraroutes.pop(rem_index)
-        self.reset_camera_routes()
+    def remove_unused_area_routes(self):
+        self.remove_unused_general_route(self.arearoutes)
+        self.reset_general_routes(self.arearoutes)
 
     #cameras
     def remove_unused_cameras(self):

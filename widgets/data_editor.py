@@ -1120,14 +1120,14 @@ class AreaEdit(DataEditor):
         self.setting1, self.setting1_label = self.add_integer_input_hideable("Setting 1", "setting1", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
         self.setting2, self.setting2_label = self.add_integer_input_hideable("Setting 2", "setting2", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
 
-        self.routeid, self.routeid_label = self.add_integer_input_hideable("Route ID", "route", MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        self.enemypointid, self.enemypointid_label = self.add_integer_input_hideable("Enemy Point ID", "enemypointid", MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
+        #self.routeid, self.routeid_label = self.add_integer_input_hideable("Route ID", "route", MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
+        #self.enemypointid, self.enemypointid_label = self.add_integer_input_hideable("Enemy Point ID", "enemypointid", MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
 
         self.area_type.currentIndexChanged.connect(self.update_name)
         self.camera_index.editingFinished.disconnect()
         self.camera_index.editingFinished.connect(self.update_camera_used)
-        self.routeid.editingFinished.disconnect()
-        self.routeid.editingFinished.connect(self.update_route_used)
+        #self.routeid.editingFinished.disconnect()
+        #self.routeid.editingFinished.connect(self.update_route_used)
 
     def update_data(self):
         obj: Area = self.bound_to
@@ -1151,11 +1151,11 @@ class AreaEdit(DataEditor):
         self.setting1.setText(str(obj.setting1))
         self.setting2.setText(str(obj.setting2))
 
-        obj.set_route()
-        self.routeid.setText(str(obj.route))
+        #obj.set_route()
+        #self.routeid.setText(str(obj.route))
 
-        obj.set_enemypointid()
-        self.enemypointid.setText(str(obj.enemypointid))
+        #obj.set_enemypointid()
+        #self.enemypointid.setText(str(obj.enemypointid))
 
         self.set_settings_visible()
 
@@ -1165,13 +1165,11 @@ class AreaEdit(DataEditor):
         self.camera_index.setVisible( obj.type == 0 )
         self.camera_index_label.setVisible( obj.type == 0 )
 
-
         setting1_labels = { 2: "BFG Entry", 3: "Acceleration Modifier", 6: "BBLM Entry", 8: "Group ID", 9: "Group ID"  }
         self.setting1.setVisible(obj.type in [2, 3, 6, 8, 9])
         if obj.type in [2, 3, 6, 8, 9]:
             self.setting1_label.setText(setting1_labels[ obj.type ])
         self.setting1_label.setVisible(obj.type in [2, 3, 6, 8, 9])
-
 
         setting2_labels = { 3: "Moving Water Speed", 6: "Transition Time (frames)"}
         self.setting2.setVisible(obj.type in [3, 6])
@@ -1179,11 +1177,10 @@ class AreaEdit(DataEditor):
             self.setting2_label.setText( setting2_labels[obj.type]   )
         self.setting2_label.setVisible(obj.type in [3, 6])
 
-
-        self.routeid.setVisible(obj.type == 3)
-        self.routeid_label.setVisible(obj.type == 3)
-        self.enemypointid.setVisible(obj.type == 4)
-        self.enemypointid_label.setVisible(obj.type == 4)
+        #self.routeid.setVisible(obj.type == 3)
+        #self.routeid_label.setVisible(obj.type == 3)
+        #self.enemypointid.setVisible(obj.type == 4)
+        #self.enemypointid_label.setVisible(obj.type == 4)
 
     def update_name(self):
         self.set_settings_visible()

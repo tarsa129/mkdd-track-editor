@@ -182,7 +182,7 @@ class ErrorAnalyzer(QDialog):
                 ))
 
         # Check camera indices in areas
-        for i, area in enumerate(kmp.areas.areas):
+        for i, area in enumerate(kmp.areas):
             if area.cameraid < -1 or area.cameraid + 1 > len(kmp.cameras):
                 write_line("Area {0} uses invalid camera index {1}".format(i, area.cameraid))
             elif area.type == 0 and area.cameraid == -1:

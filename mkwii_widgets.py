@@ -759,10 +759,25 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                             self.models.render_generic_position_colored_id(obj.position, id + (offset+i) * 4)
                             i += 1
                 offset = len(objlist)
-                #print("can cam routes be selected?", vismenu.cameraroutes.is_selectable())
-                if vismenu.cameraroutes.is_selectable():
+
+                if vismenu.cameras.is_selectable():
                     i = 0
                     for route in self.level_file.cameraroutes:
+                        for obj in route.points:
+                            objlist.append(
+                                ObjectSelectionEntry(obj=obj,
+                                                 pos1=obj.position,
+                                                 pos2=None,
+                                                 pos3=None,
+                                                 rotation=None))
+                            self.models.render_generic_position_colored_id(obj.position, id + (offset+i) * 4)
+                            i += 1
+
+                offset = len(objlist)
+
+                if vismenu.areas.is_selectable():
+                    i = 0
+                    for route in self.level_file.arearoutes:
                         for obj in route.points:
                             objlist.append(
                                 ObjectSelectionEntry(obj=obj,
@@ -816,7 +831,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                 for is_selectable, collection in (
                         (vismenu.objects.is_selectable(), self.level_file.objects.objects),
                         (vismenu.kartstartpoints.is_selectable(), self.level_file.kartpoints.positions),
-                        (vismenu.areas.is_selectable(), self.level_file.areas.areas),
+                        (vismenu.areas.is_selectable(), self.level_file.areas),
                         (vismenu.respawnpoints.is_selectable(), self.level_file.respawnpoints),
                         (vismenu.cannonpoints.is_selectable(), self.level_file.cannonpoints),
                         (vismenu.missionpoints.is_selectable(), self.level_file.missionpoints)
@@ -997,25 +1012,22 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
             if vismenu.objects.is_visible():
                 routes_to_highlight = set()
 
-                type_3_areas = self.level_file.areas.get_type(3)
-                routes_to_circle = [ area.set_route() for area in type_3_areas if (area in select_optimize)  ]
-
                 for obj in self.level_file.objects.objects:
                     if obj.route >= 0 and obj in select_optimize:
                         routes_to_highlight.add(obj.route)
 
                 for i, route in enumerate(self.level_file.routes):
+                    if not route.used_by:
+                        continue
+
                     selected = i in routes_to_highlight
+
                     if route in self.selected:
                         selected = True
 
                     last_point = None
 
                     render_type = "objectpoint"
-                    if route.has_area():
-                        render_type = "areapoint"
-                    elif not route.used_by:
-                        render_type = "unusedpoint"
 
                     for point in route.points:
                         point_selected = point in select_optimize
@@ -1025,12 +1037,6 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         if last_point is not None:
                             self.models.draw_arrow_head(last_point.position, point.position)
                         last_point = point
-
-                    if i in routes_to_circle:
-                        for point in route.points:
-                            glColor3f(0.0, 0.0, 1.0)
-                            self.models.draw_sphere(point.position, 600)
-
                     if selected:
                         glLineWidth(3.0)
 
@@ -1042,7 +1048,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     glEnd()
                     if selected:
                         glLineWidth(1.0)
-            if vismenu.cameraroutes.is_visible():
+            if vismenu.cameras.is_visible():
                 routes_to_highlight = set()
                 routes_to_circle = set()
 
@@ -1094,6 +1100,48 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     glEnd()
                     if selected:
                         glLineWidth(1.0)
+            if vismenu.areas.is_visible():
+                routes_to_highlight = set()
+                type_3_areas = self.level_file.areas.get_type(3)
+                routes_to_circle = set([ area.set_route() for area in type_3_areas if (area in select_optimize)  ])
+
+                for i, route in enumerate(self.level_file.arearoutes):
+                    selected = i in routes_to_highlight
+
+                    if route in self.selected:
+                        selected = True
+                    last_point = None
+                    if route.used_by:
+                        for point in route.points:
+                            point_selected = point in select_optimize
+                            self.models.render_generic_position_colored(point.position, point_selected, "areapoint")
+                            if i in routes_to_circle:
+                                glColor3f(0.0, 0.0, 1.0)
+                                self.models.draw_sphere(point.position, 600)
+                            selected = selected or point_selected
+                            if last_point is not None:
+                                self.models.draw_arrow_head(last_point.position, point.position)
+                            last_point = point
+                    else:
+                        for point in route.points:
+                            point_selected = point in select_optimize
+                            self.models.render_generic_position_colored(point.position, point_selected, "unusedpoint")
+                            selected = selected or point_selected
+                            if last_point is not None:
+                                self.models.draw_arrow_head(last_point.position, point.position)
+                            last_point = point
+
+                    if selected:
+                        glLineWidth(3.0)
+                    glBegin(GL_LINE_STRIP)
+                    glColor3f(0.0, 0.0, 0.0)
+                    for point in route.points:
+                        pos = point.position
+                        glVertex3f(pos.x, -pos.z, pos.y)
+                    glEnd()
+                    if selected:
+                        glLineWidth(1.0)
+
             if vismenu.enemyroute.is_visible():
                 enemypoints_to_highlight = set()
                 all_groups = self.level_file.enemypointgroups.groups
@@ -1532,7 +1580,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                                                          object.rotation,
                                                          Vector3( 2000, 50, z_scale   ), kartstart = True)
             if vismenu.areas.is_visible():
-                for object in self.level_file.areas.areas:
+                for object in self.level_file.areas:
                     self.models.render_generic_position_rotation_colored("areas",
                                                                 object.position, object.rotation,
                                                                 object in select_optimize)
@@ -1800,7 +1848,7 @@ class FilterViewMenu(QMenu):
 
         self.areas = ObjectViewSelectionToggle("Areas", self)
         self.cameras = ObjectViewSelectionToggle("Cameras", self)
-        self.cameraroutes = ObjectViewSelectionToggle("Camera Paths", self)
+        #self.cameraroutes = ObjectViewSelectionToggle("Camera Paths", self)
 
         self.cannonpoints = ObjectViewSelectionToggle("Cannon Points", self)
         self.missionpoints = ObjectViewSelectionToggle("Mission Success Points", self)
@@ -1814,7 +1862,7 @@ class FilterViewMenu(QMenu):
         return (self.enemyroute,
                 self.itemroute,
                 #self.objectroutes,
-                self.cameraroutes,
+                #self.cameraroutes,
                 self.checkpoints,
                 self.objects,
                 #self.objectroutes,

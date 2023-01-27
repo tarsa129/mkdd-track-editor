@@ -17,13 +17,13 @@ enemy/item/checkpoint
 gobj:
 - manually improve all descriptions / settings / and add default values
 - line drawing for item boxes via "i"
-- copy and place same route is still duplicating the route
 - create side buttons for object placement based on type (create icons)
 
 poti:
 - show splines (talk to zatchi)
 - camera auto route - make it based on the total length (parse all files to find average distance / speed)
 - add radius of route points with areas for multiple point rouetes
+- when route is highlighted, highlight the objects that are used
 
 jgpt:
 - render unused respawn points differently
@@ -45,17 +45,16 @@ before release: match lorenzis with colors
 
 general:
 error analyzer
+- routes with fewer than two points + smooth with two points
 create dialog for auto generation and auto cleanup
 add options for stuff to do on load
-move delete to treeview context menu
 move srt to bottom of viewer
 add conditional out of bounds?
 make 'c' work in 3d
-when route is highlighted, highlight the objects that are used
+refactor routed stuff to remove reliance on .route
 
 level view context menu (should only be stuff related to the *group* it's connected to):
 enemy/item/checkpoint: select/delete group.
-route point: select/delete group
 area: move with route, select <assoc>
 camera: move with route, select route
 
