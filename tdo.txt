@@ -18,12 +18,14 @@ gobj:
 - manually improve all descriptions / settings / and add default values
 - line drawing for item boxes via "i"
 - create side buttons for object placement based on type (create icons)
+- remove route references to unrouted objects at load
 
 poti:
 - show splines (talk to zatchi)
 - camera auto route - make it based on the total length (parse all files to find average distance / speed)
 - add radius of route points with areas for multiple point rouetes
 - when route is highlighted, highlight the objects that are used
+- make sure that at most 255 routes are being created
 
 jgpt:
 - render unused respawn points differently

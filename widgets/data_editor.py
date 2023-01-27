@@ -1045,16 +1045,6 @@ class ObjectEdit(DataEditor):
         self.cyclic.setVisible(obj is not None)
         self.cyclic_label.setVisible(obj is not None)
 
-    def update_route_used(self):
-        #print('update route used', self.bound_to.route)
-        #emit signal with old and new route numbers, for easier changing
-        self.emit_route_update.emit(self.bound_to, self.bound_to.route, int(self.route.text()) )
-
-        #now update the value
-        self.bound_to.route = int(self.route.text())
-
-        #update the name, may be needed
-        self.update_name(self.bound_to.objectid)
 
 class KartStartPointsEdit(DataEditor):
     def setup_widgets(self):
@@ -1198,18 +1188,6 @@ class AreaEdit(DataEditor):
 
         #update the name, may be needed
         self.update_name()
-
-    def update_route_used(self):
-        area : Area = self.bound_to
-        self.emit_route_update.emit(self.bound_to, self.bound_to.route, int(self.route.text()) )
-
-        #now update the value
-        area.route = int(self.route.text())
-        area.set_route_from_id()
-
-        #update the name, may be needed
-        self.update_name()
-
     def update_enemypoint_used(self):
         area : Area = self.bound_to
         area.enemypointid = int(self.enemypointid.text())
@@ -1251,9 +1229,6 @@ class CameraEdit(DataEditor):
 
         self.shake = self.add_integer_input("Shake", "shake", MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
 
-        self.route = self.add_integer_input("Object Path ID", "route",
-                                            MIN_SIGNED_BYTE, MAX_SIGNED_BYTE)
-
         self.routespeed = self.add_integer_input("Route Speed", "routespeed", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
         self.zoomspeed = self.add_integer_input("Zoom Speed", "zoomspeed", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
         self.viewspeed = self.add_integer_input("View Speed", "viewspeed", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
@@ -1267,8 +1242,6 @@ class CameraEdit(DataEditor):
         self.movieflag = self.add_integer_input("Movie Flag", "movieflag", MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
 
         self.type.currentIndexChanged.connect(self.update_name)
-        self.route.editingFinished.disconnect()
-        self.route.editingFinished.connect(self.update_route_used)
 
         self.type.currentTextChanged.connect(self.update_name)
 
@@ -1292,7 +1265,7 @@ class CameraEdit(DataEditor):
         self.type.setCurrentIndex( obj.type )
         self.nextcam.setText(str(obj.nextcam))
         self.shake.setText(str(obj.shake))
-        self.route.setText(str(obj.route))
+        #self.route.setText(str(obj.route))
         self.routespeed.setText(str(obj.routespeed))
         self.zoomspeed.setText(str(obj.zoomspeed))
         self.viewspeed.setText(str(obj.viewspeed))
@@ -1305,17 +1278,6 @@ class CameraEdit(DataEditor):
 
 
         self.nextcam.setText(str(obj.nextcam))
-
-    def update_route_used(self):
-        #print('update route used', self.bound_to.route)
-        #emit signal with old and new route numbers, for easier changing
-        self.emit_route_update.emit(self.bound_to, self.bound_to.route, int(self.route.text()) )
-
-        #now update the value
-        self.bound_to.route = int(self.route.text())
-
-        #update the name, may be needed
-        self.update_name()
 
 class RespawnPointEdit(DataEditor):
     def setup_widgets(self):

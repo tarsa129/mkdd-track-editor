@@ -1265,7 +1265,7 @@ class RoutePoint(object):
 # Section 5
 # Objects
 class MapObject(object):
-
+    level_file = None
     can_copy = True
 
     def __init__(self, position, objectid):
@@ -1366,7 +1366,7 @@ class MapObject(object):
          if self.objectid in OBJECTNAMES:
             name = OBJECTNAMES[self.objectid]
             route_info = load_route_info(name)
-
+            self.route_info = route_info
 
             return route_info
          return None
@@ -1382,6 +1382,17 @@ class MapObject(object):
             self.route_info = route_info
         else:
             self.route_info = None
+
+    def set_route(self):
+        if self.type == 3:
+            routes = __class__.level_file.routes
+            if self.route != -1 and self.route < len( routes ) and routes[self.route] == self.route_obj:
+                return self.route
+
+            for i, route in enumerate(routes):
+                if route == self.route_obj:
+                    self.route = i
+                    return i
 
 class MapObjects(object):
     def __init__(self):
@@ -1553,12 +1564,13 @@ class Area(object):
 
         return area
 
-    def write(self, f):
+    def write(self, f, start_route = 0):
         f.write(pack(">B", self.shape) ) #shape
         type = self.type if self.type >= 0 and self.type <= 10 else 11
         f.write(pack(">B", type ) )
-
-        f.write(pack(">b", self.cameraid) )
+        self.set_camera()
+        cameraid = 255 if self.cameraid < 0 else self.cameraid
+        f.write(pack(">B", cameraid) )
         f.write(pack(">B", self.priority & 0xFF) ) #priority
 
         f.write(pack(">fff", self.position.x, self.position.y, self.position.z))
@@ -1568,7 +1580,7 @@ class Area(object):
         self.set_enemypointid()
         enemypointid = 255 if self.enemypointid < 0 else self.enemypointid
         self.set_route()
-        route = 255 if self.route < 0 else self.route
+        route = 255 if self.route < 0 else self.route + start_route
         f.write(pack(">HHBBH", self.setting1, self.setting2, route, enemypointid, 0 ) )
         return 1
 
@@ -1604,7 +1616,8 @@ class Area(object):
                 if camera == self.camera:
                     self.cameraid = i
                     return i
-
+        else:
+            self.cameraid = -1
     def set_cam_from_id(self):
         if self.type == 0:
             cameras = __class__.level_file.cameras
@@ -1622,7 +1635,8 @@ class Area(object):
                 if route == self.route_obj:
                     self.route = i
                     return i
-
+        else:
+            self.cameraid = -1
     def set_route_from_id(self):
         if self.type == 3:
             routes = __class__.level_file.routes
@@ -1635,7 +1649,8 @@ class Area(object):
             point_idx = __class__.level_file.enemypointgroups.get_index_from_point(self.enemypoint)
             self.enemypointid = point_idx
             return point_idx
-
+        else:
+            self.cameraid = -1
     def set_enemypoint_from_id(self):
         self.enemypoint = __class__.level_file.enemypointgroups.get_point_from_index(self.enemypointid)
 
@@ -1673,7 +1688,7 @@ class Areas(ObjectContainer):
 
         return areas
 
-    def write(self, f):
+    def write(self, f, start_route = 0):
         f.write(b"AREA")
         area_count_off = f.tell()
         f.write(pack(">H", 0xFFFF) )
@@ -1681,7 +1696,7 @@ class Areas(ObjectContainer):
 
         num_written = 0
         for area in self:
-            num_written += area.write(f)
+            num_written += area.write(f, start_route)
 
         end_sec = f.tell()
         f.seek(area_count_off)
@@ -1727,6 +1742,7 @@ class Cameras(ObjectContainer):
             self.append(  Camera.new_type_0() )
 
 class Camera(object):
+    level_file = None
     can_copy = True
     def __init__(self, position):
         self.type = 0
@@ -1840,10 +1856,12 @@ class Camera(object):
         return new_camera
 
 
-    def write(self, f):
+    def write(self, f, route_start = 0):
 
         f.write(pack(">B", self.type ) )
-        f.write(pack(">bBb", self.nextcam, 0, self.route) )
+        self.set_route()
+        route = 255 if self.route < 0 else self.route + route_start
+        f.write(pack(">bBB", self.nextcam, 0, route) )
 
 
 
@@ -1883,6 +1901,17 @@ class Camera(object):
 
     def has_route(self):
         return (self.type in [2, 5, 6])
+
+    def set_route(self):
+        if self.has_route:
+            routes = __class__.level_file.cameraroutes
+            if self.route != -1 and self.route < len( routes ) and routes[self.route] == self.route_obj:
+                return self.route
+
+            for i, route in enumerate(routes):
+                if route == self.route_obj:
+                    self.route = i
+                    return i
 
 # Section 9
 # Jugem Points
@@ -2016,6 +2045,8 @@ class KMP(object):
         self.missionpoints = ObjectContainer()
 
         Area.level_file = self
+        Camera.level_file = self
+        MapObject.level_file = self
         EnemyPointGroups.level_file = self
 
         self.set_assoc()
@@ -2387,132 +2418,134 @@ class KMP(object):
         return KMP
 
     def write(self, f):
-         f.write(b"RKMD") #file magic
-         size_off = f.tell()
-         f.write(b"FFFF") #will be the length of the file
-         f.write(pack(">H", 0xF)) #number of sections
-         f.write(pack(">H", 0x4c)) #length of header
-         f.write(pack(">I", 0x9d8)) #length of header
-         sec_offs = f.tell()
-         f.write(b"FFFF" * 15) #placeholder for offsets
+        f.write(b"RKMD") #file magic
+        size_off = f.tell()
+        f.write(b"FFFF") #will be the length of the file
+        f.write(pack(">H", 0xF)) #number of sections
+        f.write(pack(">H", 0x4c)) #length of header
+        f.write(pack(">I", 0x9d8)) #length of header
+        sec_offs = f.tell()
+        f.write(b"FFFF" * 15) #placeholder for offsets
 
-         offsets = [ f.tell()]  #offset 1 for ktpt
-         self.kartpoints.write(f)
+        offsets = [ f.tell()]  #offset 1 for ktpt
+        self.kartpoints.write(f)
 
-         offsets.append( f.tell() ) #offset 2 for entp
-         enph_off = self.enemypointgroups.write(f)
-         offsets.append(enph_off) #offset 3 for enph
+        offsets.append( f.tell() ) #offset 2 for entp
+        enph_off = self.enemypointgroups.write(f)
+        offsets.append(enph_off) #offset 3 for enph
 
-         offsets.append( f.tell() ) #offset 4 for itpt
-         itph_off = self.itempointgroups.write(f)
-         offsets.append(itph_off) #offset 5 for itph
+        offsets.append( f.tell() ) #offset 4 for itpt
+        itph_off = self.itempointgroups.write(f)
+        offsets.append(itph_off) #offset 5 for itph
 
-         offsets.append(f.tell()) #offset 6 for ckpt
-         ktph_offset = self.checkpoints.write(f)
-         offsets.append(ktph_offset) #offset 7 for ktph
+        offsets.append(f.tell()) #offset 6 for ckpt
+        ktph_offset = self.checkpoints.write(f)
+        offsets.append(ktph_offset) #offset 7 for ktph
 
-         offsets.append(f.tell() ) #offset 8 for gobj
-         self.objects.write(f)
+        offsets.append(f.tell() ) #offset 8 for gobj
+        self.objects.write(f)
 
-         routes, cameras, areas = self.combine_routes()
-         #print(len(routes), [camera.route for camera in cameras])
+        routes = ObjectContainer()
+        for route in self.routes:
+            routes.append(route)
+        routes.extend(self.cameraroutes)
+        routes.extend(self.arearoutes)
 
-         offsets.append(f.tell() ) #offset 9 for poti
-         f.write(b"POTI")
-         f.write(pack(">H", len(routes) ) )
-         count_off = f.tell()
-         f.write(pack(">H", 0xFFFF ) )  # will be overridden later
+        #print(len(routes), [camera.route for camera in cameras])
 
-         count = 0
-         for route in routes:
+        offsets.append(f.tell() ) #offset 9 for poti
+        f.write(b"POTI")
+        f.write(pack(">H", len(routes) ) )
+        count_off = f.tell()
+        f.write(pack(">H", 0xFFFF ) )  # will be overridden later
+
+        count = 0
+        for route in routes:
             count += route.write(f)
 
-         offset = f.tell()
-         offsets.append(offset) #offset 10 for AREA
+        offset = f.tell()
+        offsets.append(offset) #offset 10 for AREA
 
-         f.seek(count_off)
-         f.write(pack(">H", count ) )  # will be overridden later
-         f.seek(offset)
+        f.seek(count_off)
+        f.write(pack(">H", count) )
+        f.seek(offset)
 
-         areas.write(f)
+        self.areas.write(f, len(self.routes) + len(self.cameraroutes) )
 
-         offsets.append(f.tell() ) # offset 11 for CAME
-         f.write(b"CAME")
-         count_off = f.tell()
-         f.write(pack(">H", 0xFFFF ) )  # will be overridden later
-         f.write(pack(">H", 0xFFFF ) )  # will be overridden later
+        offsets.append(f.tell() ) # offset 11 for CAME
+        f.write(b"CAME")
+        count_off = f.tell()
+        f.write(pack(">H", 0xFFFF ) )  # will be overridden later
+        f.write(pack(">H", 0xFFFF ) )  # will be overridden later
 
-         count = 0
+        len_obj_routes = len(self.routes)
+        for camera in self.cameras:
+            camera.write(f, len_obj_routes)
 
-         for camera in cameras:
-            count += camera.write(f)
+        offset = f.tell()  #offset 12 for JPGT
+        offsets.append(offset)
 
-         offset = f.tell()  #offset 12 for JPGT
-         offsets.append(offset)
-
-         f.seek(count_off)
-         f.write(pack(">H", count ) )
-         if self.cameras.startcam == -1:
+        f.seek(count_off)
+        f.write(pack(">H", len(self.cameras) ) )
+        if self.cameras.startcam == -1:
             f.write(pack(">bB", -1, 0 ) )
-         else:
+        else:
             f.write(pack(">BB", self.cameras.startcam, 0 ) )
-         f.seek(offset)
+        f.seek(offset)
 
+        f.write(b"JGPT")
+        f.write(pack(">H", len(self.respawnpoints) ) )  # will be overridden later
+        f.write(pack(">H", 0 ) )
 
-
-         f.write(b"JGPT")
-         f.write(pack(">H", len(self.respawnpoints) ) )  # will be overridden later
-         f.write(pack(">H", 0 ) )
-
-         count = 0
-         for point in self.respawnpoints:
+        count = 0
+        for point in self.respawnpoints:
             point.write(f, count)
-            count += 1
+        count += 1
 
 
-         offset = f.tell()
-         offsets.append(offset) #offset 13 for CNPT
+        offset = f.tell()
+        offsets.append(offset) #offset 13 for CNPT
 
-         f.write(b"CNPT")
-         count_off = f.tell()
-         f.write(pack(">H", len(self.cannonpoints) ) )  # will be overridden later
-         f.write(pack(">H", 0 ) )
+        f.write(b"CNPT")
+        count_off = f.tell()
+        f.write(pack(">H", len(self.cannonpoints) ) )  # will be overridden later
+        f.write(pack(">H", 0 ) )
 
-         for point in self.cannonpoints:
+        for point in self.cannonpoints:
             point.write(f)
-         offset = f.tell()
-         offsets.append(offset) #offset 14 for MSPT
+        offset = f.tell()
+        offsets.append(offset) #offset 14 for MSPT
 
-         f.write(b"MSPT")
-         count_off = f.tell()
-         f.write(pack(">H", len(self.missionpoints) ) )  # will be overridden later
-         f.write(pack(">H", 0 ) )
+        f.write(b"MSPT")
+        count_off = f.tell()
+        f.write(pack(">H", len(self.missionpoints) ) )  # will be overridden later
+        f.write(pack(">H", 0 ) )
 
 
-         count = 0
-         for point in self.missionpoints:
+        count = 0
+        for point in self.missionpoints:
             point.write(f, count)
-            count += 1
-         offset = f.tell()
+        count += 1
+        offset = f.tell()
 
-         offsets.append(offset) #offset 15 for STGI
-         f.write(b"STGI")
-         f.write(pack(">HH", 1, 0 ) )
-         f.write(pack(">B", self.lap_count))
-         f.write(pack(">BB", self.kartpoints.pole_position, self.kartpoints.start_squeeze) )
-         f.write(pack(">B", self.lens_flare))
-         f.write(pack(">BBBBB", 0, self.flare_color.r, self.flare_color.b, self.flare_color.b, self.flare_alpha ) )
-         f.write(pack(">b", 0 ) )
+        offsets.append(offset) #offset 15 for STGI
+        f.write(b"STGI")
+        f.write(pack(">HH", 1, 0 ) )
+        f.write(pack(">B", self.lap_count))
+        f.write(pack(">BB", self.kartpoints.pole_position, self.kartpoints.start_squeeze) )
+        f.write(pack(">B", self.lens_flare))
+        f.write(pack(">BBBBB", 0, self.flare_color.r, self.flare_color.b, self.flare_color.b, self.flare_alpha ) )
+        f.write(pack(">b", 0 ) )
 
-         byte_array = pack(">f", self.speed_modifier)
-         f.write( byte_array[0:2])
+        byte_array = pack(">f", self.speed_modifier)
+        f.write( byte_array[0:2])
 
-         assert( len(offsets) == 15 )
-         size = f.tell()
-         f.seek(size_off)
-         f.write(pack(">I", size ) )
-         f.seek(sec_offs)
-         for i in range(15):
+        assert( len(offsets) == 15 )
+        size = f.tell()
+        f.seek(size_off)
+        f.write(pack(">I", size ) )
+        f.seek(sec_offs)
+        for i in range(15):
             f.write(pack(">I", offsets[i]  - 0x4C ) )
 
     def to_bytes(self) -> bytes:
@@ -2534,11 +2567,13 @@ class KMP(object):
         routes.extend(self.arearoutes)
 
         for camera in self.cameras:
+            camera.set_route()
             new_cam = camera.copy()
             if new_cam.route != -1:
                 new_cam.route += num_obj
             cameras.append(new_cam)
         for area in self.areas:
+            area.set_route()
             new_area = area.copy()
             if new_area.route != -1:
                 new_area.route += num_objcam
@@ -2822,7 +2857,6 @@ class KMP(object):
     def reset_general_routes(self, container, start_at = 0):
         for route_index in range(start_at, len(container) ):
             for object in container[route_index].used_by:
-                object.route = route_index
                 object.route_obj = container[route_index]
     def remove_unused_routes(self):
         self.remove_unused_object_routes()
@@ -2883,8 +2917,8 @@ class KMP(object):
         for i in range( len(self.cameras) -1, -1, -1):
             cam_to_del = self.cameras[i]
             if not cam_to_del in used:
-                if cam_to_del.route != -1 and cam_to_del.route < len(self.cameraroutes):
-                    self.cameraroutes[cam_to_del.route].used_by.remove(cam_to_del)
+                if cam_to_del.route_obj is not None:
+                    cam_to_del.route_obj.used_by.remove(cam_to_del)
                 self.cameras.remove(cam_to_del)
 
         for i, camera in enumerate (self.cameras):
@@ -2899,8 +2933,8 @@ class KMP(object):
             curr_cam = self.cameras[next_idx]
 
     def remove_camera(self, cam : Camera):
-        if cam.route != -1 and cam.route < len(self.cameraroutes):
-            self.cameraroutes[cam.route].used_by.remove(cam)
+        if cam.route_obj is not None:
+            cam.route_obj.used_by.remove(cam)
 
         self.cameras.remove(cam)
 
@@ -2911,8 +2945,8 @@ class KMP(object):
 
     #objects
     def remove_object(self, obj: MapObject):
-        if obj.route != -1 and obj.route < len(self.routes):
-            self.routes[obj.route].used_by.remove(obj)
+        if obj.route_obj is not None:
+            obj.route_obj.used_by.remove(obj)
 
         self.objects.objects.remove(obj)
 

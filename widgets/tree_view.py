@@ -243,10 +243,6 @@ class ObjectEntry(NamedItem):
         elif (obj.route_info is None or obj.route_info == -1) and obj.route_obj is not None:
             text_descrip += " (HAS USELESS ROUTE)"
 
-        """
-        if self.bound_to.route != -1:
-            text_descrip += " (Route: {0})".format(self.bound_to.route)
-        """
         self.setText(0, text_descrip)
 
 

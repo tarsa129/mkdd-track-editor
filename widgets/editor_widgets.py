@@ -176,13 +176,17 @@ class ErrorAnalyzer(QDialog):
 
         # Validate path id in objects
         for object in kmp.objects.objects:
+            """
             if object.route < -1 or object.route + 1 > len(kmp.routes):
                 write_line("Map object {0} uses path id {1} that does not exist".format(
                     get_kmp_name(object.objectid), object.route
                 ))
-
+            """
+            if object.route_info is not None and object.route_obj is None:
+                write_line("Map object {0} needs a route.".format( get_kmp_name(object.objectid)))
         # Check camera indices in areas
         for i, area in enumerate(kmp.areas):
+            area.set_camera()
             if area.cameraid < -1 or area.cameraid + 1 > len(kmp.cameras):
                 write_line("Area {0} uses invalid camera index {1}".format(i, area.cameraid))
             elif area.type == 0 and area.cameraid == -1:
