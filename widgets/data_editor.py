@@ -734,8 +734,6 @@ class CheckpointEdit(DataEditor):
         self.end = self.add_multiple_decimal_input("End", "end", ["x", "z"],
                                                      -inf, +inf)
 
-        self.respawn = self.add_integer_input("Respawn", "respawn",
-                                           MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
         self.lapcounter = self.add_checkbox("Lap Counter", "lapcounter",
                                       0, 1)
         self.type = self.add_checkbox("Key Checkpoint", "type",
@@ -752,7 +750,6 @@ class CheckpointEdit(DataEditor):
         self.end[0].setText(str(round(obj.end.x, 3)))
         self.end[1].setText(str(round(obj.end.z, 3)))
 
-        self.respawn.setText(str(obj.respawn))
         self.lapcounter.setChecked(obj.lapcounter != 0)
         self.type.setChecked(obj.type != 0)
 
@@ -861,9 +858,6 @@ class ObjectEdit(DataEditor):
         self.objectid.currentTextChanged.disconnect()
         self.objectid_edit.editingFinished.disconnect()
 
-        #self.route, self.route_label = self.add_integer_input_hideable("Object Path ID", "route",
-        #                                     MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
-
         self.single = self.add_checkbox("Enable in single player mode", "single", 0, 1)
         self.double = self.add_checkbox("Enable in two player mode", "double", 0, 1)
         self.triple = self.add_checkbox("Enable in three/four player mode", "triple", 0, 1)
@@ -886,9 +880,6 @@ class ObjectEdit(DataEditor):
             self.smooth_label.setVisible(False)
             self.cyclic.setVisible(False)
             self.cyclic_label.setVisible(False)
-
-        #self.route.editingFinished.disconnect()
-        #self.route.editingFinished.connect(self.update_route_used)
 
         if (inthemaking):
             self.set_default_values()
@@ -941,21 +932,12 @@ class ObjectEdit(DataEditor):
 
         parameter_names, assets, route_info = load_parameter_names(current)
 
-        #parameter_names = None
-        #assets = []
-        #self.route.setVisible( route_info is not None)
-        #self.route_label.setVisible( route_info is not None)
-
-
         if parameter_names is None:
             for i in range(8):
                 self.userdata[i][0].setText("Obj Data {0}".format(i+1))
                 self.userdata[i][0].setVisible(True)
                 self.userdata[i][1].setVisible(True)
             self.assets.setText("Required Assets: Unknown")
-
-            #self.route.setVisible(True)
-            #self.route_label.setVisible(True)
 
         else:
             for i in range(8):
@@ -974,9 +956,6 @@ class ObjectEdit(DataEditor):
                 self.assets.setText("Required Assets: None")
             else:
                 self.assets.setText("Required Assets: {0}".format(", ".join(assets)))
-
-            #self.route.setVisible(route_info is not None)
-            #self.route_label.setVisible(route_info is not None)
 
         if hasattr(self, "in_production") and self.in_production:
             self.set_default_values()
@@ -1022,8 +1001,6 @@ class ObjectEdit(DataEditor):
 
         self.rename_object_parameters( self.get_objectname(obj.objectid) )
 
-        #self.route.setText(str(obj.route))
-
         self.single.setChecked( obj.single != 0)
         self.double.setChecked( obj.double != 0)
         self.triple.setChecked( obj.triple != 0)
@@ -1044,7 +1021,6 @@ class ObjectEdit(DataEditor):
         self.smooth_label.setVisible(obj is not None)
         self.cyclic.setVisible(obj is not None)
         self.cyclic_label.setVisible(obj is not None)
-
 
 class KartStartPointsEdit(DataEditor):
     def setup_widgets(self):
@@ -1110,14 +1086,19 @@ class AreaEdit(DataEditor):
         self.setting1, self.setting1_label = self.add_integer_input_hideable("Setting 1", "setting1", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
         self.setting2, self.setting2_label = self.add_integer_input_hideable("Setting 2", "setting2", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
 
-        #self.routeid, self.routeid_label = self.add_integer_input_hideable("Route ID", "route", MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-        #self.enemypointid, self.enemypointid_label = self.add_integer_input_hideable("Enemy Point ID", "enemypointid", MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-
         self.area_type.currentIndexChanged.connect(self.update_name)
         self.camera_index.editingFinished.disconnect()
         self.camera_index.editingFinished.connect(self.update_camera_used)
-        #self.routeid.editingFinished.disconnect()
-        #self.routeid.editingFinished.connect(self.update_route_used)
+
+        self.smooth, self.smooth_label = self.add_dropdown_input("Sharp/Smooth motion", "route_obj.smooth", POTI_Setting1, return_both = True)
+        self.cyclic, self.cyclic_label = self.add_dropdown_input("Cyclic/Back and forth motion", "route_obj.cyclic", POTI_Setting2, return_both = True)
+
+        if self.bound_to.route_obj is None:
+            self.smooth.setVisible(False)
+            self.smooth_label.setVisible(False)
+            self.cyclic.setVisible(False)
+            self.cyclic_label.setVisible(False)
+
 
     def update_data(self):
         obj: Area = self.bound_to
@@ -1141,11 +1122,15 @@ class AreaEdit(DataEditor):
         self.setting1.setText(str(obj.setting1))
         self.setting2.setText(str(obj.setting2))
 
-        #obj.set_route()
-        #self.routeid.setText(str(obj.route))
+        obj: Route = self.bound_to.route_obj
+        if obj is not None:
+            self.smooth.setCurrentIndex( min(obj.smooth, 1))
+            self.cyclic.setCurrentIndex( min(obj.cyclic, 1))
 
-        #obj.set_enemypointid()
-        #self.enemypointid.setText(str(obj.enemypointid))
+        self.smooth.setVisible(obj is not None)
+        self.smooth_label.setVisible(obj is not None)
+        self.cyclic.setVisible(obj is not None)
+        self.cyclic_label.setVisible(obj is not None)
 
         self.set_settings_visible()
 
@@ -1167,18 +1152,12 @@ class AreaEdit(DataEditor):
             self.setting2_label.setText( setting2_labels[obj.type]   )
         self.setting2_label.setVisible(obj.type in [3, 6])
 
-        #self.routeid.setVisible(obj.type == 3)
-        #self.routeid_label.setVisible(obj.type == 3)
-        #self.enemypointid.setVisible(obj.type == 4)
-        #self.enemypointid_label.setVisible(obj.type == 4)
-
     def update_name(self):
         self.set_settings_visible()
         super().update_name()
 
     def update_camera_used(self):
         area : Area = self.bound_to
-        #print('update route used', self.bound_to.route)
         #emit signal with old and new route numbers, for easier changing
         self.emit_camera_update.emit(self.bound_to, self.bound_to.cameraid, int(self.camera_index.text()) )
 
@@ -1187,11 +1166,6 @@ class AreaEdit(DataEditor):
         area.set_cam_from_id()
 
         #update the name, may be needed
-        self.update_name()
-    def update_enemypoint_used(self):
-        area : Area = self.bound_to
-        area.enemypointid = int(self.enemypointid.text())
-        area.set_enemypoint_from_id()
         self.update_name()
 
 class CamerasEdit(DataEditor):
@@ -1265,7 +1239,6 @@ class CameraEdit(DataEditor):
         self.type.setCurrentIndex( obj.type )
         self.nextcam.setText(str(obj.nextcam))
         self.shake.setText(str(obj.shake))
-        #self.route.setText(str(obj.route))
         self.routespeed.setText(str(obj.routespeed))
         self.zoomspeed.setText(str(obj.zoomspeed))
         self.viewspeed.setText(str(obj.viewspeed))

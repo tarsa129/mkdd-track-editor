@@ -881,6 +881,8 @@ class Checkpoint(KMPPoint):
             smallest = [ i for i, x in enumerate(distances) if x == min(distances)]
             self.respawn = smallest[0]
 
+    def get_mid(self):
+        return (self.start+self.end)/2.0
 
     @classmethod
     def from_file(cls, f):
@@ -1274,7 +1276,6 @@ class MapObject(object):
         self.rotation = Rotation.default()
         self.scale = Vector3(1.0, 1.0, 1.0)
 
-
         self.route = -1
         self.route_obj = None
         self.userdata = [0 for i in range(8)]
@@ -1312,13 +1313,15 @@ class MapObject(object):
         object.rotation = Rotation.from_file(f)
 
         object.scale = Vector3(*unpack(">fff", f.read(12)))
-        object.route = read_int16(f)
+        object.route = read_uint16(f)
+        if object.route == 65535:
+            object.route = -1
         object.userdata = unpack(">hhhhhhhh", f.read(2 * 8))
         object.split_prescence( read_uint16(f) )
 
         return object
 
-    def write(self, f):
+    def write(self, f, route_start):
 
         f.write(pack(">H", self.objectid  ))
 
@@ -1327,14 +1330,14 @@ class MapObject(object):
         f.write(pack(">fff", self.position.x, self.position.y, self.position.z))
         self.rotation.write(f)
         f.write(pack(">fff", self.scale.x, self.scale.y, self.scale.z))
-        f.write(pack(">h", self.route) )
-
+        route = self.set_route()
+        route = (2 ** 16 - 1) if route == -1 else route + route_start
+        f.write(pack(">H", route) )
 
         for i in range(8):
             f.write(pack(">h", self.userdata[i]))
 
         presence = self.single | (self.double << 1) | (self.triple << 2)
-
 
         f.write( pack(">H", presence) )
         return 1
@@ -1384,15 +1387,10 @@ class MapObject(object):
             self.route_info = None
 
     def set_route(self):
-        if self.type == 3:
-            routes = __class__.level_file.routes
-            if self.route != -1 and self.route < len( routes ) and routes[self.route] == self.route_obj:
-                return self.route
-
-            for i, route in enumerate(routes):
-                if route == self.route_obj:
-                    self.route = i
-                    return i
+        for i, route in enumerate(__class__.level_file.routes):
+            if route == self.route_obj:
+                return i
+        return -1
 
 class MapObjects(object):
     def __init__(self):
@@ -1414,19 +1412,15 @@ class MapObjects(object):
 
         return mapobjs
 
-    def write(self, f):
-
-        num_written = 0
-
+    def write(self, f, start_route = 0):
 
         f.write(b"GOBJ")
-        count_offset = f.tell()
         f.write(pack(">H", len(self.objects)))
         f.write(pack(">H", 0) )
 
         #print(bol2kmp)
         for object in self.objects:
-            object.write(f )
+            object.write(f, start_route)
 
 # Section 6
 # Kart/Starting positions
@@ -1579,8 +1573,8 @@ class Area(object):
 
         self.set_enemypointid()
         enemypointid = 255 if self.enemypointid < 0 else self.enemypointid
-        self.set_route()
-        route = 255 if self.route < 0 else self.route + start_route
+        route = self.set_route()
+        route = 255 if route < 0 else route + start_route
         f.write(pack(">HHBBH", self.setting1, self.setting2, route, enemypointid, 0 ) )
         return 1
 
@@ -1627,16 +1621,10 @@ class Area(object):
     #type 3 - moving road
     def set_route(self):
         if self.type == 3:
-            routes = __class__.level_file.arearoutes
-            if self.route != -1 and self.route < len( routes ) and routes[self.route] == self.route_obj:
-                return self.route
-
-            for i, route in enumerate(routes):
+            for i, route in enumerate(__class__.level_file.arearoutes):
                 if route == self.route_obj:
-                    self.route = i
                     return i
-        else:
-            self.cameraid = -1
+        return -1
     def set_route_from_id(self):
         if self.type == 3:
             routes = __class__.level_file.routes
@@ -1839,7 +1827,7 @@ class Camera(object):
         new_camera.type = self.type
         new_camera.nextcam = self.nextcam
         new_camera.shake = self.shake
-        new_camera.route = self.route
+        new_camera.route_obj = self.route_obj
         new_camera.routespeed = self.routespeed
         new_camera.zoomspeed = self.zoomspeed
         new_camera.viewspeed = self.viewspeed
@@ -1859,11 +1847,9 @@ class Camera(object):
     def write(self, f, route_start = 0):
 
         f.write(pack(">B", self.type ) )
-        self.set_route()
-        route = 255 if self.route < 0 else self.route + route_start
+        route = self.set_route()
+        route = 255 if route < 0 else route + route_start
         f.write(pack(">bBB", self.nextcam, 0, route) )
-
-
 
         f.write(pack(">H", self.routespeed ) )
         f.write(pack(">H", self.zoomspeed ) )
@@ -1905,13 +1891,10 @@ class Camera(object):
     def set_route(self):
         if self.has_route:
             routes = __class__.level_file.cameraroutes
-            if self.route != -1 and self.route < len( routes ) and routes[self.route] == self.route_obj:
-                return self.route
-
             for i, route in enumerate(routes):
                 if route == self.route_obj:
-                    self.route = i
                     return i
+        return -1
 
 # Section 9
 # Jugem Points
@@ -2297,8 +2280,11 @@ class KMP(object):
             if object.route != -1 and object.route < len(self.routes):
                 self.routes[object.route].used_by.append(object)
             elif object.route >= len(self.routes):
-                "Object {0} references route {1}, which does not exist. The reference will be removed.\n".format(i, object.route)
-                camera.route = -1
+                "Object {0} references route {1}, which does not exist. The reference will be removed.\n".format(get_kmp_name(object.objectid), object.route)
+                object.route = -1
+            elif object.route_info is None:
+                "Object {0} references route {1}, which it does not use. The reference will be removed.\n".format(get_kmp_name(object.objectid), object.route)
+                object.route = -1
         for i, camera in enumerate(self.cameras):
             #print(camera.route)
             if camera.route != -1 and camera.route < len(self.routes):
@@ -2367,7 +2353,7 @@ class KMP(object):
         area_routes = ObjectContainer()
         area_routes.assoc = AreaRoute
         for route in self.routes:
-            if len(route.used_by) > 0:
+            if route.used_by:
                 if isinstance(route.used_by[0], Camera):
                     camera_routes.append(route.to_camera())
                 elif isinstance(route.used_by[0], MapObject ):
@@ -2379,9 +2365,8 @@ class KMP(object):
         self.arearoutes = area_routes
 
         for objs in (self.routes, self.cameraroutes, self.arearoutes):
-            for i, route in enumerate(objs):
+            for route in objs:
                 for object in route.used_by:
-                    object.route = i
                     object.route_obj = route
                 for point in route.points:
                     point.partof = route
@@ -2443,15 +2428,12 @@ class KMP(object):
         offsets.append(ktph_offset) #offset 7 for ktph
 
         offsets.append(f.tell() ) #offset 8 for gobj
-        self.objects.write(f)
+        self.objects.write(f, len(self.cameraroutes) + len(self.arearoutes))
 
         routes = ObjectContainer()
-        for route in self.routes:
-            routes.append(route)
         routes.extend(self.cameraroutes)
         routes.extend(self.arearoutes)
-
-        #print(len(routes), [camera.route for camera in cameras])
+        routes.extend(self.routes)
 
         offsets.append(f.tell() ) #offset 9 for poti
         f.write(b"POTI")
@@ -2470,7 +2452,7 @@ class KMP(object):
         f.write(pack(">H", count) )
         f.seek(offset)
 
-        self.areas.write(f, len(self.routes) + len(self.cameraroutes) )
+        self.areas.write(f, len(self.cameraroutes) )
 
         offsets.append(f.tell() ) # offset 11 for CAME
         f.write(b"CAME")
@@ -2478,9 +2460,8 @@ class KMP(object):
         f.write(pack(">H", 0xFFFF ) )  # will be overridden later
         f.write(pack(">H", 0xFFFF ) )  # will be overridden later
 
-        len_obj_routes = len(self.routes)
         for camera in self.cameras:
-            camera.write(f, len_obj_routes)
+            camera.write(f, 0)
 
         offset = f.tell()  #offset 12 for JPGT
         offsets.append(offset)
@@ -2552,34 +2533,6 @@ class KMP(object):
         f = BytesIO()
         self.write(f)
         return f.getvalue()
-
-    def combine_routes(self):
-        routes = ObjectContainer()
-        cameras = Cameras()
-        areas = Areas()
-
-        num_obj = len(self.routes)
-        num_objcam = num_obj + len(self.cameraroutes)
-
-        for route in self.routes:
-            routes.append(route)
-        routes.extend(self.cameraroutes)
-        routes.extend(self.arearoutes)
-
-        for camera in self.cameras:
-            camera.set_route()
-            new_cam = camera.copy()
-            if new_cam.route != -1:
-                new_cam.route += num_obj
-            cameras.append(new_cam)
-        for area in self.areas:
-            area.set_route()
-            new_area = area.copy()
-            if new_area.route != -1:
-                new_area.route += num_objcam
-            areas.append(new_area)
-
-        return routes, cameras, areas
 
     def auto_generation(self):
         """

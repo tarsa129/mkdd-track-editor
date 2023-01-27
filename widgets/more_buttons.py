@@ -324,14 +324,8 @@ class MoreButtons(QWidget):
         elif isinstance(obj, ObjectContainer) and obj.assoc is JugemPoint:
             all_options = False
 
-
-            new_respawn = QPushButton(self)
-            new_respawn.setText("Add Respawn")
-            new_respawn.clicked.connect(lambda: self.parent.button_add_from_addi_options(9, False) )
-            self.vbox.addWidget(new_respawn)
-
             new_respawn_assign = QPushButton(self)
-            new_respawn_assign.setText("Add Respawn and Assign to Closest Checkpoints")
+            new_respawn_assign.setText("v: Add Respawn and Assign to Closest Checkpoints")
             new_respawn_assign.clicked.connect(lambda: self.parent.button_add_from_addi_options(9, True) )
             self.vbox.addWidget(new_respawn_assign)
 
@@ -339,6 +333,11 @@ class MoreButtons(QWidget):
             auto_respawn_existing.setText("Auto Respawns (Create from Checkpoints)")
             auto_respawn_existing.clicked.connect(lambda: self.parent.button_add_from_addi_options(22, obj) )
             self.vbox.addWidget(auto_respawn_existing)
+
+            new_respawn = QPushButton(self)
+            new_respawn.setText("Add Respawn")
+            new_respawn.clicked.connect(lambda: self.parent.button_add_from_addi_options(9, False) )
+            self.vbox.addWidget(new_respawn)
 
             auto_respawn_existing = QPushButton(self)
             auto_respawn_existing.setText("Auto Respawns (Assign All Where Closest)")
@@ -439,9 +438,7 @@ class MoreButtons(QWidget):
         item_boxes = self.check_objects(objs, (MapObject), "objectid", 101)
         if len(item_boxes) == 2:
             options[0] = item_boxes
-        #routed_objects = self.check_objects(objs, [MapObject, Camera])
-        #if len(self.check_objects(objs, [Route])) == 1 and len(routed_objects) > 0:
-        #    options[1] = routed_objects
+
         checkpoints = self.check_objects(objs, (Checkpoint))
         if len(checkpoints) > 0 :
             options[2] = checkpoints

@@ -1013,21 +1013,19 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                 routes_to_highlight = set()
 
                 for obj in self.level_file.objects.objects:
-                    if obj.route >= 0 and obj in select_optimize:
-                        routes_to_highlight.add(obj.route)
+                    if obj.route_obj is not None and obj in select_optimize:
+                        routes_to_highlight.add(obj.route_obj)
 
                 for i, route in enumerate(self.level_file.routes):
-                    if not route.used_by:
-                        continue
 
-                    selected = i in routes_to_highlight
+                    selected = route in routes_to_highlight
 
                     if route in self.selected:
                         selected = True
 
                     last_point = None
 
-                    render_type = "objectpoint"
+                    render_type = "objectpoint" if route.used_by else "unusedpoint"
 
                     for point in route.points:
                         point_selected = point in select_optimize
@@ -1101,21 +1099,21 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     if selected:
                         glLineWidth(1.0)
             if vismenu.areas.is_visible():
-                routes_to_highlight = set()
                 type_3_areas = self.level_file.areas.get_type(3)
-                routes_to_circle = set([ area.set_route() for area in type_3_areas if (area in select_optimize)  ])
+                routes_to_circle = set([ area.route_obj for area in type_3_areas if (area in select_optimize)  ])
 
                 for i, route in enumerate(self.level_file.arearoutes):
-                    selected = i in routes_to_highlight
 
-                    if route in self.selected:
-                        selected = True
+                    #selected = route in select_optimize
+                    selected = False
+                    circle = route in routes_to_circle
+
                     last_point = None
                     if route.used_by:
                         for point in route.points:
                             point_selected = point in select_optimize
                             self.models.render_generic_position_colored(point.position, point_selected, "areapoint")
-                            if i in routes_to_circle:
+                            if circle:
                                 glColor3f(0.0, 0.0, 1.0)
                                 self.models.draw_sphere(point.position, 600)
                             selected = selected or point_selected
@@ -1131,7 +1129,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                                 self.models.draw_arrow_head(last_point.position, point.position)
                             last_point = point
 
-                    if selected:
+                    if selected or circle:
                         glLineWidth(3.0)
                     glBegin(GL_LINE_STRIP)
                     glColor3f(0.0, 0.0, 0.0)
@@ -1139,7 +1137,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         pos = point.position
                         glVertex3f(pos.x, -pos.z, pos.y)
                     glEnd()
-                    if selected:
+                    if selected or circle:
                         glLineWidth(1.0)
 
             if vismenu.enemyroute.is_visible():
@@ -1586,8 +1584,10 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                                                                 object in select_optimize)
                     if object in select_optimize:
                         glColor4f(*colors_selection)
+                        glLineWidth(3.0)
                     else:
                         glColor4f(*colors_area)
+                        glLineWidth(1.0)
                     if object.shape == 0:
                         self.models.draw_wireframe_cube(object.position, object.rotation, object.scale*100 * 100)
                     else:
@@ -1640,7 +1640,9 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                 mapx, mapz = self.mouse_coord_to_world_coord(mouse_pos.x(), mouse_pos.y())
                 pos1 : Vector3 = self.connecting_start
                 pos2 = Vector3( mapx, 0, -mapz)
+                glLineWidth(5.0)
                 glBegin(GL_LINES)
+                glColor3f(0.0, 0.0, 0.0)
                 glVertex3f(pos1.x, -pos1.z, pos1.y)
                 glVertex3f(pos2.x, -pos2.z, pos2.y)
                 glEnd()

@@ -272,7 +272,10 @@ class AreaEntry(NamedItem):
             elif area.type == 2:
                 disp_string += ", (BFG: {0})".format(area.setting1)
             elif area.type == 3:
-                disp_string += ", (Route: {0})".format(area.route)
+                if area.route_obj is not None:
+                    disp_string += ", (Route)"
+                else:
+                    disp_string += ", (NEEDS A ROUTE)"
             elif area.type == 4:
                 disp_string += ", (Enemy point ID: {0})".format(area.set_enemypointid())
             elif area.type == 6:
@@ -294,7 +297,10 @@ class CameraEntry(NamedItem):
         if camera.type < len(CAME_TYPES) and camera.type >= 0:
             text_descrip += "(Type: {0} - {1})".format( camera.type, CAME_TYPES[camera.type])
             if camera.type in routed_cameras:
-                text_descrip +=  ", (Route: {0})".format(camera.route)
+                if camera.route_obj is not None:
+                    text_descrip += " (Routed)"
+                else:
+                    text_descrip += " (NEEDS A ROUTE)"
         else:
             text_descrip += "INVALID"
         self.setText(0, text_descrip)
