@@ -1252,6 +1252,8 @@ class GenEditor(QMainWindow):
                     if os.path.exists(collisionfile):
                         self.load_collision_kcl(collisionfile)
 
+                    self.frame_selection(adjust_zoom=True)
+
                 except Exception as error:
                     print("Error appeared while loading:", error)
                     traceback.print_exc()
@@ -2511,17 +2513,14 @@ class GenEditor(QMainWindow):
         if new is not None:
             new.used_by.append(obj)
 
-    def update_camera_used_by(self, obj, old, new):
+    def update_camera_used_by(self, obj, old : Camera, new : Camera):
         #print("update route used by", obj, old, new)
         if old == new:
             return
-
-        #print("old", self.level_file.routes[old].used_by, "new", self.level_file.routes[new].used_by)
-
-        if old != -1:
-            self.level_file.cameras[old].used_by.remove(obj)
-        if new != -1:
-            self.level_file.cameras[new].used_by.append(obj)
+        if old is not None:
+            old.used_by.remove(obj)
+        if new is not None:
+            new.used_by.append(obj)
 
     def on_cut_action_triggered(self):
         self.on_copy_action_triggered()
@@ -3008,9 +3007,9 @@ class GenEditor(QMainWindow):
             elif isinstance(self.connect_start, Area):
                 area : Area = self.connect_start
                 if self.connect_start.type == 0 and isinstance(endpoint, Camera):
-                    old_camera = area.set_camera()
+                    old_camera = area.camera
                     area.camera = endpoint
-                    self.update_camera_used_by(area, old_camera, area.set_camera() )
+                    self.update_camera_used_by(area, old_camera, area.camera )
                 if self.connect_start.type == 3 and isinstance(endpoint, RoutePoint) and isinstance(endpoint.partof, AreaRoute):
                     old_route = area.route_obj
                     area.route_obj = endpoint.partof

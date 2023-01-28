@@ -30,15 +30,11 @@ jgpt:
 - render unused respawn points differently
 
 area:
-- split up area based on camera vs not camera
 - add tabs for camera editing
-- split area routes to be separate from object routes
 
 came:
 - camera replaying (long shot)
-- split up cameras based on replay and not
 - render unused cameras differently
-- render the start cam differently (sphere)
 - force camera to route if position unused
 
 before release: match lorenzis with colors

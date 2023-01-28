@@ -775,6 +775,21 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                 offset = len(objlist)
 
+                if vismenu.replayareas.is_selectable():
+                    i = 0
+                    for route in self.level_file.replaycameraroutes:
+                        for obj in route.points:
+                            objlist.append(
+                                ObjectSelectionEntry(obj=obj,
+                                                 pos1=obj.position,
+                                                 pos2=None,
+                                                 pos3=None,
+                                                 rotation=None))
+                            self.models.render_generic_position_colored_id(obj.position, id + (offset+i) * 4)
+                            i += 1
+
+                offset = len(objlist)
+
                 if vismenu.areas.is_selectable():
 
                     i = 0
@@ -834,6 +849,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         (vismenu.kartstartpoints.is_selectable(), self.level_file.kartpoints.positions),
                         (vismenu.areas.is_selectable(), self.level_file.areas),
                         (vismenu.replayareas.is_selectable(), self.level_file.replayareas),
+                        (vismenu.replayareas.is_selectable(), self.level_file.replaycameras),
                         (vismenu.respawnpoints.is_selectable(), self.level_file.respawnpoints),
                         (vismenu.cannonpoints.is_selectable(), self.level_file.cannonpoints),
                         (vismenu.missionpoints.is_selectable(), self.level_file.missionpoints)
@@ -1597,7 +1613,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         self.models.draw_wireframe_cylinder(object.position, object.rotation, object.scale*50 * 100)
 
                 #render cameras
-                cameras_to_circle = [ area.set_camera() for area in self.level_file.replayareas if (area in select_optimize)  ]
+                cameras_to_circle = [ area.camera for area in self.level_file.replayareas if (area in select_optimize)  ]
                 for object in self.level_file.replaycameras:
                     for i, object in enumerate(self.level_file.replaycameras):
 
@@ -1605,15 +1621,56 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                                                                     object.position, object.rotation,
                                                                     object in select_optimize)
 
-                        if i in cameras_to_circle:
+                        if object in cameras_to_circle:
                             glColor3f(0.0, 0.0, 1.0)
                             self.models.draw_sphere(object.position, 600)
 
-                        if object in select_optimize and object.type in (4, 5):
+                        if object in select_optimize and object.type == 4:
                             glColor3f(0.0, 1.0, 0.0)
                             self.models.draw_sphere(object.position3, 300)
                             glColor3f(1.0, 0.0, 0.0)
                             self.models.draw_sphere(object.position2, 300)
+
+                routes_to_highlight = [camera.route_obj for camera in self.level_file.replaycameras if camera in select_optimize]
+                routes_to_circle = [camera.route_obj for camera in self.level_file.replaycameras if camera in cameras_to_circle]
+
+                for i, route in enumerate(self.level_file.replaycameraroutes):
+                    selected = route in routes_to_highlight
+
+                    if route in self.selected:
+                        selected = True
+                    last_point = None
+                    if route.used_by:
+                        for point in route.points:
+                            point_selected = point in select_optimize
+                            self.models.render_generic_position_colored(point.position, point_selected, "camerapoint")
+                            selected = selected or point_selected
+                            if last_point is not None:
+                                self.models.draw_arrow_head(last_point.position, point.position)
+                            if route in routes_to_circle:
+                                glColor3f(0.0, 0.0, 1.0)
+                                self.models.draw_sphere(point.position, 600)
+                            last_point = point
+                    else:
+                        for point in route.points:
+                            point_selected = point in select_optimize
+                            self.models.render_generic_position_colored(point.position, point_selected, "unusedpoint")
+                            selected = selected or point_selected
+                            if last_point is not None:
+                                self.models.draw_arrow_head(last_point.position, point.position)
+                            last_point = point
+
+                    if selected:
+                        glLineWidth(3.0)
+                    glBegin(GL_LINE_STRIP)
+                    glColor3f(0.0, 0.0, 0.0)
+                    for point in route.points:
+                        pos = point.position
+                        glVertex3f(pos.x, -pos.z, pos.y)
+                    glEnd()
+                    if selected:
+                        glLineWidth(1.0)
+
             if vismenu.cameras.is_visible():
                 for i, object in enumerate(self.level_file.cameras):
                     if object.type == 0:

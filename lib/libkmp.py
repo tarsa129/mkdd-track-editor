@@ -1809,7 +1809,7 @@ class Camera(object):
         new_camera.rotation = self.rotation.copy()
 
         new_camera.type = self.type
-        new_camera.nextcam = self.nextcam
+        new_camera.nextcam_obj = self.nextcam_obj
         new_camera.shake = self.shake
         new_camera.route_obj = self.route_obj
         new_camera.routespeed = self.routespeed
@@ -1875,10 +1875,15 @@ class Camera(object):
 
     def set_route(self):
         if self.has_route:
+            replayroutes = __class__.level_file.replaycameraroutes
+            for i,route in enumerate(replayroutes):
+                if route == self.route_obj:
+                    return i
+
             routes = __class__.level_file.cameraroutes
             for i, route in enumerate(routes):
                 if route == self.route_obj:
-                    return i
+                    return i + len(replayroutes)
         return -1
 
     def set_nextcam(self):
@@ -2017,6 +2022,7 @@ class KMP(object):
         self.cameras = Cameras()
 
         self.cameraroutes = ObjectContainer()
+        self.replaycameraroutes = ObjectContainer()
 
         self.respawnpoints = ObjectContainer()
         self.cannonpoints = ObjectContainer()
@@ -2277,16 +2283,15 @@ class KMP(object):
             if object.route != -1 and object.route < len(self.routes):
                 self.routes[object.route].used_by.append(object)
             elif object.route >= len(self.routes):
-                "Object {0} references route {1}, which does not exist. The reference will be removed.\n".format(get_kmp_name(object.objectid), object.route)
+                return_string += "Object {0} references route {1}, which does not exist. The reference will be removed.\n".format(get_kmp_name(object.objectid), object.route)
                 object.route = -1
             elif object.route_info is None:
-                "Object {0} references route {1}, which it does not use. The reference will be removed.\n".format(get_kmp_name(object.objectid), object.route)
                 object.route = -1
         for i, camera in enumerate(self.cameras):
             if camera.route != -1 and camera.route < len(self.routes):
                 self.routes[camera.route].used_by.append(camera)
             elif camera.route >= len(self.routes):
-                "Camera {0} references route {1}, which does not exist. The reference will be removed.\n".format(i, camera.route)
+                return_string += "Camera {0} references route {1}, which does not exist. The reference will be removed.\n".format(i, camera.route)
                 camera.route = -1
             else:
                 camera.route = -1
@@ -2295,13 +2300,13 @@ class KMP(object):
                 if area.cameraid != -1 and area.cameraid < len(self.cameras):
                     self.cameras[area.cameraid].used_by.append(area)
                 elif area.cameraid >= len(self.cameras):
-                    "Area {0} references camera {1}, which does not exist. The reference will be removed.\n".format(i, area.cameraid)
+                    return_string += "Area {0} references camera {1}, which does not exist. The reference will be removed.\n".format(i, area.cameraid)
                     area.cameraid = -1
             if area.type == 3:
                 if area.route != -1 and area.route < len(self.routes):
                     self.routes[area.route].used_by.append(area)
                 elif area.route >= len(self.routes):
-                    "Area {0} references route {1}, which does not exist. The reference will be removed.\n".format(i, area.route)
+                    return_string += "Area {0} references route {1}, which does not exist. The reference will be removed.\n".format(i, area.route)
 
         #copy routes as necessary
         to_split = []
@@ -2406,12 +2411,43 @@ class KMP(object):
             if camera.nextcam != -1 and camera.nextcam < len(self.cameras) :
                 camera.nextcam_obj = self.cameras[camera.nextcam]
 
-        self.replaycameras.extend( self.replayareas.get_cameras() )
+        replaycams = list(set(self.replayareas.get_cameras()))
+        nextcams = [(camera, camera.nextcam_obj) for camera in self.cameras if camera.nextcam_obj is not None]
+        in_both = [ (camera, nextcam) for (camera, nextcam) in nextcams if nextcam in replaycams]
+
+        for camera, nextcam in in_both:
+            new_camera = nextcam.copy()
+            camera.nextcam_obj = new_camera
+            self.cameras.append(new_camera)
+
+        self.replaycameras.extend( replaycams )
         for camera in self.replaycameras:
             self.cameras.remove(camera)
 
         """remove invalid cameras"""
         self.remove_invalid_cameras()
+
+        """do type assertions on replay cams"""
+        for area in self.replayareas:
+            if area.camera is not None and area.camera.type not in (1, 2, 3, 4, 6):
+                return_string += "An area of type Camera references a camera of type {0}, which is not a valid replay camera \
+                    The reference will be removed\n".format(area.camera.type)
+                area.camera = None
+            elif area.camera is not None:
+                area.camera.used_by.append(area)
+
+        invalid_nonreplay = []
+        for camera in self.cameras:
+            if camera.type not in (0, 4, 5, 7, 8, 9):
+                return_string += "A camera of type {0} was found among the non-replay cams. It will be removed.\n".format(camera.type)
+                invalid_nonreplay.append(camera)
+        for camera in invalid_nonreplay:
+            self.remove_camera(camera)
+
+        """split camera routes into replay routes and other routes"""
+        self.replaycameraroutes.extend( [camera.route_obj for camera in self.replaycameras]  )
+        for route in self.replaycameraroutes:
+            self.cameraroutes.remove(route)
 
         return return_string
 
@@ -2447,9 +2483,10 @@ class KMP(object):
         offsets.append(ktph_offset) #offset 7 for ktph
 
         offsets.append(f.tell() ) #offset 8 for gobj
-        self.objects.write(f, len(self.cameraroutes) + len(self.arearoutes))
+        self.objects.write(f, len(self.replaycameraroutes) + len(self.cameraroutes) + len(self.arearoutes))
 
         routes = ObjectContainer()
+        routes.extend(self.replaycameraroutes)
         routes.extend(self.cameraroutes)
         routes.extend(self.arearoutes)
         routes.extend(self.routes)
@@ -2474,7 +2511,7 @@ class KMP(object):
         areas = Areas()
         areas.extend( self.areas  )
         areas.extend( self.replayareas )
-        areas.write(f, len(self.cameraroutes) )
+        areas.write(f, len(self.cameraroutes) + len(self.replaycameraroutes) )
 
         cameras = Cameras()
         cameras.extend( self.replaycameras )

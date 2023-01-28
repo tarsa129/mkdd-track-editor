@@ -1194,7 +1194,6 @@ class CameraEdit(DataEditor):
 
 
         self.type.setCurrentIndex( obj.type )
-        #self.nextcam.setText(str(obj.nextcam))
         self.shake.setText(str(obj.shake))
         self.routespeed.setText(str(obj.routespeed))
         self.zoomspeed.setText(str(obj.zoomspeed))
@@ -1205,9 +1204,6 @@ class CameraEdit(DataEditor):
         self.fov[0].setText(str(obj.fov.start))
         self.fov[1].setText(str(obj.fov.end))
         self.camduration.setText(str(obj.camduration))
-
-
-        #self.nextcam.setText(str(obj.nextcam))
 
 class RespawnPointEdit(DataEditor):
     def setup_widgets(self):
