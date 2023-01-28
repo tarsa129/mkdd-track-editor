@@ -24,13 +24,14 @@ poti:
 - camera auto route - make it based on the total length (parse all files to find average distance / speed)
 - add radius of route points with areas for multiple point rouetes
 - when route is highlighted, highlight the objects that are used
-- make sure that at most 255 routes are being created between camears and areas 
+- make sure that at most 255 routes are being created between camears and areas
 
 jgpt:
 - render unused respawn points differently
 
 area:
 - add tabs for camera editing
+- sort areas by type
 
 came:
 - camera replaying (long shot)

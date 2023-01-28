@@ -2856,6 +2856,11 @@ class GenEditor(QMainWindow):
                 set_first.triggered.connect(lambda: self.make_first_cam(obj))
                 context_menu.addAction(set_first)
 
+            if isinstance(obj, Area) and obj in self.level_file.replayareas:
+                select_linked = QAction("Select Linked", self)
+                select_linked.triggered.connect(lambda: self.select_linked(obj))
+                context_menu.addAction(select_linked)
+
         context_menu.exec(self.sender().mapToGlobal(position))
         context_menu.destroy()
 
@@ -2887,6 +2892,22 @@ class GenEditor(QMainWindow):
         self.level_view.level_file = self.level_file
         self.level_view.do_redraw()
 
+    def select_linked(self, obj):
+        if isinstance(obj, Area) and obj in self.level_file.replayareas:
+            new_selected = [obj]
+            new_selected_position = [obj.position]
+            if obj.camera is not None:
+                new_selected.append(obj.camera)
+                new_selected_position.append(obj.camera.position)
+            if obj.camera.route_obj is not None:
+                new_selected.extend( [ point for point in obj.camera.route_obj.points]  )
+                new_selected_position.extend( [ point.position for point in obj.camera.route_obj.points]  )
+
+            self.level_view.selected = new_selected
+            self.level_view.selected_positions = new_selected_position
+            self.level_view.selected_rotations = [obj.rotation]
+            self.level_view.do_redraw()
+            self.level_view.select_update.emit()
 
     def action_update_position(self, event, pos):
         self.current_coordinates = pos
