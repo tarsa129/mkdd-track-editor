@@ -179,33 +179,9 @@ class ErrorAnalyzer(QDialog):
             if object.route_info is not None and object.route_obj is None:
                 write_line("Map object {0} needs a route.".format( get_kmp_name(object.objectid)))
         # Check camera indices in areas
-        for i, area in enumerate(kmp.areas):
-            area.set_camera()
-            if area.cameraid < -1 or area.cameraid + 1 > len(kmp.cameras):
-                write_line("Area {0} uses invalid camera index {1}".format(i, area.cameraid))
-            elif area.type == 0 and area.cameraid == -1:
-                write_line("Area {0} uses invalid camera index {1}".format(i, area.cameraid))
-
-        have_start = False
-        first_start = -1
-        # Check cameras
-        for i, camera in enumerate(kmp.cameras):
-            if camera.nextcam < -1 or camera.nextcam + 1 > len(kmp.cameras):
-                write_line("Camera {0} uses invalid nextcam (next camera) index {1}".format(
-                    i, camera.nextcam
-                ))
-            if camera.has_route() and camera.route_obj is None:
-                write_line("Camera {0} needs a route".format(i))
-            if camera.startcamera != 0 and not have_start:
-                first_start = i
-                have_start = True
-            elif camera.startcamera != 0 and have_start:
-                write_line("Camera {0} is a starting cam, but Camera {1} is already a starting cam".format(i, first_start))
-
-
-        if len(kmp.checkpoints.groups) == 0:
-            write_line("You need at least one checkpoint group!")
-
+        for i, area in enumerate(kmp.replayareas):
+            if area.camera is None:
+                write_line("Area {0} needs a connected camera".format(i))
 
         cls.check_checkpoints_convex(kmp, write_line)
 

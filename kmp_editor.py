@@ -400,6 +400,9 @@ class GenEditor(QMainWindow):
         if self.visibility_menu.areas.is_visible():
             for area in self.level_file.areas:
                 extend(area.position)
+        if self.visibility_menu.replayareas.is_visible():
+            for area in self.level_file.replayareas:
+                extend(area.position)
         if self.visibility_menu.cameras.is_visible():
             for camera in self.level_file.cameras:
                 extend(camera.position)
@@ -2200,7 +2203,10 @@ class GenEditor(QMainWindow):
                         self.level_file.reassign_one_respawn(object)
                 elif isinstance(object, libkmp.Area):
                     added_area = True
-                    self.level_file.areas.append(placeobject)
+                    if object.type == 0:
+                        self.level_file.replayareas.append(placeobject)
+                    else:
+                        self.level_file.areas.append(placeobject)
                 elif isinstance(object, libkmp.Camera):
                     self.level_file.cameras.append(placeobject)
                 elif isinstance(object, Route):
@@ -2228,7 +2234,6 @@ class GenEditor(QMainWindow):
                         self.action_ground_spec_object(point)
             if isinstance(object, libkmp.Area):
                 if object.type == 0:
-                    object.cameraid = len(self.level_file.cameras) - 1
                     object.camera = self.level_file.cameras[-1]
                     self.level_file.cameras[-1].used_by.append(object)
                 elif object.type == 3:
@@ -2251,9 +2256,6 @@ class GenEditor(QMainWindow):
                 for point in object.route_obj.points:
                     point.position = point.position + object.position
                     self.action_ground_spec_object(point)
-
-
-
 
         self.pik_control.update_info()
         self.level_view.do_redraw()
@@ -2336,24 +2338,26 @@ class GenEditor(QMainWindow):
         elif event.key() == Qt.Key_Minus:
             self.level_view.zoom_out()
 
+        #C IS FOR "connecting"
+        #
         if event.key() == Qt.Key_C:
-            if len(self.level_view.selected) == 1:
-                sel_obj = self.level_view.selected[0]
-                if isinstance(sel_obj, Checkpoint):
-                    self.connect_start = self.level_view.selected[0]
-                    self.level_view.connecting_mode = True
-                    self.level_view.connecting_start = self.connect_start.get_mid()
-                elif isinstance( sel_obj , (KMPPoint, MapObject, Camera, Area) ):
-                    if isinstance(sel_obj, MapObject) and sel_obj.route_info is None:
-                        return
-                    if isinstance(sel_obj, Area) and sel_obj.type not in [0, 3, 4]:
-                        return
-                    if isinstance(sel_obj, Camera) and not sel_obj.has_route():
-                        return
-                    self.connect_start = self.level_view.selected[0]
-                    self.level_view.connecting_mode = True
-                    self.level_view.connecting_start = self.connect_start.position
-
+            if len(self.level_view.selected) != 1:
+                return
+            sel_obj = self.level_view.selected[0]
+            if isinstance(sel_obj, Checkpoint):
+                self.connect_start = self.level_view.selected[0]
+                self.level_view.connecting_mode = True
+                self.level_view.connecting_start = self.connect_start.get_mid()
+            elif isinstance( sel_obj , (KMPPoint, MapObject, Camera, Area) ):
+                if isinstance(sel_obj, MapObject) and sel_obj.route_info is None:
+                    return
+                if isinstance(sel_obj, Area) and sel_obj.type not in [0, 3, 4]:
+                    return
+                if isinstance(sel_obj, Camera) and not sel_obj.has_route():
+                    return
+                self.connect_start = self.level_view.selected[0]
+                self.level_view.connecting_mode = True
+                self.level_view.connecting_start = self.connect_start.position
     def keyReleaseEvent(self, event: QtGui.QKeyEvent):
         if event.key() == Qt.Key_Shift:
             self.level_view.shift_is_pressed = False
@@ -2379,6 +2383,7 @@ class GenEditor(QMainWindow):
             self.level_view.connecting_mode = False
             self.level_view.connecting_start = None
             self.connect_start = None
+            self.connect_mode = None
 
     def reset_move_flags(self):
         self.level_view.MOVE_FORWARD = 0
@@ -2470,7 +2475,10 @@ class GenEditor(QMainWindow):
                 self.level_file.remove_respawn(obj)
                 #self.level_file.respawnpoints.remove(obj)
             elif isinstance(obj, libkmp.Area):
-                self.level_file.areas.remove_area(obj)
+                if obj.type == 0:
+                    self.level_file.replayareas.remove_area(obj)
+                else:
+                    self.level_file.areas.remove_area(obj)
             elif isinstance(obj, libkmp.Camera):
                 self.level_file.remove_camera(obj)
             elif isinstance(obj, PointGroup ):
@@ -2542,12 +2550,15 @@ class GenEditor(QMainWindow):
                 obj.partof = None
             if hasattr(obj, 'route_obj'):
                 object_to_routeobj[obj] = obj.route_obj
+                obj.route = obj.set_route()
                 obj.route_obj = None
             if hasattr(obj, 'enemypoint'):
                 object_to_enemypoint[obj] = obj.enemypoint
+                obj.enemypointid = obj.set_enemypointid()
                 obj.enemypoint = None
             if hasattr(obj, 'camera'):
                 object_to_camera[obj] = obj.camera
+                obj.cameraid = obj.set_camera()
                 obj.camera = None
 
             if hasattr(obj, '__dict__'):
@@ -2666,7 +2677,10 @@ class GenEditor(QMainWindow):
 
                 self.level_file.respawnpoints.append(obj)
             elif isinstance(obj, libkmp.Area):
-                self.level_file.areas.append(obj)
+                if obj.type == 0:
+                    self.level_file.replayareas.append(obj)
+                else:
+                    self.level_file.areas.append(obj)
             elif isinstance(obj, libkmp.Camera):
                 obj.used_by = []
                 self.level_file.cameras.append(obj)
@@ -2749,7 +2763,10 @@ class GenEditor(QMainWindow):
                 elif isinstance(currentobj, libkmp.Camera):
                     item = get_treeitem(self.leveldatatreeview.cameras, currentobj)
                 elif isinstance(currentobj, libkmp.Area):
-                    item = get_treeitem(self.leveldatatreeview.areas, currentobj)
+                    if currentobj.type == 0:
+                        item = get_treeitem(self.leveldatatreeview.replayareas, currentobj)
+                    else:
+                        item = get_treeitem(self.leveldatatreeview.areas, currentobj)
                 elif isinstance(currentobj, libkmp.JugemPoint):
                     item = get_treeitem(self.leveldatatreeview.respawnpoints, currentobj)
                 elif isinstance(currentobj, libkmp.KartStartPoint):
@@ -2835,7 +2852,10 @@ class GenEditor(QMainWindow):
                 delete_all = QAction("Delete Route", self)
                 delete_all.triggered.connect(lambda: self.delete_route_from_point(obj))
                 context_menu.addAction(delete_all)
-
+            if isinstance(obj, Camera) and obj in self.level_file.cameras:
+                set_first = QAction("Make First Cam", self)
+                set_first.triggered.connect(lambda: self.make_first_cam(obj))
+                context_menu.addAction(set_first)
 
         context_menu.exec(self.sender().mapToGlobal(position))
         context_menu.destroy()
@@ -2862,6 +2882,12 @@ class GenEditor(QMainWindow):
         self.action_delete_objects()
         self.level_view.do_redraw()
         self.level_view.select_update.emit()
+
+    def make_first_cam(self, obj: Camera):
+        self.level_file.cameras.startcam = obj
+        self.level_view.level_file = self.level_file
+        self.level_view.do_redraw()
+
 
     def action_update_position(self, event, pos):
         self.current_coordinates = pos
@@ -2938,7 +2964,7 @@ class GenEditor(QMainWindow):
                 self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
             #create a new path for the object/camera
             elif isinstance(self.connect_start, (MapObject, Camera) ):
-                if self.connect_start.route_obj is not None:
+                if self.connect_start.route_obj is not None and self.connect_mode == 1:
                     if isinstance(self.connect_start, MapObject ):
                         self.button_add_from_addi_options(5, self.connect_start)
                     elif isinstance(self.connect_start, Camera ):
@@ -2991,9 +3017,11 @@ class GenEditor(QMainWindow):
                     self.update_route_used_by(area, old_route, area.route_obj)
                 elif self.connect_start.type == 4 and isinstance(endpoint, EnemyPoint):
                     self.connect_start.enemypoint = endpoint
+            elif isinstance(endpoint, Camera) and isinstance(self.connect_start, Camera):
+                if (endpoint in self.level_file.cameras) and (self.connect_start in self.level_file.cameras):
+                    self.connect_start.nextcam_obj = endpoint
 
         self.connect_start = None
-
 
         self.leveldatatreeview.set_objects(self.level_file)
         self.update_3d()

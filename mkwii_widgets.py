@@ -776,6 +776,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                 offset = len(objlist)
 
                 if vismenu.areas.is_selectable():
+
                     i = 0
                     for route in self.level_file.arearoutes:
                         for obj in route.points:
@@ -832,6 +833,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         (vismenu.objects.is_selectable(), self.level_file.objects.objects),
                         (vismenu.kartstartpoints.is_selectable(), self.level_file.kartpoints.positions),
                         (vismenu.areas.is_selectable(), self.level_file.areas),
+                        (vismenu.replayareas.is_selectable(), self.level_file.replayareas),
                         (vismenu.respawnpoints.is_selectable(), self.level_file.respawnpoints),
                         (vismenu.cannonpoints.is_selectable(), self.level_file.cannonpoints),
                         (vismenu.missionpoints.is_selectable(), self.level_file.missionpoints)
@@ -1047,23 +1049,10 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     if selected:
                         glLineWidth(1.0)
             if vismenu.cameras.is_visible():
-                routes_to_highlight = set()
-                routes_to_circle = set()
-
-                type_0_areas = self.level_file.areas.get_type(0)
-                cameras_to_circle = [ area.set_camera() for area in type_0_areas if (area in select_optimize)  ]
-
-                for i, camera in enumerate(self.level_file.cameras):
-                    if camera.route >= 0 and camera in select_optimize:
-                        routes_to_highlight.add(camera.route)
-                    if i in cameras_to_circle and camera.route >= 0 :
-                        routes_to_circle.add(camera.route)
-                        routes_to_highlight.add(camera.route)
-
-
+                routes_to_highlight = set( [camera.route_obj for camera in self.level_file.cameras if camera in select_optimize]  )
 
                 for i, route in enumerate(self.level_file.cameraroutes):
-                    selected = i in routes_to_highlight
+                    selected = route in routes_to_highlight
 
                     if route in self.selected:
                         selected = True
@@ -1072,9 +1061,6 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         for point in route.points:
                             point_selected = point in select_optimize
                             self.models.render_generic_position_colored(point.position, point_selected, "camerapoint")
-                            if i in routes_to_circle:
-                                glColor3f(0.0, 0.0, 1.0)
-                                self.models.draw_sphere(point.position, 600)
                             selected = selected or point_selected
                             if last_point is not None:
                                 self.models.draw_arrow_head(last_point.position, point.position)
@@ -1592,26 +1578,70 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         self.models.draw_wireframe_cube(object.position, object.rotation, object.scale*100 * 100)
                     else:
                         self.models.draw_wireframe_cylinder(object.position, object.rotation, object.scale*50 * 100)
+
+            if vismenu.replayareas.is_visible():
+
+                for object in self.level_file.replayareas:
+                    self.models.render_generic_position_rotation_colored("areas",
+                                                                object.position, object.rotation,
+                                                                object in select_optimize)
+                    if object in select_optimize:
+                        glColor4f(*colors_selection)
+                        glLineWidth(3.0)
+                    else:
+                        glColor4f(*colors_area)
+                        glLineWidth(1.0)
+                    if object.shape == 0:
+                        self.models.draw_wireframe_cube(object.position, object.rotation, object.scale*100 * 100)
+                    else:
+                        self.models.draw_wireframe_cylinder(object.position, object.rotation, object.scale*50 * 100)
+
+                #render cameras
+                cameras_to_circle = [ area.set_camera() for area in self.level_file.replayareas if (area in select_optimize)  ]
+                for object in self.level_file.replaycameras:
+                    for i, object in enumerate(self.level_file.replaycameras):
+
+                        self.models.render_generic_position_rotation_colored("camera",
+                                                                    object.position, object.rotation,
+                                                                    object in select_optimize)
+
+                        if i in cameras_to_circle:
+                            glColor3f(0.0, 0.0, 1.0)
+                            self.models.draw_sphere(object.position, 600)
+
+                        if object in select_optimize and object.type in (4, 5):
+                            glColor3f(0.0, 1.0, 0.0)
+                            self.models.draw_sphere(object.position3, 300)
+                            glColor3f(1.0, 0.0, 0.0)
+                            self.models.draw_sphere(object.position2, 300)
             if vismenu.cameras.is_visible():
-                type_0_areas = self.level_file.areas.get_type(0)
-                cameras_to_circle = [ area.set_camera() for area in type_0_areas if (area in select_optimize)  ]
-
                 for i, object in enumerate(self.level_file.cameras):
-
+                    if object.type == 0:
+                        continue
                     self.models.render_generic_position_rotation_colored("camera",
                                                                 object.position, object.rotation,
                                                                  object in select_optimize)
-
-                    if i in cameras_to_circle:
-                        glColor3f(0.0, 0.0, 1.0)
-                        self.models.draw_sphere(object.position, 600)
-
-                    if object in select_optimize and object.type in [0, 1, 4, 5]:
+                    if object in select_optimize and object.type in (4, 5):
                         glColor3f(0.0, 1.0, 0.0)
                         self.models.draw_sphere(object.position3, 300)
                         glColor3f(1.0, 0.0, 0.0)
                         self.models.draw_sphere(object.position2, 300)
 
+                    if object.nextcam_obj is not None:
+                        pos1 = object.position
+                        pos2 = object.nextcam_obj.position
+                        glLineWidth(3.0)
+                        glBegin(GL_LINES)
+                        glColor3f(0.0, 0.0, 0.0)
+                        glVertex3f(pos1.x, -pos1.z, pos1.y)
+                        glVertex3f(pos2.x, -pos2.z, pos2.y)
+                        glEnd()
+                        glLineWidth(5.0)
+                        self.models.draw_arrow_head(pos1, pos2)
+
+                    if object == self.level_file.cameras.startcam:
+                        glColor3f(1.0, 1.0, 0.0)
+                        self.models.draw_sphere(object.position, 600)
 
             if vismenu.respawnpoints.is_visible():
                 for i, object in enumerate( self.level_file.respawnpoints) :
@@ -1849,6 +1879,7 @@ class FilterViewMenu(QMenu):
         #self.objectroutes = ObjectViewSelectionToggle("Object Paths", self)
 
         self.areas = ObjectViewSelectionToggle("Areas", self)
+        self.replayareas = ObjectViewSelectionToggle("Replay Cameras", self)
         self.cameras = ObjectViewSelectionToggle("Cameras", self)
         #self.cameraroutes = ObjectViewSelectionToggle("Camera Paths", self)
 
@@ -1863,12 +1894,10 @@ class FilterViewMenu(QMenu):
     def get_entries(self):
         return (self.enemyroute,
                 self.itemroute,
-                #self.objectroutes,
-                #self.cameraroutes,
                 self.checkpoints,
                 self.objects,
-                #self.objectroutes,
                 self.areas,
+                self.replayareas,
                 self.cameras,
                 self.respawnpoints,
                 self.kartstartpoints,

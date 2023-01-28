@@ -10,7 +10,6 @@ ktpt
 
 enemy/item/checkpoint
 - add option to set enemy point as first
-- allow self linked unless it's only one
 - checkpoints: fix concave checkpoints
 - checkpoints: add lap completion %
 
@@ -18,6 +17,7 @@ gobj:
 - manually improve all descriptions / settings / and add default values
 - line drawing for item boxes via "i"
 - create side buttons for object placement based on type (create icons)
+- support for optional routes
 
 poti:
 - show splines (talk to zatchi)
@@ -38,9 +38,8 @@ came:
 - camera replaying (long shot)
 - split up cameras based on replay and not
 - render unused cameras differently
-- do not render goal camera
+- render the start cam differently (sphere)
 - force camera to route if position unused
-- view start and view end: render correctly and only if used (also affects data editor)
 
 before release: match lorenzis with colors
 
@@ -55,5 +54,4 @@ make 'c' work in 3d
 level view context menu (should only be stuff related to the *group* it's connected to):
 enemy/item/checkpoint: select/delete group.
 area: move with route, select <assoc>
-camera: move with route, select route
-
+camera: move with route, select route, for starting: set as start

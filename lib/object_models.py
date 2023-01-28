@@ -60,7 +60,7 @@ class ObjectModels(object):
             self.wireframe_cube = Model.from_obj(f, rotate=True)
 
         with open("resources/arrow_head.obj", "r") as f:
-            self.arrow_head = Model.from_obj(f, rotate=True, scale=300.0)
+            self.arrow_head = Model.from_obj(f, rotate=True, scale=500.0)
 
     def init_gl(self):
         for dirpath, dirs, files in os.walk("resources/objectmodels"):

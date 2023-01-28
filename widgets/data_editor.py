@@ -600,10 +600,6 @@ def choose_data_editor(obj):
         return CannonPointEdit
     elif isinstance(obj, MissionPoint):
         return MissionPointEdit
-
-    elif isinstance(obj, Cameras):
-        return CamerasEdit
-
     else:
         return None
 
@@ -1080,15 +1076,10 @@ class AreaEdit(DataEditor):
         self.priority = self.add_integer_input("Priority", "priority",
                                            MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
 
-        self.camera_index, self.camera_index_label = self.add_integer_input_hideable("Camera Index", "cameraid",
-                                                   MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
-
         self.setting1, self.setting1_label = self.add_integer_input_hideable("Setting 1", "setting1", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
         self.setting2, self.setting2_label = self.add_integer_input_hideable("Setting 2", "setting2", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
 
         self.area_type.currentIndexChanged.connect(self.update_name)
-        self.camera_index.editingFinished.disconnect()
-        self.camera_index.editingFinished.connect(self.update_camera_used)
 
         self.smooth, self.smooth_label = self.add_dropdown_input("Sharp/Smooth motion", "route_obj.smooth", POTI_Setting1, return_both = True)
         self.cyclic, self.cyclic_label = self.add_dropdown_input("Cyclic/Back and forth motion", "route_obj.cyclic", POTI_Setting2, return_both = True)
@@ -1115,8 +1106,6 @@ class AreaEdit(DataEditor):
         self.shape.setCurrentIndex( obj.shape )
         self.area_type.setCurrentIndex( obj.type )
 
-        obj.set_camera()
-        self.camera_index.setText(str(obj.cameraid))
         self.priority.setText(str(obj.priority))
 
         self.setting1.setText(str(obj.setting1))
@@ -1137,8 +1126,6 @@ class AreaEdit(DataEditor):
     def set_settings_visible(self):
         obj: Area = self.bound_to
         obj.type = self.area_type.currentIndex()
-        self.camera_index.setVisible( obj.type == 0 )
-        self.camera_index_label.setVisible( obj.type == 0 )
 
         setting1_labels = { 2: "BFG Entry", 3: "Acceleration Modifier", 6: "BBLM Entry", 8: "Group ID", 9: "Group ID"  }
         self.setting1.setVisible(obj.type in [2, 3, 6, 8, 9])
@@ -1156,33 +1143,6 @@ class AreaEdit(DataEditor):
         self.set_settings_visible()
         super().update_name()
 
-    def update_camera_used(self):
-        area : Area = self.bound_to
-        #emit signal with old and new route numbers, for easier changing
-        self.emit_camera_update.emit(self.bound_to, self.bound_to.cameraid, int(self.camera_index.text()) )
-
-        #now update the value
-        area.cameraid = int(self.camera_index.text())
-        area.set_cam_from_id()
-
-        #update the name, may be needed
-        self.update_name()
-
-class CamerasEdit(DataEditor):
-    def setup_widgets(self):
-        self.startcam = self.add_integer_input("Starting Camera", "startcam", 0, 255)
-        self.startcam.editingFinished.connect(self.update_starting_cam)
-    def update_data(self):
-        obj: Cameras = self.bound_to
-        self.startcam.setText( str(obj.startcam) )
-
-    def update_starting_cam(self):
-        self.bound_to.startcam = int(self.startcam.text())
-        self.update_name()
-
-    def update_name(self):
-        super().update_name()
-
 class CameraEdit(DataEditor):
     emit_route_update = pyqtSignal("PyQt_PyObject", "int", "int")
 
@@ -1197,9 +1157,6 @@ class CameraEdit(DataEditor):
                                                         -inf, +inf)
 
         self.type = self.add_dropdown_input("Camera Type", "type", CAME_Type)
-
-        self.nextcam = self.add_integer_input("Next Cam", "nextcam",
-                                              MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
 
         self.shake = self.add_integer_input("Shake", "shake", MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
 
@@ -1237,7 +1194,7 @@ class CameraEdit(DataEditor):
 
 
         self.type.setCurrentIndex( obj.type )
-        self.nextcam.setText(str(obj.nextcam))
+        #self.nextcam.setText(str(obj.nextcam))
         self.shake.setText(str(obj.shake))
         self.routespeed.setText(str(obj.routespeed))
         self.zoomspeed.setText(str(obj.zoomspeed))
@@ -1250,7 +1207,7 @@ class CameraEdit(DataEditor):
         self.camduration.setText(str(obj.camduration))
 
 
-        self.nextcam.setText(str(obj.nextcam))
+        #self.nextcam.setText(str(obj.nextcam))
 
 class RespawnPointEdit(DataEditor):
     def setup_widgets(self):

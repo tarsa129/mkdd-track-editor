@@ -39,16 +39,6 @@ class ObjectGroupObjects(ObjectGroup):
             self.addChild(item)"""
         self.sortChildren(0, 0)
 
-class ObjectGroupCameras(ObjectGroup):
-
-    def set_name(self):
-
-        if self.bound_to is not None:
-            self.setText(0, "Cameras, Start Camera: {0}".format( self.bound_to.startcam) )
-
-    def update_name(self):
-        self.set_name()
-
 class ObjectGroupKartPoints(ObjectGroup):
     def set_name(self):
 
@@ -266,22 +256,28 @@ class AreaEntry(NamedItem):
     def update_name(self):
         area : Area = self.bound_to
         if area.type < len(AREA_TYPES) and area.type >= 0:
-            disp_string = "Type: {0}, {1}".format(area.type, AREA_TYPES[area.type])
             if area.type == 0:
-                disp_string += ", (Cam: {0})".format(area.cameraid)
-            elif area.type == 2:
-                disp_string += ", (BFG: {0})".format(area.setting1)
-            elif area.type == 3:
-                if area.route_obj is not None:
-                    disp_string += ", (Route)"
-                else:
-                    disp_string += ", (NEEDS A ROUTE)"
-            elif area.type == 4:
-                disp_string += ", (Enemy point ID: {0})".format(area.set_enemypointid())
-            elif area.type == 6:
-                disp_string += ", (BBLM: {0})".format(area.setting1)
-            elif area.type in (8, 9):
-                disp_string += ", (Group: {0})".format(area.setting1)
+                disp_string = ""
+                if area.camera is None:
+                    disp_string += "(NEEDS A CAMERA)"
+            else:
+                disp_string = "{0}".format(AREA_TYPES[area.type])
+                if area.type == 2:
+                    disp_string += ", (BFG: {0})".format(area.setting1)
+                elif area.type == 3:
+                    if area.route_obj is not None:
+                        disp_string += ", (Routed)"
+                    else:
+                        disp_string += ", (NEEDS A ROUTE)"
+                elif area.type == 4:
+                    if area.enemypoint is not None:
+                        disp_string += "(Connted to an enemy point)"
+                    else:
+                        disp_string += ", (NEEDS AN ENEMY POINT)"
+                elif area.type == 6:
+                    disp_string += ", (BBLM: {0})".format(area.setting1)
+                elif area.type in (8, 9):
+                    disp_string += ", (Group: {0})".format(area.setting1)
         else:
             disp_string = "INVALID"
         self.setText(0, disp_string)
@@ -360,9 +356,10 @@ class LevelDataTreeView(QTreeWidget):
         #self.objectroutes = self._add_group("Object Paths")
 
         self.areas = self._add_group("Areas")
-        self.cameras = self._add_group("Cameras", ObjectGroupCameras)
+        self.replayareas = self._add_group("Replay Cameras")
+        self.cameras = self._add_group("Cameras")
         #self.cameraroutes = self._add_group("Camera Paths")
-        self.cameras.set_name()
+        #self.cameras.set_name()
 
         self.cannons = self._add_group("Cannon Points ")
         self.missions = self._add_group("Mission Success Points ")
@@ -463,6 +460,7 @@ class LevelDataTreeView(QTreeWidget):
         self.objects.remove_children()
         self.kartpoints.remove_children()
         self.areas.remove_children()
+        self.replayareas.remove_children()
         self.cameras.remove_children()
         self.respawnpoints.remove_children()
         self.cannons.remove_children()
@@ -535,14 +533,8 @@ class LevelDataTreeView(QTreeWidget):
         for area in kmpdata.areas:
             item = AreaEntry(self.areas, "Area", area)
 
-        """
-        for respawn in kmpdata.respawnpoints:
-            item = RespawnEntry(self.respawnpoints, "Respawn", respawn)
-        """
-
         for i, camera in enumerate(kmpdata.cameras):
             item = CameraEntry(self.cameras, "Camera", camera, i)
-        self.cameras.set_name()
 
         for cannon in kmpdata.cannonpoints:
             item = CannonEntry(self.cannons, "Cannon", cannon)
@@ -591,9 +583,8 @@ class LevelDataTreeView(QTreeWidget):
         levelfile.kartpoints.widget = self.kartpoints
         self.kartpoints.set_name()
         self.areas.bound_to = levelfile.areas
+        self.replayareas.bound_to = levelfile.replayareas
         self.cameras.bound_to = levelfile.cameras
-        levelfile.cameras.widget = self.cameras
-        self.cameras.set_name()
         self.respawnpoints.bound_to = levelfile.respawnpoints
         self.cannons.bound_to = levelfile.cannonpoints
         self.missions.bound_to = levelfile.missionpoints

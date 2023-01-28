@@ -162,7 +162,7 @@ class MoreButtons(QWidget):
                 new_item_copy.clicked.connect(lambda: self.parent.button_add_from_addi_options(4, obj.copy()) )
                 self.vbox.addWidget(new_item_copy)
 
-        elif isinstance(obj, Areas):
+        elif isinstance(obj, ReplayAreas):
             all_options = False
 
             new_camera_cam_route = QPushButton(self)
@@ -175,6 +175,8 @@ class MoreButtons(QWidget):
             new_camera_cam_route.clicked.connect(lambda: self.parent.button_add_from_addi_options(12) )
             self.vbox.addWidget(new_camera_cam_route)
 
+        elif isinstance(obj, Areas):
+            all_options = False
             new_area = QPushButton(self)
             new_area.setText("Add Environment Effect Area (Type 1)")
             new_area.clicked.connect(lambda: self.parent.button_add_from_addi_options(7, 1) )
