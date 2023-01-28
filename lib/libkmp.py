@@ -614,21 +614,20 @@ class EnemyPointGroups(PointGroups):
         return EnemyPointGroup.new()
 
     def remove_point(self, del_point):
+        super().remove_point(del_point)
+
         type_4_areas : list[Area] = __class__.level_file.areas.get_type(4)
         for area in type_4_areas:
             if area.enemypoint == del_point:
                 area.find_closest_enemypoint()
 
-        super().remove_point(del_point)
-
     def remove_group(self, del_group, merge = True):
+        super().remove_group(del_group, merge = True)
+
         type_4_areas = __class__.level_file.areas.get_type(4)
         for area in type_4_areas:
             if area.enemypoint in del_group.points:
                 area.enemypoint = None
-                area.enemypointid = -1
-
-        super().remove_group(del_group, merge = True)
 
     @classmethod
     def from_file(cls, f):
@@ -1565,8 +1564,8 @@ class Area(object):
         self.rotation.write(f)
         f.write(pack(">fff", self.scale.x, self.scale.y, self.scale.z))
 
-        self.set_enemypointid()
-        enemypointid = 255 if self.enemypointid < 0 else self.enemypointid
+        enemypointid = self.set_enemypointid()
+        enemypointid = 255 if enemypointid < 0 else enemypointid
         route = self.set_route()
         route = 255 if route < 0 else route + start_route
         f.write(pack(">HHBBH", self.setting1, self.setting2, route, enemypointid, 0 ) )
@@ -1619,17 +1618,13 @@ class Area(object):
     def find_closest_enemypoint(self):
         enemygroups = __class__.level_file.enemypointgroups.groups
         min_distance = 9999999999999
-        pointid = 0
         self.enemypoint = None
         for group in enemygroups:
             for point in group.points:
                 distance = self.position.distance( point.position)
                 if distance < min_distance:
-                    self.enemypointid = pointid
                     self.enemypoint = point
                     min_distance = distance
-
-                pointid += 1
 
     def remove_self(self):
         if self.camera is not None:
@@ -2396,6 +2391,10 @@ class KMP(object):
             if area.cameraid < num_cams:
                 area.camera = self.cameras[area.cameraid]
         for area in self.areas.get_type(4):
+            if area.enemypointid == -1:
+                return_string += "A area of type 4 was found that referenced an enemypoint that does not exist.\
+                    It will be assigned to the closest enemypoint instead.\n"
+                area.find_closest_enemypoint()
             area.enemypoint = self.enemypointgroups.get_point_from_index(area.enemypointid)
             if area.enemypoint is None:
                 return_string += "A area of type 4 was found that referenced an enemypoint that does not exist.\

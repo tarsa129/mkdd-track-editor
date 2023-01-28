@@ -32,6 +32,7 @@ jgpt:
 area:
 - add tabs for camera editing
 - create route if one does not exist, assign to closest enemypoint if none (at load)
+- add back helper function for load
 
 came:
 - camera replaying (long shot)
