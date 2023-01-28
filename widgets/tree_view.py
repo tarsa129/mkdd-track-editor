@@ -271,7 +271,7 @@ class AreaEntry(NamedItem):
                         disp_string += ", (NEEDS A ROUTE)"
                 elif area.type == 4:
                     if area.enemypoint is not None:
-                        disp_string += "(Connted to an enemy point)"
+                        disp_string += ", (Connected to an enemy point)"
                     else:
                         disp_string += ", (NEEDS AN ENEMY POINT)"
                 elif area.type == 6:

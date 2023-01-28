@@ -2402,6 +2402,7 @@ class KMP(object):
         self.replayareas.extend( self.areas.get_type(0) )
         for area in self.replayareas:
             self.areas.remove(area)
+        self.areas.sort( key = lambda h: h.type)
 
         """separate cameras into replay and not"""
         #assign nextcams
@@ -2448,6 +2449,7 @@ class KMP(object):
         self.replaycameraroutes.extend( [camera.route_obj for camera in self.replaycameras]  )
         for route in self.replaycameraroutes:
             self.cameraroutes.remove(route)
+
 
         return return_string
 

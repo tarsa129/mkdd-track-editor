@@ -31,7 +31,6 @@ jgpt:
 
 area:
 - add tabs for camera editing
-- sort areas by type
 
 came:
 - camera replaying (long shot)
