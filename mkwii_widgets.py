@@ -1027,121 +1027,6 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
             select_optimize = {x:True for x in selected}
 
-            if vismenu.objects.is_visible():
-                routes_to_highlight = set()
-
-                for obj in self.level_file.objects.objects:
-                    if obj.route_obj is not None and obj in select_optimize:
-                        routes_to_highlight.add(obj.route_obj)
-
-                for i, route in enumerate(self.level_file.routes):
-
-                    selected = route in routes_to_highlight
-
-                    if route in self.selected:
-                        selected = True
-
-                    last_point = None
-
-                    render_type = "objectpoint" if route.used_by else "unusedpoint"
-
-                    for point in route.points:
-                        point_selected = point in select_optimize
-                        self.models.render_generic_position_colored(point.position, point_selected, render_type)
-                        selected = selected or point_selected
-
-                        if last_point is not None:
-                            self.models.draw_arrow_head(last_point.position, point.position)
-                        last_point = point
-                    if selected:
-                        glLineWidth(3.0)
-
-                    glBegin(GL_LINE_STRIP)
-                    glColor3f(0.0, 0.0, 0.0)
-                    for point in route.points:
-                        pos = point.position
-                        glVertex3f(pos.x, -pos.z, pos.y)
-                    glEnd()
-                    if selected:
-                        glLineWidth(1.0)
-            if vismenu.cameras.is_visible():
-                routes_to_highlight = set( [camera.route_obj for camera in self.level_file.cameras if camera in select_optimize]  )
-
-                for i, route in enumerate(self.level_file.cameraroutes):
-                    selected = route in routes_to_highlight
-
-                    if route in self.selected:
-                        selected = True
-                    last_point = None
-                    if route.used_by:
-                        for point in route.points:
-                            point_selected = point in select_optimize
-                            self.models.render_generic_position_colored(point.position, point_selected, "camerapoint")
-                            selected = selected or point_selected
-                            if last_point is not None:
-                                self.models.draw_arrow_head(last_point.position, point.position)
-                            last_point = point
-                    else:
-                        for point in route.points:
-                            point_selected = point in select_optimize
-                            self.models.render_generic_position_colored(point.position, point_selected, "unusedpoint")
-                            selected = selected or point_selected
-                            if last_point is not None:
-                                self.models.draw_arrow_head(last_point.position, point.position)
-                            last_point = point
-
-                    if selected:
-                        glLineWidth(3.0)
-                    glBegin(GL_LINE_STRIP)
-                    glColor3f(0.0, 0.0, 0.0)
-                    for point in route.points:
-                        pos = point.position
-                        glVertex3f(pos.x, -pos.z, pos.y)
-                    glEnd()
-                    if selected:
-                        glLineWidth(1.0)
-            if vismenu.areas.is_visible():
-                type_3_areas = self.level_file.areas.get_type(3)
-                routes_to_circle = set([ area.route_obj for area in type_3_areas if (area in select_optimize)  ])
-
-                for i, route in enumerate(self.level_file.arearoutes):
-
-                    #selected = route in select_optimize
-                    selected = False
-                    circle = route in routes_to_circle
-
-                    last_point = None
-                    if route.used_by:
-                        for point in route.points:
-                            point_selected = point in select_optimize
-                            self.models.render_generic_position_colored(point.position, point_selected, "areapoint")
-                            if circle:
-                                glColor3f(0.0, 0.0, 1.0)
-                                self.models.draw_sphere(point.position, 600)
-                            selected = selected or point_selected
-                            if last_point is not None:
-                                self.models.draw_arrow_head(last_point.position, point.position)
-                            last_point = point
-                    else:
-                        for point in route.points:
-                            point_selected = point in select_optimize
-                            self.models.render_generic_position_colored(point.position, point_selected, "unusedpoint")
-                            selected = selected or point_selected
-                            if last_point is not None:
-                                self.models.draw_arrow_head(last_point.position, point.position)
-                            last_point = point
-
-                    if selected or circle:
-                        glLineWidth(3.0)
-                    glBegin(GL_LINE_STRIP)
-                    glColor3f(0.0, 0.0, 0.0)
-                    for point in route.points:
-                        pos = point.position
-                        glVertex3f(pos.x, -pos.z, pos.y)
-                    glEnd()
-                    if selected or circle:
-                        glLineWidth(1.0)
-
             if vismenu.enemyroute.is_visible():
                 enemypoints_to_highlight = set()
                 all_groups = self.level_file.enemypointgroups.groups
@@ -1150,7 +1035,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                 #figure out based on area type 4:
                 type_4_areas = self.level_file.areas.get_type(4)
-                indices_to_circle = [ area.set_enemypointid() for area in type_4_areas if (area in select_optimize)  ]
+                points_to_circle = [ area.enemypoint for area in type_4_areas if (area in select_optimize)  ]
 
                 point_index = 0
 
@@ -1173,7 +1058,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                             glColor3f(1.0, 1.0, 0.0)
                             self.models.draw_sphere(point.position, 300)
 
-                        if point_index in indices_to_circle:
+                        if point in points_to_circle:
                             glColor3f(0.0, 0.0, 1.0)
                             self.models.draw_sphere(point.position, 600)
 
@@ -1569,6 +1454,44 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     self.models.render_generic_position_rotation_colored("objects",
                                                                  object.position, object.rotation,
                                                                  object in select_optimize)
+
+                routes_to_highlight = set()
+
+                for obj in self.level_file.objects.objects:
+                    if obj.route_obj is not None and obj in select_optimize:
+                        routes_to_highlight.add(obj.route_obj)
+
+                for i, route in enumerate(self.level_file.routes):
+
+                    selected = route in routes_to_highlight
+
+                    if route in self.selected:
+                        selected = True
+
+                    last_point = None
+
+                    render_type = "objectpoint" if route.used_by else "unusedobjectpoint"
+
+                    for point in route.points:
+                        point_selected = point in select_optimize
+                        self.models.render_generic_position_colored(point.position, point_selected, render_type)
+                        selected = selected or point_selected
+
+                        if last_point is not None:
+                            self.models.draw_arrow_head(last_point.position, point.position)
+                        last_point = point
+                    if selected:
+                        glLineWidth(3.0)
+
+                    glBegin(GL_LINE_STRIP)
+                    glColor3f(0.0, 0.0, 0.0)
+                    for point in route.points:
+                        pos = point.position
+                        glVertex3f(pos.x, -pos.z, pos.y)
+                    glEnd()
+                    if selected:
+                        glLineWidth(1.0)
+
             if vismenu.kartstartpoints.is_visible():
                 for object in self.level_file.kartpoints.positions:
                     self.models.render_generic_position_rotation_colored("startpoints",
@@ -1594,6 +1517,47 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         self.models.draw_wireframe_cube(object.position, object.rotation, object.scale*100 * 100)
                     else:
                         self.models.draw_wireframe_cylinder(object.position, object.rotation, object.scale*50 * 100)
+
+                type_3_areas = self.level_file.areas.get_type(3)
+                routes_to_circle = set([ area.route_obj for area in type_3_areas if (area in select_optimize)  ])
+
+                for i, route in enumerate(self.level_file.arearoutes):
+
+                    #selected = route in select_optimize
+                    selected = False
+                    circle = route in routes_to_circle
+
+                    last_point = None
+                    if route.used_by:
+                        for point in route.points:
+                            point_selected = point in select_optimize
+                            self.models.render_generic_position_colored(point.position, point_selected, "areapoint")
+                            if circle:
+                                glColor3f(0.0, 0.0, 1.0)
+                                self.models.draw_sphere(point.position, 600)
+                            selected = selected or point_selected
+                            if last_point is not None:
+                                self.models.draw_arrow_head(last_point.position, point.position)
+                            last_point = point
+                    else:
+                        for point in route.points:
+                            point_selected = point in select_optimize
+                            self.models.render_generic_position_colored(point.position, point_selected, "unusedpoint")
+                            selected = selected or point_selected
+                            if last_point is not None:
+                                self.models.draw_arrow_head(last_point.position, point.position)
+                            last_point = point
+
+                    if selected or circle:
+                        glLineWidth(3.0)
+                    glBegin(GL_LINE_STRIP)
+                    glColor3f(0.0, 0.0, 0.0)
+                    for point in route.points:
+                        pos = point.position
+                        glVertex3f(pos.x, -pos.z, pos.y)
+                    glEnd()
+                    if selected or circle:
+                        glLineWidth(1.0)
 
             if vismenu.replayareas.is_visible():
 
@@ -1680,9 +1644,9 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                                                                  object in select_optimize)
                     if object in select_optimize and object.type in (4, 5):
                         glColor3f(0.0, 1.0, 0.0)
-                        self.models.draw_sphere(object.position3, 300)
+                        self.models.draw_sphere(object.position3, 600)
                         glColor3f(1.0, 0.0, 0.0)
-                        self.models.draw_sphere(object.position2, 300)
+                        self.models.draw_sphere(object.position2, 600)
 
                     if object.nextcam_obj is not None:
                         pos1 = object.position
@@ -1699,6 +1663,42 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     if object == self.level_file.cameras.startcam:
                         glColor3f(1.0, 1.0, 0.0)
                         self.models.draw_sphere(object.position, 600)
+
+                routes_to_highlight = set( [camera.route_obj for camera in self.level_file.cameras if camera in select_optimize]  )
+
+                for i, route in enumerate(self.level_file.cameraroutes):
+                    selected = route in routes_to_highlight
+
+                    if route in self.selected:
+                        selected = True
+                    last_point = None
+                    if route.used_by:
+                        for point in route.points:
+                            point_selected = point in select_optimize
+                            self.models.render_generic_position_colored(point.position, point_selected, "camerapoint")
+                            selected = selected or point_selected
+                            if last_point is not None:
+                                self.models.draw_arrow_head(last_point.position, point.position)
+                            last_point = point
+                    else:
+                        for point in route.points:
+                            point_selected = point in select_optimize
+                            self.models.render_generic_position_colored(point.position, point_selected, "unusedpoint")
+                            selected = selected or point_selected
+                            if last_point is not None:
+                                self.models.draw_arrow_head(last_point.position, point.position)
+                            last_point = point
+
+                    if selected:
+                        glLineWidth(3.0)
+                    glBegin(GL_LINE_STRIP)
+                    glColor3f(0.0, 0.0, 0.0)
+                    for point in route.points:
+                        pos = point.position
+                        glVertex3f(pos.x, -pos.z, pos.y)
+                    glEnd()
+                    if selected:
+                        glLineWidth(1.0)
 
             if vismenu.respawnpoints.is_visible():
                 for i, object in enumerate( self.level_file.respawnpoints) :
