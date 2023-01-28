@@ -761,6 +761,33 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                 offset = len(objlist)
 
                 if vismenu.cameras.is_selectable():
+                    for i, obj in enumerate(self.level_file.cameras):
+                        if obj in self.selected:
+                            objlist.append(
+                                ObjectSelectionEntry(obj=obj,
+                                                     pos1=obj.position,
+                                                     pos2=obj.position2,
+                                                     pos3=obj.position3,
+                                                     rotation=obj.rotation))
+                            self.models.render_generic_position_rotation_colored_id(obj.position, obj.rotation,
+                                                                                    id + (offset + i) * 4)
+                            if obj.type in [0, 1, 4, 5]:
+
+                                self.models.render_generic_position_colored_id(obj.position2, id + (offset + i) * 4 + 1)
+                                self.models.render_generic_position_colored_id(obj.position3, id + (offset + i) * 4 + 2)
+                        else:
+                            objlist.append(
+                                ObjectSelectionEntry(obj=obj,
+                                                     pos1=obj.position,
+                                                     pos2=None,
+                                                     pos3=None,
+                                                     rotation=obj.rotation))
+                            self.models.render_generic_position_rotation_colored_id(obj.position, obj.rotation,
+                                                                                    id + (offset + i) * 4)
+
+                offset = len(objlist)
+
+                if vismenu.cameras.is_selectable():
                     i = 0
                     for route in self.level_file.cameraroutes:
                         for obj in route.points:
@@ -816,33 +843,6 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                                              rotation=None))
                         self.models.render_generic_position_colored_id(obj.start, id+(offset+i)*4)
                         self.models.render_generic_position_colored_id(obj.end, id+(offset+i)*4 + 1)
-
-                offset = len(objlist)
-
-                if vismenu.cameras.is_selectable():
-                    for i, obj in enumerate(self.level_file.cameras):
-                        if obj in self.selected:
-                            objlist.append(
-                                ObjectSelectionEntry(obj=obj,
-                                                     pos1=obj.position,
-                                                     pos2=obj.position2,
-                                                     pos3=obj.position3,
-                                                     rotation=obj.rotation))
-                            self.models.render_generic_position_rotation_colored_id(obj.position, obj.rotation,
-                                                                                    id + (offset + i) * 4)
-                            if obj.type in [0, 1, 4, 5]:
-
-                                self.models.render_generic_position_colored_id(obj.position2, id + (offset + i) * 4 + 1)
-                                self.models.render_generic_position_colored_id(obj.position3, id + (offset + i) * 4 + 2)
-                        else:
-                            objlist.append(
-                                ObjectSelectionEntry(obj=obj,
-                                                     pos1=obj.position,
-                                                     pos2=None,
-                                                     pos3=None,
-                                                     rotation=obj.rotation))
-                            self.models.render_generic_position_rotation_colored_id(obj.position, obj.rotation,
-                                                                                    id + (offset + i) * 4)
 
                 for is_selectable, collection in (
                         (vismenu.objects.is_selectable(), self.level_file.objects.objects),
@@ -1651,13 +1651,12 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     if object.nextcam_obj is not None:
                         pos1 = object.position
                         pos2 = object.nextcam_obj.position
-                        glLineWidth(3.0)
+                        glLineWidth(2.0)
                         glBegin(GL_LINES)
                         glColor3f(0.0, 0.0, 0.0)
                         glVertex3f(pos1.x, -pos1.z, pos1.y)
                         glVertex3f(pos2.x, -pos2.z, pos2.y)
                         glEnd()
-                        glLineWidth(5.0)
                         self.models.draw_arrow_head(pos1, pos2)
 
                     if object == self.level_file.cameras.startcam:
@@ -1665,12 +1664,10 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         self.models.draw_sphere(object.position, 600)
 
                 routes_to_highlight = set( [camera.route_obj for camera in self.level_file.cameras if camera in select_optimize]  )
-
+                glLineWidth(1.0)
                 for i, route in enumerate(self.level_file.cameraroutes):
-                    selected = route in routes_to_highlight
+                    selected = route in routes_to_highlight or route in self.selected
 
-                    if route in self.selected:
-                        selected = True
                     last_point = None
                     if route.used_by:
                         for point in route.points:
@@ -1692,7 +1689,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     if selected:
                         glLineWidth(3.0)
                     glBegin(GL_LINE_STRIP)
-                    glColor3f(0.0, 0.0, 0.0)
+                    glColor3f(0.8, 0.0, 0.8)
                     for point in route.points:
                         pos = point.position
                         glVertex3f(pos.x, -pos.z, pos.y)

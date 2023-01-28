@@ -2257,24 +2257,19 @@ class GenEditor(QMainWindow):
 
     @catch_exception
     def action_move_objects(self, deltax, deltay, deltaz):
-        for i in range(len(self.level_view.selected_positions)):
-            for j in range(len(self.level_view.selected_positions)):
-                pos = self.level_view.selected_positions
-                if i != j and pos[i] == pos[j]:
-                    print("What the fuck")
+
+        added_pos = []
+
         for pos in self.level_view.selected_positions:
-            pos.x += deltax
-            pos.y += deltay
-            pos.z += deltaz
+            if pos not in added_pos:
+                pos.x += deltax
+                pos.y += deltay
+                pos.z += deltaz
+
+                added_pos.append(pos)
 
             self.level_view.gizmo.move_to_average(self.level_view.selected_positions)
 
-
-        #if len(self.pikmin_gen_view.selected) == 1:
-        #    obj = self.pikmin_gen_view.selected[0]
-        #    self.pik_control.set_info(obj, obj.position, obj.rotation)
-
-        #self.pikmin_gen_view.update()
         self.level_view.do_redraw()
         self.pik_control.update_info()
         self.set_has_unsaved_changes(True)

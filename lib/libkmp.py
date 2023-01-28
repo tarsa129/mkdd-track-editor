@@ -2385,7 +2385,6 @@ class KMP(object):
             self.areas.remove(area)
 
         """set cameras and enemypoints for areas"""
-        #assign cameras
         num_cams = len(self.cameras)
         for area in self.areas.get_type(0):
             if area.cameraid < num_cams:
@@ -2406,6 +2405,11 @@ class KMP(object):
         for area in self.replayareas:
             self.areas.remove(area)
         self.areas.sort( key = lambda h: h.type)
+
+        """snap cameras to routes"""
+        for camera in self.cameras:
+            if camera.has_route() and camera.route_obj is not None and camera.route_obj.points:
+                camera.position = camera.route_obj.points[0].position
 
         """separate cameras into replay and not"""
         #assign nextcams
@@ -2530,7 +2534,7 @@ class KMP(object):
         offsets.append(f.tell() ) # offset 11 for CAME
         f.write(b"CAME")
         f.write(pack(">H", len(cameras) ) )
-        f.write(pack(">H", startcamid) )
+        f.write(pack(">BB", startcamid, 0) )
 
         for camera in cameras:
             camera.write(f, 0, len(self.replaycameras))
@@ -2910,38 +2914,29 @@ class KMP(object):
         for camera in self.cameras:
             if camera.type == 0:
                 used.append(camera)
-        if self.cameras.startcam is not NotImplemented:
-            first_cam : Camera = self.cameras.startcam
-            used.append(first_cam)
-            opening_cams.append(first_cam)
-            next_cam = first_cam.nextcam
-            while next_cam != -1 and next_cam < len(self.cameras):
-                next_camera = self.cameras[next_cam]
-                if next_camera in used:
-                    break
-                used.append(next_camera)
-                opening_cams.append(next_camera)
-                next_cam = next_camera.nextcam
 
-        #now iterate through area
-        for area in self.replayareas:
-            if area.camera is not None:
-                used.append( area.camera )
+        next_cam : Camera = self.cameras.startcam
+        while next_cam is not None and next_cam not in opening_cams:
+            opening_cams.append(next_cam)
+            next_cam = next_cam.nextcam_obj
+
+        used.extend(opening_cams)
 
         #deleting stuff
-        for i in range( len(self.cameras) -1, -1, -1):
-            cam_to_del = self.cameras[i]
-            if not cam_to_del in used:
-                if cam_to_del.route_obj is not None:
-                    cam_to_del.route_obj.used_by.remove(cam_to_del)
-                self.cameras.remove(cam_to_del)
+        for camera in self.cameras:
+            if not camera in used:
+                if camera.route_obj is not None:
+                    camera.route_obj.used_by.remove(camera)
+                self.cameras.remove(camera)
 
-        #deal with starting cams
-        curr_cam = opening_cams[0]
-        for i in range(1, len(opening_cams)):
-            next_idx = self.cameras.index( opening_cams[i] )
-            curr_cam.nextcam = next_idx
-            curr_cam = self.cameras[next_idx]
+    def removed_unused_replay_cameras(self):
+        used_cams = self.replayareas.get_cameras()
+        for camera in self.replaycameras:
+            if camera not in used_cams:
+                if camera.route_obj is not None:
+                    camera.route_obj.used_by.remove(camera)
+                self.replaycameras.remove(camera)
+
 
     def remove_camera(self, cam : Camera):
         for camera in self.cameras:

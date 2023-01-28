@@ -207,9 +207,15 @@ class DataEditor(QWidget):
         def input_edited():
             #print("Hmmmm")
             text = line_edit.text()
+            val = int(text)
             #print("input:", text)
 
-            setattr(self.bound_to, attribute, int(text))
+            if "." in attribute:
+                sub_obj, attr = attribute.split('.')
+                if self.bound_to.route_obj is not None:
+                    setattr( self.bound_to.route_obj.points[0], attr, val)
+            else:
+                setattr(self.bound_to, attribute, val)
 
         line_edit.editingFinished.connect(input_edited)
 
@@ -1172,8 +1178,27 @@ class CameraEdit(DataEditor):
         self.startflag = self.add_integer_input("Start Flag", "startflag", MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
         self.movieflag = self.add_integer_input("Movie Flag", "movieflag", MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
 
-        self.type.currentIndexChanged.connect(self.update_name)
+        self.smooth, self.smooth_label = self.add_dropdown_input("Sharp/Smooth motion", "route_obj.smooth", POTI_Setting1, return_both = True)
+        self.cyclic, self.cyclic_label = self.add_dropdown_input("Cyclic/Back and forth motion", "route_obj.cyclic", POTI_Setting2, return_both = True)
 
+        self.route_unk1, self.route_unk1_label = self.add_integer_input_hideable(\
+            "Sharp/Smooth motion", "route_obj.unk1", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
+        self.route_unk2, self.route_unk2_label = self.add_integer_input_hideable(\
+            "Sharp/Smooth motion", "route_obj.unk2", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
+
+        if self.bound_to.route_obj is None:
+            self.smooth.setVisible(False)
+            self.smooth_label.setVisible(False)
+            self.cyclic.setVisible(False)
+            self.cyclic_label.setVisible(False)
+
+            self.route_unk1.setVisible(False)
+            self.route_unk1_label.setVisible(False)
+            self.route_unk2.setVisible(False)
+            self.route_unk1_label.setVisible(False)
+
+
+        self.type.currentIndexChanged.connect(self.update_name)
         self.type.currentTextChanged.connect(self.update_name)
 
     def update_data(self):
@@ -1204,6 +1229,26 @@ class CameraEdit(DataEditor):
         self.fov[0].setText(str(obj.fov.start))
         self.fov[1].setText(str(obj.fov.end))
         self.camduration.setText(str(obj.camduration))
+
+        obj: Route = self.bound_to.route_obj
+        if obj is not None:
+            self.smooth.setCurrentIndex( min(obj.smooth, 1))
+            self.cyclic.setCurrentIndex( min(obj.cyclic, 1))
+
+            if obj.points:
+                self.route_unk1.setText( str( obj.points[0].unk1  ))
+                self.route_unk2.setText( str( obj.points[0].unk2  ))
+
+        self.smooth.setVisible(obj is not None)
+        self.smooth_label.setVisible(obj is not None)
+        self.cyclic.setVisible(obj is not None)
+        self.cyclic_label.setVisible(obj is not None)
+
+        self.route_unk1.setVisible(obj is not None)
+        self.route_unk1_label.setVisible(obj is not None)
+        self.route_unk2.setVisible(obj is not None)
+        self.route_unk2_label.setVisible(obj is not None)
+
 
 class RespawnPointEdit(DataEditor):
     def setup_widgets(self):

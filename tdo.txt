@@ -22,7 +22,6 @@ poti:
 - add radius of route points with areas for multiple point rouetes
 - when route is highlighted, highlight the objects that are used
 - make sure that at most 255 routes are being created between camears and areas
-- when the last point of a route is deleted, also delete the route
 
 jgpt:
 - render unused respawn points differently
@@ -37,6 +36,7 @@ came:
 - camera replaying (long shot)
 - render unused cameras differently
 - force camera to route if position unused
+- remove rotation
 
 before release: match lorenzis with colors
 
