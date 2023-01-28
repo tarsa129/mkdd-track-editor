@@ -1480,12 +1480,8 @@ class GenEditor(QMainWindow):
             #add points to group at current position
             if isinstance(obj, KMPPoint):
                 self.button_add_from_addi_options( 11, obj)
-            elif isinstance(obj, PointGroup):
-                self.button_add_from_addi_options( 1, obj )
             elif isinstance(obj, PointGroups):
-                if len(obj.groups) != 1 or len(obj.groups[0].points) != 0:
-                    self.button_add_from_addi_options( 0, obj)
-                self.button_add_from_addi_options( 1, obj.groups[-1]  )
+                self.button_add_from_addi_options( 0, obj )
             elif isinstance(obj, ObjectContainer) and obj.assoc == ObjectRoute:
                 self.button_add_from_addi_options( 5 )
                 self.button_add_from_addi_options( 6, self.level_file.routes[-1] )
@@ -1496,6 +1492,8 @@ class GenEditor(QMainWindow):
                 self.button_add_from_addi_options( 15, obj)
             elif isinstance(obj, ObjectContainer) and obj.assoc == JugemPoint:
                 self.button_add_from_addi_options( 9, True)
+            elif isinstance(obj, MapObject) and obj.has_route():
+                self.button_add_from_addi_options( 6, obj)
             else:
                 print('nothing caught')
                 add_something = False
@@ -1592,10 +1590,6 @@ class GenEditor(QMainWindow):
                     self.level_file.itempointgroups.groups.append(obj)
                 elif isinstance(obj, libkmp.CheckpointGroup):
                     self.level_file.checkpoints.groups.append(obj)
-                elif isinstance(obj, libkmp.Route):
-                    route_container = self.level_file.get_route_container(obj)
-                    route_container.append(obj)
-
                 self.object_to_be_added = None
                 self.pik_control.button_add_object.setChecked(False)
                 self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_NONE)
@@ -1636,14 +1630,15 @@ class GenEditor(QMainWindow):
         self.objects_to_be_added = None
         self.object_to_be_added = None
 
-
         if option == 0: #add an empty enemy group
             to_deal_with = self.level_file.get_to_deal_with(obj)
             to_deal_with.add_new_group()
+            self.button_add_from_addi_options(1, to_deal_with.groups[-1])
+
         elif option == 1: #adding an enemy point to a group, the group is obj
             to_deal_with = self.level_file.get_to_deal_with(obj)
             thing_to_add = to_deal_with.get_new_point()
-            self.object_to_be_added = [thing_to_add, obj.id, -1 ]
+            self.object_to_be_added = [thing_to_add, obj, -1 ]
 
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
@@ -1714,26 +1709,17 @@ class GenEditor(QMainWindow):
             new_route_group = libkmp.CameraRoute.new()
             self.level_file.cameraroutes.append(new_route_group)
         elif option == 6: #add route point to end of route
-            #find route in routepoints
-            id = 0
-            idx = 0
+            if obj.route_obj is None:
+                route_collec = self.level_file.get_route_container(obj)
+                new_route = self.level_file.get_route_for_obj(obj)
+                obj.route_obj = new_route
+                new_route.used_by = [obj]
+                route_collec.append(new_route)
 
-            to_look_through = self.level_file.get_route_container(obj)
-
-            for route in to_look_through:
-                if route is obj:
-                    id = idx
-                    break
-                else:
-                    idx += 1
-
-            #self.addobjectwindow_last_selected_category = 5
             new_point = libkmp.RoutePoint.new()
             new_point.partof = obj
-            self.object_to_be_added = [new_point, id, -1 ]
+            self.object_to_be_added = [new_point, obj.route_obj, -1 ]
 
-            #self.object_to_be_added[0].group = obj.id
-            #actively adding objects
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
         elif option == 7: #add new area
@@ -2083,7 +2069,10 @@ class GenEditor(QMainWindow):
                 to_deal_with = self.level_file.get_to_deal_with(object)
                 if group == 0 and not to_deal_with.groups:
                     to_deal_with.groups.append(to_deal_with.get_new_group())
-                to_deal_with.groups[group].points.insert(position + self.points_added, placeobject)
+                if isinstance(group, PointGroup):
+                    group.points.insert(position + self.points_added, placeobject)
+                else:
+                    to_deal_with.groups[group].points.insert(position + self.points_added, placeobject)
                 self.points_added += 1
                 if to_deal_with.num_total_points() == 255:
                     self.button_stop_adding()
@@ -2465,6 +2454,12 @@ class GenEditor(QMainWindow):
                 #route_container = self.level_file.get_route_container(obj.partof)
                 obj.partof.points.remove(obj)
 
+                if len(obj.partof.points) == 0:
+                    route_container = self.level_file.get_route_container(obj.partof)
+
+                    for object in obj.partof.used_by:
+                        object.route_obj = None
+                    route_container.remove(obj.partof)
 
             elif isinstance(obj, libkmp.Checkpoint):
                 self.level_file.checkpoints.remove_point(obj)

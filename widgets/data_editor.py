@@ -1127,17 +1127,17 @@ class AreaEdit(DataEditor):
         obj: Area = self.bound_to
         obj.type = self.area_type.currentIndex()
 
-        setting1_labels = { 2: "BFG Entry", 3: "Acceleration Modifier", 6: "BBLM Entry", 8: "Group ID", 9: "Group ID"  }
-        self.setting1.setVisible(obj.type in [2, 3, 6, 8, 9])
-        if obj.type in [2, 3, 6, 8, 9]:
+        setting1_labels = { 2: "BFG Entry", 3: "Acceleration Modifier", 6: "BBLM Entry", 8: "Group ID", 9: "Group ID" }
+        self.setting1.setVisible(obj.type in setting1_labels )
+        if obj.type in setting1_labels:
             self.setting1_label.setText(setting1_labels[ obj.type ])
-        self.setting1_label.setVisible(obj.type in [2, 3, 6, 8, 9])
+        self.setting1_label.setVisible(obj.type in setting1_labels)
 
         setting2_labels = { 3: "Moving Water Speed", 6: "Transition Time (frames)"}
-        self.setting2.setVisible(obj.type in [3, 6])
-        if obj.type in [3, 6]:
+        self.setting2.setVisible(obj.type in setting2_labels)
+        if obj.type in setting2_labels:
             self.setting2_label.setText( setting2_labels[obj.type]   )
-        self.setting2_label.setVisible(obj.type in [3, 6])
+        self.setting2_label.setVisible(obj.type in setting2_labels)
 
     def update_name(self):
         self.set_settings_visible()

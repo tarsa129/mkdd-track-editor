@@ -5,9 +5,6 @@ refactor options code to move stuff to libkmp
 
 mkwii to do list:
 
-ktpt
-- on load, sort by playerid (and abstract playerid out to index)
-
 enemy/item/checkpoint
 - add option to set enemy point as first
 - checkpoints: fix concave checkpoints
@@ -25,14 +22,16 @@ poti:
 - add radius of route points with areas for multiple point rouetes
 - when route is highlighted, highlight the objects that are used
 - make sure that at most 255 routes are being created between camears and areas
+- when the last point of a route is deleted, also delete the route
 
 jgpt:
 - render unused respawn points differently
 
 area:
 - add tabs for camera editing
-- create route if one does not exist, assign to closest enemypoint if none (at load)
-- add back helper function for load
+- create route if one does not exist
+- add back helper function for copy
+- replay area: render differently if it needs a camear
 
 came:
 - camera replaying (long shot)
@@ -46,7 +45,7 @@ error analyzer
 - routes with fewer than two points + smooth with two points
 create dialog for auto generation and auto cleanup
 move srt to bottom of viewer
-add conditional out of bounds?
+add conditional out of bounds? - not yet
 make 'c' work in 3d
 
 level view context menu (should only be stuff related to the *group* it's connected to):

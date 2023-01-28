@@ -19,8 +19,6 @@ class MoreButtons(QWidget):
     #where the list of buttons is defined
     def add_buttons(self, obj = None):
         self.clear_buttons()
-        all_options = False
-
 
         if obj is None: #nothing selected and top level stuff
             return
@@ -48,19 +46,7 @@ class MoreButtons(QWidget):
                 remove_empty.clicked.connect(lambda: self.parent.button_add_from_addi_options(23, obj) )
                 self.vbox.addWidget(remove_empty)
 
-            #should not be happen
-            elif isinstance(obj, PointGroup):
-                new_enemy_group = QPushButton(self)
-                new_enemy_group.setText("Add " + point_type + " Path")
-                new_enemy_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(0, obj) )
-                self.vbox.addWidget(new_enemy_group)
-
-                new_enemy_point = QPushButton(self)
-                new_enemy_point.setText("Add " + point_type + " Points To End Of Path")
-                new_enemy_point.clicked.connect(lambda: self.parent.button_add_from_addi_options(1, obj) )
-                self.vbox.addWidget(new_enemy_point)
             elif isinstance(obj, KMPPoint):
-                all_options = False
                 new_enemy_point = QPushButton(self)
                 new_enemy_point.setText("v: Add " + point_type + " Points Here")
                 new_enemy_point.clicked.connect(lambda: self.parent.button_add_from_addi_options(11, obj) )
@@ -74,8 +60,6 @@ class MoreButtons(QWidget):
                 self.vbox.addWidget(copy_from_item)
 
         elif isinstance(obj, CheckpointGroups):
-            all_options = False
-
             set_key_automatically = QPushButton(self)
             set_key_automatically.setText("Auto Key Checkpoints")
             set_key_automatically.clicked.connect(lambda: self.parent.button_add_from_addi_options(21, obj) )
@@ -88,27 +72,19 @@ class MoreButtons(QWidget):
 
         elif isinstance(obj, Checkpoint):
 
-            all_options = False
             set_to_closest = QPushButton(self)
             set_to_closest.setText("Assign to Closest Respawn")
             set_to_closest.clicked.connect(lambda: self.parent.button_add_from_addi_options(2, obj) )
             self.vbox.addWidget(set_to_closest)
 
-        elif isinstance(obj, Route):
-            new_route_point = QPushButton(self)
-            new_route_point.setText("Add Route Points To End")
-            new_route_point.clicked.connect(lambda: self.parent.button_add_from_addi_options(6, obj) )
-            self.vbox.addWidget(new_route_point)
         elif isinstance(obj, RoutePoint):
-            all_options = False
+
             new_point_here = QPushButton(self)
             new_point_here.setText("v: Add Route Points Here")
             new_point_here.clicked.connect(lambda: self.parent.button_add_from_addi_options(15, obj) )
             self.vbox.addWidget(new_point_here)
 
         elif isinstance(obj, MapObjects):
-            all_options = False
-
             auto_route_all = QPushButton(self)
             auto_route_all.setText("Auto Route All Objects")
             auto_route_all.clicked.connect(lambda: self.parent.button_add_from_addi_options(17, obj) )
@@ -137,34 +113,34 @@ class MoreButtons(QWidget):
 
             if route_stuff:
 
+                add_points_end = QPushButton(self)
+                add_points_end.setText("v: Add Points to End of Route")
+                add_points_end.clicked.connect(lambda: self.parent.button_add_from_addi_options(6, obj) )
+                self.vbox.addWidget(add_points_end)
+
                 do_auto_route = QPushButton(self)
                 do_auto_route.setText("Auto Route")
                 do_auto_route.clicked.connect(lambda: self.parent.button_add_from_addi_options(16, obj) )
                 self.vbox.addWidget(do_auto_route)
 
-                all_options = False
                 new_item_copy = QPushButton(self)
                 new_item_copy.setText("Copy and Place Current Object (Same Route)")
                 new_item_copy.clicked.connect(lambda: self.parent.button_add_from_addi_options(4, obj.copy()) )
                 self.vbox.addWidget(new_item_copy)
 
-
-                all_options = False
                 new_item_copy = QPushButton(self)
                 new_item_copy.setText("Copy and Place Current Object (New Route)")
                 new_item_copy.clicked.connect(lambda: self.parent.button_add_from_addi_options(4.5, obj.copy()) )
                 self.vbox.addWidget(new_item_copy)
 
             else:
-                all_options = False
+
                 new_item_copy = QPushButton(self)
                 new_item_copy.setText("Copy and Place Current Object")
                 new_item_copy.clicked.connect(lambda: self.parent.button_add_from_addi_options(4, obj.copy()) )
                 self.vbox.addWidget(new_item_copy)
 
         elif isinstance(obj, ReplayAreas):
-            all_options = False
-
             new_camera_cam_route = QPushButton(self)
             new_camera_cam_route.setText("Add Area/Stationary Cam")
             new_camera_cam_route.clicked.connect(lambda: self.parent.button_add_from_addi_options(12.5) )
@@ -176,49 +152,48 @@ class MoreButtons(QWidget):
             self.vbox.addWidget(new_camera_cam_route)
 
         elif isinstance(obj, Areas):
-            all_options = False
             new_area = QPushButton(self)
-            new_area.setText("Add Environment Effect Area (Type 1)")
+            new_area.setText("Add Environment Effect Area")
             new_area.clicked.connect(lambda: self.parent.button_add_from_addi_options(7, 1) )
             self.vbox.addWidget(new_area)
 
             new_area_2 = QPushButton(self)
-            new_area_2.setText("Add BFG Swapper Area (Type 2)")
+            new_area_2.setText("Add BFG Swapper Area")
             new_area_2.clicked.connect(lambda: self.parent.button_add_from_addi_options(7, 2) )
             self.vbox.addWidget(new_area_2)
 
             new_area_3 = QPushButton(self)
-            new_area_3.setText("Add Moving Road Area With Route (Type 3)")
+            new_area_3.setText("Add Moving Road Area With Route")
             new_area_3.clicked.connect(lambda: self.parent.button_add_from_addi_options(7, 3) )
             self.vbox.addWidget(new_area_3)
 
             new_area_4 = QPushButton(self)
-            new_area_4.setText("Add Destination Point Area (Type 4)")
+            new_area_4.setText("Add Destination Point Area")
             new_area_4.clicked.connect(lambda: self.parent.button_add_from_addi_options(7, 4) )
             self.vbox.addWidget(new_area_4)
 
             new_area_5 = QPushButton(self)
-            new_area_5.setText("Add Minimap Control Area (Type 5)")
+            new_area_5.setText("Add Minimap Control Area")
             new_area_5.clicked.connect(lambda: self.parent.button_add_from_addi_options(7, 5) )
             self.vbox.addWidget(new_area_5)
 
             new_area_6 = QPushButton(self)
-            new_area_6.setText("Add BBLM Swapper (Type 6)")
+            new_area_6.setText("Add BBLM Swapper")
             new_area_6.clicked.connect(lambda: self.parent.button_add_from_addi_options(7, 6) )
             self.vbox.addWidget(new_area_6)
 
             new_area_7 = QPushButton(self)
-            new_area_7.setText("Add Flying Boos Area (Type 7)")
+            new_area_7.setText("Add Flying Boos Area")
             new_area_7.clicked.connect(lambda: self.parent.button_add_from_addi_options(7, 7) )
             self.vbox.addWidget(new_area_7)
 
             new_area_8 = QPushButton(self)
-            new_area_8.setText("Add Object Grouper/Unloading Areas (Types 8/9)")
+            new_area_8.setText("Add Object Grouper/Unloading Areas")
             new_area_8.clicked.connect(lambda: self.parent.button_add_from_addi_options(7.5) )
             self.vbox.addWidget(new_area_8)
 
             new_area_a = QPushButton(self)
-            new_area_a.setText("Add Fall Boundary Area (Type 10)")
+            new_area_a.setText("Add Fall Boundary Area")
             new_area_a.clicked.connect(lambda: self.parent.button_add_from_addi_options(7, 10) )
             self.vbox.addWidget(new_area_a)
 
@@ -238,9 +213,6 @@ class MoreButtons(QWidget):
 
 
         elif isinstance(obj, Camera):
-
-            all_options = False
-
 
             if obj.has_route():
             #auto route camera
@@ -267,9 +239,6 @@ class MoreButtons(QWidget):
 
         elif isinstance(obj, Cameras):
 
-            all_options = False
-            #auto route all
-
             remove_unused_cams = QPushButton(self)
             remove_unused_cams.setText("Remove Unused Cameras")
             remove_unused_cams.clicked.connect(lambda: self.parent.button_add_from_addi_options(25, obj) )
@@ -279,12 +248,12 @@ class MoreButtons(QWidget):
             auto_route_all.setText("Auto Route All Cameras")
             auto_route_all.clicked.connect(lambda: self.parent.button_add_from_addi_options(17, obj) )
             self.vbox.addWidget(auto_route_all)
-
+            """
             snap_camera = QPushButton(self)
             snap_camera.setText("Snap All Cameras to Route")
             snap_camera.clicked.connect(lambda: self.parent.button_add_from_addi_options(20, obj) )
             self.vbox.addWidget(snap_camera)
-
+            """
             new_camera = QPushButton(self)
             new_camera.setText("Add Opening Camera Type 4 (KartPathFollow)")
             new_camera.clicked.connect(lambda: self.parent.button_add_from_addi_options(8, 4) )
@@ -300,31 +269,7 @@ class MoreButtons(QWidget):
             new_goal.clicked.connect(lambda: self.parent.button_add_from_addi_options(8, 0) )
             self.vbox.addWidget(new_goal)
 
-        elif isinstance(obj, ObjectContainer) and obj.assoc is ObjectRoute:
-            new_route_group = QPushButton(self)
-            new_route_group.setText("Add Object Route")
-            new_route_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(5) )
-            self.vbox.addWidget(new_route_group)
-
-            remove_unsed = QPushButton(self)
-            remove_unsed.setText("Removed Unused Object Routes")
-            remove_unsed.clicked.connect(lambda: self.parent.button_add_from_addi_options(23, obj) )
-            self.vbox.addWidget(remove_unsed)
-
-        elif isinstance(obj, ObjectContainer) and obj.assoc is CameraRoute:
-            new_cameraroute_group = QPushButton(self)
-            new_cameraroute_group.setText("Add Camera Route")
-            new_cameraroute_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(5.5) )
-            self.vbox.addWidget(new_cameraroute_group)
-
-            remove_unsed = QPushButton(self)
-            remove_unsed.setText("Removed Unused Camera Routes")
-            remove_unsed.clicked.connect(lambda: self.parent.button_add_from_addi_options(23.5, obj) )
-            self.vbox.addWidget(remove_unsed)
-
-            #copy camera
         elif isinstance(obj, ObjectContainer) and obj.assoc is JugemPoint:
-            all_options = False
 
             new_respawn_assign = QPushButton(self)
             new_respawn_assign.setText("v: Add Respawn and Assign to Closest Checkpoints")
@@ -351,45 +296,11 @@ class MoreButtons(QWidget):
             remove_unused.clicked.connect(lambda: self.parent.button_add_from_addi_options(26, obj) )
             self.vbox.addWidget(remove_unused)
         elif isinstance(obj, JugemPoint):
-            all_options = False
 
             assign_only = QPushButton(self)
             assign_only.setText("Assign to Checkpoints Where Closest")
             assign_only.clicked.connect(lambda: self.parent.button_add_from_addi_options(2, obj) )
             self.vbox.addWidget(assign_only)
-
-        if all_options:
-            self.add_top_level_items()
-    def add_top_level_items(self):
-        new_enemy_group = QPushButton(self)
-        new_enemy_group.setText("Add Enemy Group")
-        new_enemy_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(0) )
-        self.vbox.addWidget(new_enemy_group)
-
-        new_check_group = QPushButton(self)
-        new_check_group.setText("Add Checkpoint Group")
-        new_check_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(2) )
-        self.vbox.addWidget(new_check_group)
-
-        new_route_group = QPushButton(self)
-        new_route_group.setText("Add Object Route")
-        new_route_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(5) )
-        self.vbox.addWidget(new_route_group)
-
-        new_cameraroute_group = QPushButton(self)
-        new_cameraroute_group.setText("Add Camera Route")
-        new_cameraroute_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(5.5) )
-        self.vbox.addWidget(new_cameraroute_group)
-
-        new_respawn = QPushButton(self)
-        new_respawn.setText("Add Respawn")
-        new_respawn.clicked.connect(lambda: self.parent.button_add_from_addi_options(9) )
-        self.vbox.addWidget(new_respawn)
-
-        new_camera_cam_route = QPushButton(self)
-        new_camera_cam_route.setText("Add Area/Cam/Route")
-        new_camera_cam_route.clicked.connect(lambda: self.parent.button_add_from_addi_options(12) )
-        self.vbox.addWidget(new_camera_cam_route)
 
     def add_buttons_multi(self, objs):
         self.clear_buttons()
