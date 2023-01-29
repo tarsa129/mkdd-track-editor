@@ -858,6 +858,7 @@ class Checkpoint(KMPPoint):
         self.end = end
         self.mid = (start+end)/2.0
         self.respawn = respawn
+        self.respawn_obj = None
         self.type = type
         self.lapcounter = 0
 
@@ -876,8 +877,8 @@ class Checkpoint(KMPPoint):
         mid = (self.start + self.end) / 2
         distances = [ respawn.position.distance_2d( mid  ) for respawn in respawns ]
         if len(distances) > 0:
-            smallest = [ i for i, x in enumerate(distances) if x == min(distances)]
-            self.respawn = smallest[0]
+            smallest = [ x for i, x in enumerate(distances) if x == min(distances)]
+            self.respawn_obj = smallest[0]
 
     def get_mid(self):
         return (self.start+self.end)/2.0
@@ -2675,16 +2676,11 @@ class KMP(object):
                 checkpoint.respawn = old_assign if checkpoint.respawn != rsp_id or old_assign == rsp_id else checkpoint.respawn
 
     def remove_respawn(self, rsp: JugemPoint):
-        respawn_idx = self.get_index_of_respawn(rsp)
         self.respawnpoints.remove(rsp)
-        if respawn_idx != -1:
-            #edit the respawn link of all checkpoints
-            for checkgroup in self.checkpoints.groups:
-                for checkpoint in checkgroup.points:
-                    if checkpoint.respawn > respawn_idx:
-                        checkpoint.respawn -= 1
-                    elif checkpoint.respawn == respawn_idx:
-                        checkpoint.assign_to_closest(self.respawnpoints)
+        for checkgroup in self.checkpoints.groups:
+            for checkpoint in checkgroup.points:
+                if checkpoint.respawn_obj == rsp:
+                    checkpoint.assign_to_closest(self.respawnpoints)
 
     def get_index_of_respawn(self, rsp: JugemPoint):
         for i, respawn in enumerate( self.respawnpoints) :

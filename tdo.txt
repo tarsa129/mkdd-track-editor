@@ -1,19 +1,18 @@
 mkdd-master to do list:
 drag n drop opening
-refactor libkmp objectcontainers so that all groups are objectcontainers
 refactor options code to move stuff to libkmp
-
-mkwii to do list:
 
 enemy/item/checkpoint
 - add option to set enemy point as first
 - checkpoints: fix concave checkpoints
 - checkpoints: add lap completion %
+- checkpoints: also highlight the lines going from the checkpoints
+- checkpoints: remove reliance on respawnid
 
 gobj:
 - manually improve all descriptions / settings / and add default values
-- line drawing for item boxes via "i"
 - create side buttons for object placement based on type (create icons)
+- line drawing for item boxes via "i"
 - support for optional routes
 
 poti:
@@ -25,28 +24,34 @@ poti:
 
 jgpt:
 - render unused respawn points differently
+- render the box
 
 area:
 - add tabs for camera editing
 - create route if one does not exist
-- add back helper function for copy
-- replay area: render differently if it needs a camear
+- add back helper functions for copy
+- replay area: render differently if it needs a camera
 
 came:
 - camera replaying (long shot)
 - render unused cameras differently
-- force camera to route if position unused
 - remove rotation
+
+cnpt:
+- add stuff in general (make sure it works in top ortho)
 
 before release: match lorenzis with colors
 
 general:
 error analyzer
 - routes with fewer than two points + smooth with two points
+- clicking on errors selects what's wrong?
+- checkpoints: make sure that the # of keycps on each split path are balanced
 create dialog for auto generation and auto cleanup
 move srt to bottom of viewer
 add conditional out of bounds? - not yet
 make 'c' work in 3d
+make sure that arrows work in toportho (do not consider y value)
 
 level view context menu (should only be stuff related to the *group* it's connected to):
 enemy/item/checkpoint: select/delete group.

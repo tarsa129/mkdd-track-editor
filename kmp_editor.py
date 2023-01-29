@@ -860,7 +860,8 @@ class GenEditor(QMainWindow):
                 ",".join(str(t) for t in collision_model.hidden_collision_type_groups)
 
             if self.level_view.collision is not None:
-                self.level_view.collision.hidden_coltypes = target_set
+                self.level_view.collision.hidden_coltypes = self.configuration["editor"]["hidden_collision_types"]
+                self.level_view.collision.hidden_colgroups = self.configuration["editor"]["hidden_collision_type_groups"]
 
             save_cfg(self.configuration)
             self.update_3d()
@@ -1446,8 +1447,11 @@ class GenEditor(QMainWindow):
             set(int(t) for t in editor_config.get("hidden_collision_types", "").split(",") if t)
         alternative_mesh.hidden_collision_type_groups = \
             set(int(t) for t in editor_config.get("hidden_collision_type_groups", "").split(",") if t)
+
         self.level_view.collision.hidden_coltypes = \
             set(int(t) for t in editor_config.get("hidden_collision_types", "").split(",") if t)
+        self.level_view.collision.hidden_colgroups = \
+            set(int(t) for t in editor_config.get("hidden_collision_type_groups", "").split(",") if t)
         save_cfg(self.configuration)
 
     def action_close_edit_startpos_window(self):
@@ -3003,7 +3007,7 @@ class GenEditor(QMainWindow):
                 if to_deal_with is not None:
                     self.connect_two_groups(endpoint, to_deal_with)
             elif isinstance(endpoint, JugemPoint) and isinstance(self.connect_start, Checkpoint):
-                self.connect_start.respawn = self.level_file.get_index_of_respawn(endpoint)
+                self.connect_start.respawn_obj = endpoint
             elif isinstance(endpoint, RoutePoint) and isinstance(self.connect_start, (MapObject, Camera)):
                 if isinstance(endpoint.partof, ObjectRoute) and isinstance(self.connect_start, MapObject):
                     if self.connect_start.route_obj is not None:

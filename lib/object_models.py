@@ -36,6 +36,8 @@ class ObjectModels(object):
         self.areas = GenericObject(colors["Areas"])
 
         self.respawn = GenericObject(colors["Respawn"])
+        self.unusedrespawn = GenericObject(colors["UnusedRespawn"])
+
         self.startpoints = GenericObject(colors["StartPoints"])
         self.cannons = GenericObject(colors["Cannons"])
         self.missions = GenericObject(colors["Missions"])
@@ -75,7 +77,7 @@ class ObjectModels(object):
                     self.models[objectname] = TexturedModel.from_obj_path(os.path.join(dirpath, file), rotate=True)
         for cube in (self.cube, self.checkpointleft, self.checkpointright, self.camerapoint, self.objectpoint, self.enemypoint, self.itempoint,
                      self.objects, self.areas, self.respawn, self.startpoints, self.camera, self.unusedpoint, self.areapoint,
-                     self.unusedobjectpoint,
+                     self.unusedobjectpoint, self.unusedrespawn,
                      self.cannons, self.missions):
             cube.generate_displists()
 
@@ -222,6 +224,7 @@ class ObjectModels(object):
     def render_generic_position_colored_id(self, position, id):
         glPushMatrix()
         glTranslatef(position.x, -position.z, position.y)
+        glScale(2.0, 2.0, 2.0)
         #glTranslatef(position.x, position.y, position.z)
         self.cube.render_coloredid(id)
 
@@ -237,7 +240,7 @@ class ObjectModels(object):
         #glMultMatrixf(mtx)
 
         do_rotation(rotation)
-
+        glScale(2.0, 2.0, 2.0)
         self.cube.render_coloredid(id)
 
         glPopMatrix()

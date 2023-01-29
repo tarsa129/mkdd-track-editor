@@ -155,6 +155,7 @@ class Collision(object):
         #print(grid_size_x, grid_size_z)
 
         self.hidden_coltypes = set()
+        self.hidden_colgroups = set()
 
     def collide_ray_downwards(self, x, z, y=99999999):
         grid_x = int((x+MAX_X) // self.cell_size)
@@ -215,8 +216,9 @@ class Collision(object):
         hit = None
         for i, face in triangles:#face in self.faces:#
             #print(face)
-            if len(face) > 3 and (face[3] in self.hidden_coltypes):
-                continue
+            if len(face) > 3:
+                if (face[3] in self.hidden_coltypes) or ( face[3] & 0x1F in self.hidden_colgroups):
+                    continue
 
             v1 = face[0]
             v2 = face[1]

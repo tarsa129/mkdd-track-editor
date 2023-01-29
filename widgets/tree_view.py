@@ -288,10 +288,10 @@ class CameraEntry(NamedItem):
         bound_to.widget = self
 
     def update_name(self):
-        text_descrip = "Camera {0}: ".format(self.index)
+        text_descrip = ""
         camera : Camera = self.bound_to
         if camera.type < len(CAME_TYPES) and camera.type >= 0:
-            text_descrip += "(Type: {0} - {1})".format( camera.type, CAME_TYPES[camera.type])
+            text_descrip += "{1}".format( camera.type, CAME_TYPES[camera.type])
             if camera.type in routed_cameras:
                 if camera.route_obj is not None:
                     text_descrip += " (Routed)"
