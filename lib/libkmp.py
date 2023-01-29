@@ -857,7 +857,7 @@ class Checkpoint(KMPPoint):
         self.start = start
         self.end = end
         self.mid = (start+end)/2.0
-        self.respawn = respawn
+        self.respawnid = respawn
         self.respawn_obj = None
         self.type = type
         self.lapcounter = 0
@@ -877,8 +877,8 @@ class Checkpoint(KMPPoint):
         mid = (self.start + self.end) / 2
         distances = [ respawn.position.distance_2d( mid  ) for respawn in respawns ]
         if len(distances) > 0:
-            smallest = [ x for i, x in enumerate(distances) if x == min(distances)]
-            self.respawn_obj = smallest[0]
+            smallest = [ i for i, x in enumerate(distances) if x == min(distances)]
+            self.respawn_obj = respawns[smallest[0]]
 
     def get_mid(self):
         return (self.start+self.end)/2.0
@@ -890,7 +890,7 @@ class Checkpoint(KMPPoint):
         checkpoint.start = Vector3(*unpack(">f", f.read(4) ), 0, *unpack(">f", f.read(4) ) )
         checkpoint.end = Vector3(*unpack(">f", f.read(4) ), 0, *unpack(">f", f.read(4) ) )
 
-        checkpoint.respawn = read_uint8(f) #respawn
+        checkpoint.respawnid = read_uint8(f) #respawn
 
         checkpoint_type = read_uint8(f)
         if checkpoint_type == 0:
@@ -907,7 +907,7 @@ class Checkpoint(KMPPoint):
     def write(self, f, prev, next, key, lap_counter = False ):
         f.write(pack(">ff", self.start.x, self.start.z))
         f.write(pack(">ff", self.end.x, self.end.z))
-        f.write(pack(">b", self.respawn))
+        f.write(pack(">b", self.respawnid))
 
         if self.lapcounter == 1:
             f.write(pack(">b", 0))
@@ -938,7 +938,7 @@ class CheckpointGroup(PointGroup):
         return super().copy_group_after(new_id, point, group)
 
     def get_used_respawns(self):
-        return set( [checkpoint.respawn for checkpoint in self.points]  )
+        return set( [checkpoint.respawn_obj for checkpoint in self.points]  )
 
     def num_key_cps(self):
         return sum( [1 for ckpt in self.points if ckpt.type > 0]  )
@@ -964,6 +964,9 @@ class CheckpointGroup(PointGroup):
 
         return checkpointgroup
 
+    def set_rspid(self, rsps):
+        for point in self.points:
+            point.respawnid = rsps.index(point.respawn_obj)
 
     def write_ckpt(self, f, key, prev):
 
@@ -1092,6 +1095,11 @@ class CheckpointGroups(PointGroups):
             used_respawns.extend( group.get_used_respawns() )
 
         return set(used_respawns)
+
+    def set_rspid(self, rsps):
+        for group in self.groups:
+            group.set_rspid(rsps)
+
 
 # Section 3
 # Routes/Paths for cameras, objects and other things
@@ -2103,8 +2111,8 @@ class KMP(object):
             assert camera is not None
             yield camera
 
-        for respawn in self.respawnpoints:
-            assert respawn is not None
+        for respawnid in self.respawnpoints:
+            assert respawnid is not None
             yield respawn
 
         for cannon in self.cannonpoints:
@@ -2459,6 +2467,16 @@ class KMP(object):
             self.cameraroutes.remove(route)
 
 
+        """set respawn_obj for checkpoints"""
+        for group in self.checkpoints.groups:
+            for point in group.points:
+                if point.respawnid > -1 and point.respawnid < len(self.respawnpoints):
+                    point.respawn_obj = self.respawnpoints[point.respawnid]
+                else:
+                    return_string += "A checkpoint was found to have an invalid respawn reference\
+                        it has been reassigned to the closest resapwn point.\n"
+                    point.assign_to_closest(self.respawnpoints)
+
         return return_string
 
     @classmethod
@@ -2489,6 +2507,7 @@ class KMP(object):
         offsets.append(itph_off) #offset 5 for itph
 
         offsets.append(f.tell()) #offset 6 for ckpt
+        self.checkpoints.set_rspid(self.respawnpoints)
         ktph_offset = self.checkpoints.write(f)
         offsets.append(ktph_offset) #offset 7 for ktph
 
@@ -2626,13 +2645,11 @@ class KMP(object):
         self.areas.remove_invalid()
         self.remove_invalid_objects()
 
-    #respawn code
+    #respawnid code
     def create_respawns(self):
 
         #remove all respwans
         self.respawnpoints.clear()
-        rsp_idx = 0
-
         for checkgroup in self.checkpoints.groups:
             num_checks = len(checkgroup.points)
             for i in range(4, num_checks, 8):
@@ -2643,16 +2660,14 @@ class KMP(object):
 
                 for j in range( i - 4, i + 4):
                     if j < num_checks:
-                        checkgroup.points[j].respawn = rsp_idx
-
-                rsp_idx += 1
+                        checkgroup.points[j].respawn_obj = respawn_new
 
                 self.rotate_one_respawn(respawn_new)
                 self.respawnpoints.append(respawn_new)
 
             #the ones at the end of the group have the same one as the previous
             for i in range( (int)(num_checks / 8), num_checks):
-                checkgroup.points[i].respawn = rsp_idx - 1
+                checkgroup.points[i].respawn_obj = respawn_new
 
     def reassign_respawns(self):
         if len(self.checkpoints.groups) == 0:
@@ -2673,7 +2688,7 @@ class KMP(object):
             for checkpoint in checkgroup.points:
                 old_assign = checkpoint.respawn
                 checkpoint.assign_to_closest(self.respawnpoints)
-                checkpoint.respawn = old_assign if checkpoint.respawn != rsp_id or old_assign == rsp_id else checkpoint.respawn
+                checkpoint.respawnid = old_assign if checkpoint.respawnid != rsp_id or old_assign == rsp_id else checkpoint.respawn
 
     def remove_respawn(self, rsp: JugemPoint):
         self.respawnpoints.remove(rsp)

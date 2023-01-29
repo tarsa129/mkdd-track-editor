@@ -1717,7 +1717,6 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     glEnd()
                     if selected:
                         glLineWidth(1.0)
-
             if vismenu.respawnpoints.is_visible():
                 used_respawns = self.level_file.checkpoints.get_used_respawns()
                 for i, object in enumerate( self.level_file.respawnpoints):
@@ -1728,9 +1727,9 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                                                                 object.position, object.rotation,
                                                                 object in select_optimize)
 
-                    if i in respawns_to_highlight:
+                    if object in respawns_to_highlight:
                         glColor3f(1.0, 1.0, 0.0) # will be replaced with the respawn color
-                        self.models.draw_sphere(object.position, 300)
+                        self.models.draw_sphere(object.position, 600)
 
             if vismenu.cannonpoints.is_visible():
                 for object in self.level_file.cannonpoints:
