@@ -23,7 +23,6 @@ poti:
 - make sure that at most 255 routes are being created between camears and areas
 
 jgpt:
-- render unused respawn points differently
 - render the box
 
 area:

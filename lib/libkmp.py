@@ -2462,7 +2462,7 @@ class KMP(object):
             self.remove_camera(camera)
 
         """split camera routes into replay routes and other routes"""
-        self.replaycameraroutes.extend( [camera.route_obj for camera in self.replaycameras]  )
+        self.replaycameraroutes.extend( [camera.route_obj for camera in self.replaycameras if camera.route_obj is not None]  )
         for route in self.replaycameraroutes:
             self.cameraroutes.remove(route)
 
