@@ -1853,12 +1853,8 @@ class Camera(object):
 
         f.write(pack(">ff", self.fov.start, self.fov.end))
 
-
+        f.write(pack(">fff", self.position2.x, self.position2.y, self.position2.z))
         f.write(pack(">fff", self.position3.x, self.position3.y, self.position3.z))
-        if self.type == 4:
-            f.write(pack(">fff", self.position3.x, self.position3.y, self.position3.z))
-        else:
-            f.write(pack(">fff", self.position2.x, self.position2.y, self.position2.z))
         f.write(pack(">f", self.camduration) )
 
         return 1
