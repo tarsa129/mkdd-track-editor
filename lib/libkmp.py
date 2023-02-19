@@ -237,9 +237,8 @@ class KMPPoint(object):
 class PointGroup(object):
     def __init__(self):
         self.points = []
-        self.id = 0
-        self.prevgroup = [-1, -1, -1, -1, -1, -1]
-        self.nextgroup = [-1, -1, -1, -1, -1, -1]
+        self.prevgroup = []
+        self.nextgroup = []
 
     def insert_point(self, enemypoint, index=-1):
         self.points.insert(index, enemypoint)
@@ -248,10 +247,9 @@ class PointGroup(object):
         point = self.points.pop(index)
         self.points.insert(targetindex, point)
 
-    def copy_group(self, new_id, group):
-        group.id = new_id
+    def copy_group(self, group):
         for point in self.points:
-            new_point = deepcopy(point)
+            #new_point = deepcopy(point)
             group.points.append(point)
 
         group.prevgroup = self.prevgroup.copy()
@@ -259,64 +257,54 @@ class PointGroup(object):
 
         return group
 
-    def copy_group_after(self, new_id, point, group):
-        group.id = new_id
+    def copy_group_after(self, point, new_group):
         pos = self.points.index(point)
 
         # Check if the element is the last element
         if not len(self.points)-1 == pos:
             for point in self.points[pos+1:]:
-                group.points.append(point)
+                new_group.points.append(point)
 
-        group.nextgroup = self.nextgroup.copy()
-        group.prevgroup = [self.id] + [-1] * 5
+        #this is the new group
+        new_group.nextgroup = self.nextgroup.copy()
+        new_group.prevgroup = [self]
 
-        self.nextgroup = [new_id] + [-1] * 5
-        self.prevgroup = [new_id if id == self.id else id for id in self.prevgroup]
+        #this is the current group
+        self.nextgroup = [new_group]
+        self.prevgroup = [new_group if group == self else group for group in self.prevgroup]
 
-        return group
+        return new_group
 
     def remove_after(self, point):
         pos = self.points.index(point)
         self.points = self.points[:pos+1]
 
     def copy_into_group(self, group):
-        for point in group.points:
-            self.points.append(point)
+        self.points.extend(group.points)
 
     def num_prev(self):
-        return sum ( [1 for id in self.prevgroup if id != -1]  )
+        return len(self.prevgroup)
 
     def num_next(self):
-        return sum ( [1 for id in self.nextgroup if id != -1]  )
+        return len(self.nextgroup)
 
-    def add_new_prev(self, id):
-        if id in self.prevgroup or id == -1:
-            return
-        self.prevgroup = [id for id in self.prevgroup if id != -1]
-        if len(self.prevgroup) == 6:
+    def add_new_prev(self, new_group):
+        if new_group is None or self.num_prev() == 6 or new_group in self.prevgroup:
             return False
-        self.prevgroup.append(id)
-        self.prevgroup += [-1] * (6 - len(self.prevgroup))
+        self.prevgroup.append(new_group)
 
-    def add_new_next(self, id):
-        if id in self.nextgroup or id == -1:
-            return
-        self.nextgroup = [id for id in self.nextgroup if id != -1]
-        if len(self.nextgroup) == 6:
+    def add_new_next(self, new_group):
+        if new_group is None or self.num_next() == 6 or new_group in self.nextgroup:
             return False
-        self.nextgroup.append(id)
-        self.nextgroup += [-1] * (6 - len(self.nextgroup))
+        self.nextgroup.append(new_group)
 
-    def remove_prev(self, id):
-        if id in self.prevgroup:
-            self.prevgroup.remove(id)
-            self.prevgroup.append(-1)
+    def remove_prev(self, group):
+        if group in self.prevgroup:
+            self.prevgroup.remove(group)
 
-    def remove_next(self, id):
-        if id in self.nextgroup:
-            self.nextgroup.remove(id)
-            self.nextgroup.append(-1)
+    def remove_next(self, group):
+        if group in self.nextgroup:
+            self.nextgroup.remove(group)
 
 class PointGroups(object):
     def __init__(self):
@@ -328,29 +316,16 @@ class PointGroups(object):
             for point in group.points:
                 yield point
 
-    def new_group_id(self):
-        return len(self.groups)
-
     def split_group(self, group : PointGroup, point : KMPPoint):
-        new_id = self.new_group_id()
-        new_group = group.copy_group_after(new_id, point)
+        new_group = self.get_new_group()
+        new_group = group.copy_group_after(point, new_group)
 
         self.groups.append(new_group)
         group.remove_after(point)
 
         for other_group in self.groups:
-            if other_group != group and other_group != new_group:
-                other_group.prevgroup = [new_id if id == group.id else id for id in other_group.prevgroup]
-
-    def check_if_duplicate_possible(self, group):
-        num_prevs_of_nexts = max( [ self.groups[idx].num_prev() for idx in group.nextgroup if idx != -1 ] )
-        num_nexts_of_prevs = max( [ self.groups[idx].num_next() for idx in group.prevgroup if idx != -1 ] )
-        return num_prevs_of_nexts < 6 and num_nexts_of_prevs < 6
-
-    def duplicate_group(self, group):
-        new_id = self.new_group_id()
-        new_group = group.copy_group(new_id)
-        self.groups.append(new_group)
+            if group in other_group.prevgroup:
+                other_group.prevgroup = [new_group if grp == group else grp for grp in other_group.prevgroup ]
 
     def find_group_of_point(self, point):
         for i, group in enumerate(self.groups):
@@ -358,11 +333,13 @@ class PointGroups(object):
                 if point == curr_point:
                     return i, group, j
         return None, None, None
+
     def merge_groups(self):
         #print("new merge cycle")
         if len(self.groups) < 2:
             return
 
+        first_group = self.groups[0]
         i = 0
         while i < len(self.groups):
             if len(self.groups) < 2:
@@ -370,15 +347,15 @@ class PointGroups(object):
 
             group = self.groups[i]
             #print("compare the ids, they should be the same", i, group.id)
-            if group.num_next() == 1 and self.groups[ group.nextgroup[0] ].num_prev() == 1:
-                if 0 in group.nextgroup:
+            #if this group only has one next, and the nextgroup only has one prev, they can be merged
+            if group.num_next() == 1 and group.nextgroup[0].num_prev() == 1:
+                if first_group in group.nextgroup:
+                    #print("do not merge with the starte")
                     i += 1 #do not merge with the start
                     continue
-                del_group = self.groups[ group.nextgroup[0] ]
-
-                #print('merge ' + str(i) + " and " + str(del_group.id))
-                if group.id == del_group.id:
-                    print("ERROR: TRYING TO MERGE INTO ITSELF", group.id)
+                del_group = group.nextgroup[0]
+                if group == del_group:
+                    print("ERROR: TRYING TO MERGE INTO ITSELF", i)
                     return
                     #continue
 
@@ -389,19 +366,9 @@ class PointGroups(object):
                 #replace this group's next with the deleted group's next
                 group.nextgroup = del_group.nextgroup.copy()
 
-                #around the deleted groups:
-                for this_group in self.groups:
-                    if this_group.id > del_group.id:
-                        this_group.id -= 1
                 for this_group in self.groups:
                     #replace links to the deleted group with the group it was merged into
-                    this_group.prevgroup = [ id if id != del_group.id else group.id for id in this_group.prevgroup]
-
-                    #this_group.nextgroup = [ id if id != del_group.id else this_group.id for id in group.nextgroup]
-
-                    #deal with others
-                    this_group.prevgroup = [ id if id < del_group.id or id == -1 else id - 1 for id in this_group.prevgroup ]
-                    this_group.nextgroup = [ id if id < del_group.id or id == -1 else id - 1 for id in this_group.nextgroup  ]
+                    this_group.prevgroup = [ group if grp == del_group else grp for grp in this_group.prevgroup]
             else:
                 i += 1
 
@@ -413,39 +380,28 @@ class PointGroups(object):
 
     def add_new_group(self):
         new_group = self.get_new_group()
-        new_group.id = self.new_group_id()
         self.groups.append( new_group )
 
         if len(self.groups) == 1:
-            new_group.add_new_next(0)
-            new_group.add_new_prev(0)
+            new_group.add_new_next(new_group)
+            new_group.add_new_prev(new_group)
 
     def remove_group(self, del_group, merge = True):
         self.groups.remove(del_group)
 
         for group in self.groups :
-            if group.id > del_group.id:
-                group.id -= 1
 
             #remove previous links to the deleted group
-            group.prevgroup = [ id for id in group.prevgroup if id != del_group.id]
-            group.nextgroup = [ id for id in group.nextgroup if id != del_group.id]
+            group.prevgroup = [ grp for grp in group.prevgroup if grp != del_group]
+            group.nextgroup = [ grp for grp in group.nextgroup if grp != del_group]
 
-            #pad back to 6 entries
-            group.prevgroup += [-1] * (6- len(group.prevgroup))
-            group.nextgroup += [-1] * (6- len(group.nextgroup))
-
-
-            #deal with others
-            group.prevgroup = [ id if id < del_group.id or id == -1 else id - 1 for id in group.prevgroup ]
-            group.nextgroup = [ id if id < del_group.id or id == -1 else id - 1 for id in group.nextgroup  ]
 
         if merge:
             self.merge_groups()
 
         if len(self.groups) == 1:
-            self.groups[0].add_new_next(0)
-            self.groups[0].add_new_prev(0)
+            self.groups[0].add_new_next(self.groups[0])
+            self.groups[0].add_new_prev(self.groups[0])
 
     def remove_point(self, point):
         group_idx, group, point_idx = self.find_group_of_point(point)
@@ -471,10 +427,9 @@ class PointGroups(object):
                 to_visit.pop(0)
             visited.append(idx)
 
-            to_visit.extend( [id for id in self.groups[idx].nextgroup if id != -1 and id not in visited] )
+            to_visit.extend( [grp for grp in to_visit.nextgroup if grp not in visited] )
 
-        unused_groups = [self.groups[i] for i in list( range(1, len(self.groups) )) if i not in visited]
-        num_points = [len(group.points) for group in unused_groups]
+        unused_groups = [grp for grp in self.groups if grp not in visited]
         for group in unused_groups:
             if group in self.groups:
                 #do not merge until the end
@@ -510,6 +465,21 @@ class PointGroups(object):
 
     def remove_all(self):
         self.groups = []
+
+    def set_this_as_first(self, point: KMPPoint):
+        if self.get_index_from_point(point) == 0:
+            return
+        group_idx, group, point_idx = self.find_group_of_point(point)
+        if point_idx == 0:
+            self.groups.remove(group)
+            self.groups.insert(0, group)
+        else:
+            self.split_group(group, group.points[point_idx - 1])
+            new_group = self.groups.pop()
+            self.groups.insert(0, new_group)
+
+        self.merge_groups()
+
 
 # Section 1
 # Enemy/Item Route Code Start
@@ -580,27 +550,33 @@ class EnemyPointGroup(PointGroup):
 
         return group
 
-    def copy_group(self, new_id):
+    def copy_group(self):
         group = EnemyPointGroup()
-        return super().copy_group(new_id, group)
+        return super().copy_group( group)
 
-    def copy_group_after(self, new_id, point):
+    def copy_group_after(self, point, group):
         group = EnemyPointGroup()
-        return super().copy_group_after(new_id, point, group)
+        return super().copy_group_after(point, group)
 
     def write_points_enpt(self, f):
         for point in self.points:
             point.write(f)
         return len(self.points)
 
-    def write_enph(self, f, index):
-         f.write(pack(">B", index ) )
-         f.write(pack(">B", len(self.points) ) )
-         for i in range(6):
-            f.write(pack(">b", self.prevgroup[i]))
-         for i in range(6):
-            f.write(pack(">b", self.nextgroup[i]))
-         f.write(pack(">H",  0) )
+    def write_enph(self, f, index, groups):
+        f.write(pack(">B", index) )
+        f.write(pack(">B", len(self.points) ) )
+        for grp in self.prevgroup:
+           f.write(pack(">B", groups.get_idx(grp)))
+        for i in range( 6 - len(self.prevgroup) ):
+           f.write(pack(">b", -1))
+
+        for grp in self.nextgroup:
+           f.write(pack(">B", groups.get_idx(grp)))
+        for i in range( 6 - len(self.nextgroup) ):
+           f.write(pack(">b", -1))
+
+        f.write(pack(">H",  0) )
 
 class EnemyPointGroups(PointGroups):
     level_file = None
@@ -683,7 +659,7 @@ class EnemyPointGroups(PointGroups):
         f.write(pack(">H", 0) )
 
         for idx, group in enumerate( self.groups ):
-            group.write_enph(f, point_indices[idx])
+            group.write_enph(f, point_indices[idx], self)
 
         return enph_offset
 
@@ -755,30 +731,35 @@ class ItemPointGroup(PointGroup):
 
         return group
 
-    def copy_group(self, new_id):
+    def copy_group(self):
         group = ItemPointGroup()
-        return super().copy_group(new_id, group)
+        return super().copy_group(group)
 
-    def copy_group_after(self, new_id, point):
+    def copy_group_after(self, point, group):
         group = ItemPointGroup()
-        return super().copy_group_after(new_id, point, group)
+        return super().copy_group_after( point, group)
 
     def write_itpt(self, f):
         for point in self.points:
             point.write(f)
         return len(self.points)
 
-    def write_itph(self, f, index):
-         self.prevgroup += [-1] * (6 - len(self.prevgroup) )
-         self.nextgroup += [-1] * (6 - len(self.nextgroup) )
+    def write_itph(self, f, index, groups):
 
-         f.write(pack(">B", index ) )
-         f.write(pack(">B", len(self.points) ) )
-         for i in range(6):
-            f.write(pack(">b", self.prevgroup[i]))
-         for i in range(6):
-            f.write(pack(">b", self.nextgroup[i]))
-         f.write(pack(">H",  0) )
+
+        f.write(pack(">B", index ) )
+        f.write(pack(">B", len(self.points) ) )
+
+        for grp in self.prevgroup:
+           f.write(pack(">B", groups.get_idx(grp)))
+        for i in range( 6 - len(self.prevgroup) ):
+           f.write(pack(">b", -1))
+        for grp in self.nextgroup:
+           f.write(pack(">B", groups.get_idx(grp)))
+        for i in range( 6 - len(self.nextgroup) ):
+           f.write(pack(">b", -1))
+
+        f.write(pack(">H",  0) )
 
 class ItemPointGroups(PointGroups):
     def __init__(self):
@@ -847,7 +828,7 @@ class ItemPointGroups(PointGroups):
         f.write(pack(">H", 0) )
 
         for idx, group in enumerate( self.groups ):
-            group.write_itph(f, point_indices[idx])
+            group.write_itph(f, point_indices[idx], self)
 
 
         return  itph_offset
@@ -928,14 +909,14 @@ class CheckpointGroup(PointGroup):
     def new(cls):
         return cls()
 
-    def copy_group(self, new_id):
+    def copy_group(self):
         group = CheckpointGroup()
-        return super().copy_group(new_id, group)
+        return super().copy_group( group)
 
 
-    def copy_group_after(self, new_id, point):
+    def copy_group_after(self, point, group):
         group = CheckpointGroup()
-        return super().copy_group_after(new_id, point, group)
+        return super().copy_group_after( point, group)
 
     def get_used_respawns(self):
         return set( [checkpoint.respawn_obj for checkpoint in self.points]  )
@@ -982,12 +963,20 @@ class CheckpointGroup(PointGroup):
                 key = self.points[-1].write(f, len(self.points) - 2 + prev, -1, key)
         return key
 
-    def write_ckph(self, f, index):
+    def write_ckph(self, f, index, groups):
         #print(index, len(self.points), self.prevgroup, self.nextgroup)
         f.write(pack(">B", index ) )
         f.write(pack(">B", len(self.points) ) )
-        f.write(pack(">bbbbbb", self.prevgroup[0], self.prevgroup[1], self.prevgroup[2], self.prevgroup[3], self.prevgroup[4], self.prevgroup[5]) )
-        f.write(pack(">bbbbbb", self.nextgroup[0], self.nextgroup[1], self.nextgroup[2], self.nextgroup[3], self.nextgroup[4], self.nextgroup[5]) )
+
+        for grp in self.prevgroup:
+           f.write(pack(">B", groups.get_idx(grp)))
+        for i in range( 6 - len(self.prevgroup) ):
+           f.write(pack(">b", -1))
+        for grp in self.nextgroup:
+           f.write(pack(">B", groups.get_idx(grp)))
+        for i in range( 6 - len(self.nextgroup) ):
+           f.write(pack(">b", -1))
+
         f.write(pack(">H",  0) )
 
 class CheckpointGroups(PointGroups):
@@ -1047,8 +1036,9 @@ class CheckpointGroups(PointGroups):
             indices_offset.append(sum_points)
             num_key = group.write_ckpt(f, starting_key_cp[i], sum_points)
 
-            for id in group.nextgroup:
-                starting_key_cp[id] = max( starting_key_cp[id], num_key)
+            for grp in group.nextgroup:
+                id = self.get_idx(grp)
+                starting_key_cp[ id ] = max( starting_key_cp[id], num_key)
 
             sum_points += len(group.points)
         ckph_offset = f.tell()
@@ -1058,7 +1048,7 @@ class CheckpointGroups(PointGroups):
         f.write(pack(">H", 0) )
 
         for idx, group in enumerate( self.groups ):
-            group.write_ckph(f, indices_offset[idx])
+            group.write_ckph(f, indices_offset[idx], self)
         return ckph_offset
 
     def set_key_cps(self):
@@ -2050,15 +2040,21 @@ class KMP(object):
     @classmethod
     def make_useful(cls):
         kmp = cls()
-        kmp.enemypointgroups.groups.append(EnemyPointGroup.new())
-        kmp.enemypointgroups.groups[0].add_new_prev(0)
-        kmp.enemypointgroups.groups[0].add_new_next(0)
-        kmp.itempointgroups.groups.append(ItemPointGroup.new())
-        kmp.itempointgroups.groups[0].add_new_prev(0)
-        kmp.itempointgroups.groups[0].add_new_next(0)
-        kmp.checkpoints.groups.append(CheckpointGroup.new() )
-        kmp.checkpoints.groups[0].add_new_prev(0)
-        kmp.checkpoints.groups[0].add_new_next(0)
+
+        first_enemy = EnemyPointGroup.new()
+        kmp.enemypointgroups.groups.append(first_enemy)
+        first_enemy.add_new_prev(first_enemy)
+        first_enemy.add_new_next(first_enemy)
+
+        first_item = ItemPointGroup.new()
+        kmp.itempointgroups.groups.append(first_item)
+        first_item.add_new_prev(first_item)
+        first_item.add_new_next(first_item)
+
+        first_checkgroup = CheckpointGroup.new()
+        kmp.checkpoints.groups.append(first_checkgroup)
+        first_checkgroup.add_new_prev(first_checkgroup)
+        first_checkgroup.add_new_next(first_checkgroup)
         kmp.kartpoints.positions.append( KartStartPoint.new() )
 
         kmp.cameras.add_goal_camera()
@@ -2368,17 +2364,20 @@ class KMP(object):
 
         #remove self-linked routes
         for grouped_things in (self.enemypointgroups.groups, self.itempointgroups.groups, self.checkpoints.groups):
+            #set the proper prevnext
+            for i, group in enumerate(grouped_things):
+                group.prevgroup = [grouped_things[i] for i in group.prevgroup if i != -1 and i < len(grouped_things)]
+                group.nextgroup = [grouped_things[i] for i in group.nextgroup if i != -1 and i < len(grouped_things)]
+
             if len(grouped_things) < 2:
                 continue
             for i,group in enumerate(grouped_things):
-                if i in group.prevgroup and len(group.points) == 1:
+                if group in group.prevgroup and len(group.points) == 1:
                     return_string += "Group {0} was self-linked as a previous group. The link has been removed.\n".format(i)
-                    group.prevgroup = [ id for id in group.prevgroup if id != i ]
-                    group.prevgroup += [-1] * (6-len(group.prevgroup))
-                if i in group.nextgroup  and len(group.points) == 1:
+                    group.remove_prev(group)
+                if group in group.nextgroup  and len(group.points) == 1:
                     return_string += "Group {0} was self-linked as a next group. The link has been removed.\n".format(i)
-                    group.nextgroup = [ id for id in group.nextgroup if id != i]
-                    group.nextgroup += [-1] * (6-len(group.nextgroup))
+                    group.remove_next(group)
 
         """sort cannonpoints by id"""
         self.cannonpoints.sort( key = lambda h: h.id)
@@ -2792,7 +2791,6 @@ class KMP(object):
         for i, group in enumerate( self.enemypointgroups.groups ):
 
             new_cp_group = CheckpointGroup()
-            new_cp_group.id = i
             new_cp_group.prevgroup = group.prevgroup
             new_cp_group.nextgroup = group.nextgroup
 

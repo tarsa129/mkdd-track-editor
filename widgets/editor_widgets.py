@@ -156,15 +156,6 @@ class ErrorAnalyzer(QDialog):
         #check selfed inked
         #check for unreachable groups
 
-        # Check prev/next groups of checkpoints
-        for i, group in enumerate(kmp.checkpoints.groups):
-            for index in chain(group.prevgroup, group.nextgroup):
-                if index != -1:
-                    if index < -1 or index+1 > len(kmp.checkpoints.groups):
-                        write_line("Checkpoint group {0} has invalid Prev or Nextgroup index {1}".format(
-                            i, index
-                        ))
-
         #check for empty (and used!) routes
         for i, group in enumerate(kmp.routes):
 

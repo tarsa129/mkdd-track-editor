@@ -1030,7 +1030,6 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
             if vismenu.enemyroute.is_visible():
                 enemypoints_to_highlight = set()
                 all_groups = self.level_file.enemypointgroups.groups
-                used_colors = [None] * len(all_groups) #stores the ingoing colors
                 selected_groups = [False] * len(all_groups) #used to determine if a group should be selected - use instead of group_selected
 
                 #figure out based on area type 4:
@@ -1110,31 +1109,14 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     # draw to nextgroup only
                     prevpoint = group.points[-1]
                     #stores (group index, point)
-                    nextpoints = [ (i, all_groups[i].points[0]) for i in group.nextgroup if len(all_groups[i].points) > 0 and i > -1]
+                    nextpoints = [ (grp, grp.points[0]) for grp in group.nextgroup if len(grp.points) > 0]
                     if len(nextpoints) == 0:
                         continue
 
-                    #generate the color for inbound stuff
-                    color_gen = random.Random(group.id)
-                    color_components = [
-                        color_gen.random() * 0.5,
-                        color_gen.random() * 0.5,
-                        color_gen.random() * 0.2,
-                    ]
-                    color_gen.shuffle(color_components)
-                    color_components[2] += 0.5
-
-
-                    for group in group.nextgroup:
-                        if group != -1 and used_colors[group] is None:
-                            used_colors[group] = color_components
-
-
                     #draw arrows
+                    glColor3f(0.0, 0.0, 0.0)
                     for group, point in nextpoints:
-                        glColor3f(*used_colors[group])
-
-                        if selected_groups[i] or selected_groups[group]:
+                        if selected_groups[i]: #or selected_groups[groupgroup]:
                             glLineWidth(3.0)
                         glBegin(GL_LINES)
                         glVertex3f(prevpoint.position.x, -prevpoint.position.z, prevpoint.position.y)
@@ -1143,13 +1125,12 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                         self.models.draw_arrow_head(prevpoint.position, point.position)
 
-                        if selected_groups[i] or selected_groups[group]:
+                        if selected_groups[i]: #or selected_groups[group]:
                             glLineWidth(1.0)
             if vismenu.itemroute.is_visible():
                 enemypoints_to_highlight = set()
 
                 all_groups = self.level_file.itempointgroups.groups
-                used_colors = [None] * len(all_groups) #stores the ingoing colors
                 selected_groups = [False] * len(all_groups)
 
                 point_index = 0
@@ -1216,32 +1197,16 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     if len(group.points) == 0:
                         continue
                     # Draw the connections between each enemy point group.
-                    # draw to nextgroup only
                     prevpoint = group.points[-1]
                     #stores (group index, point)
-                    nextpoints = [ (i, all_groups[i].points[0]) for i in group.nextgroup if len(all_groups[i].points) > 0 and i > -1]
+                    nextpoints = [ (grp, grp.points[0]) for grp in group.nextgroup if len(grp.points) > 0]
                     if len(nextpoints) == 0:
                         continue
 
-                    #generate the color for inbound stuff
-                    color_gen = random.Random(group.id)
-                    color_components = [
-                        color_gen.random() * 0.5,
-                        color_gen.random() * 0.2,
-                        color_gen.random() * 0.5,
-                    ]
-                    color_gen.shuffle(color_components)
-                    color_components[1] += 0.5
-
-
-                    for group in group.nextgroup:
-                        if group != -1 and used_colors[group] is None:
-                            used_colors[group] = color_components
-
+                    glColor3f(0.0, 0.0, 0.0)
                     for group, point in nextpoints:
-                        glColor3f(*used_colors[group])
 
-                        if selected_groups[i] or selected_groups[group]:
+                        if selected_groups[i]: #or selected_groups[group]:
                             glLineWidth(8.0)
 
                         glBegin(GL_LINES)
@@ -1251,12 +1216,11 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                         self.models.draw_arrow_head(prevpoint.position, point.position)
 
-                        if selected_groups[i] or selected_groups[group]:
+                        if selected_groups[i]: #or selected_groups[group]:
                             glLineWidth(4.0)
 
             #for checkpoints
             all_groups = self.level_file.checkpoints.groups
-            used_colors = [None] * len(all_groups) #stores the ingoing colors
             selected_groups = [False] * len(all_groups)
 
             respawns_to_highlight = set()
@@ -1427,31 +1391,13 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     # draw to nextgroup only
                     prevpoint = group.points[-1]
                     #stores (group index, point)
-                    nextpoints = [ (i, all_groups[i].points[0]) for i in group.nextgroup if len(all_groups[i].points) > 0 and i > -1]
+                    nextpoints = [ (grp, grp.points[0]) for grp in group.nextgroup if len(grp.points) > 0]
                     if len(nextpoints) == 0:
                         continue
 
-                    #generate the color for inbound stuff
-                    color_gen = random.Random(group.id)
-                    color_components = [
-                        color_gen.random() * 0.2,
-                        color_gen.random() * 0.5,
-                        color_gen.random() * 0.2,
-                    ]
-                    color_gen.shuffle(color_components)
-                    color_components[2] += 0.5
-
-
-                    for group in group.nextgroup:
-                        if group != -1 and used_colors[group] is None:
-                            used_colors[group] = color_components
-
-
-
+                    glColor3f(0,0,0)
                     for group, point in nextpoints:
-                        glColor3f(*used_colors[group])
-
-                        if selected_groups[i] or selected_groups[group]:
+                        if selected_groups[i]: #or selected_groups[group]:
                             glLineWidth(highligh_cp_lengt)
 
                         glBegin(GL_LINES)
@@ -1468,7 +1414,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                         self.models.draw_arrow_head(prevpoint.end, point.end)
 
-                        if selected_groups[i] or selected_groups[group]:
+                        if selected_groups[i] :#or selected_groups[group]:
                             glLineWidth(normal_width)
             glPopMatrix()
             #go between the groups
