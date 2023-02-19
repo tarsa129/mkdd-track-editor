@@ -2813,6 +2813,10 @@ class GenEditor(QMainWindow):
                 set_first.triggered.connect(lambda: self.make_first_cam(obj))
                 context_menu.addAction(set_first)
 
+                select_linked = QAction("Select Linked", self)
+                select_linked.triggered.connect(lambda: self.select_linked(obj))
+                context_menu.addAction(select_linked)
+
             if isinstance(obj, Area) and obj in self.level_file.replayareas:
                 select_linked = QAction("Select Linked", self)
                 select_linked.triggered.connect(lambda: self.select_linked(obj))
@@ -2863,6 +2867,18 @@ class GenEditor(QMainWindow):
             if obj.camera.route_obj is not None:
                 new_selected.extend( [ point for point in obj.camera.route_obj.points]  )
                 new_selected_position.extend( [ point.position for point in obj.camera.route_obj.points]  )
+
+            self.level_view.selected = new_selected
+            self.level_view.selected_positions = new_selected_position
+            self.level_view.selected_rotations = [obj.rotation]
+            self.level_view.do_redraw()
+            self.level_view.select_update.emit()
+        elif isinstance(obj, Camera):
+            new_selected = [obj]
+            new_selected_position = [obj.position]
+            if obj.route_obj is not None:
+                new_selected.extend( obj.route_obj.points  )
+                new_selected_position.extend( [ point.position for point in obj.route_obj.points]  )
 
             self.level_view.selected = new_selected
             self.level_view.selected_positions = new_selected_position
