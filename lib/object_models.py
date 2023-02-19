@@ -21,7 +21,10 @@ class ObjectModels(object):
 
         self.cube = Cube()
         self.enemypoint = Cube(colors["EnemyRoutes"])
+        self.enemypointfirst = Cube(colors["FirstEnemyPoint"])
         self.itempoint = Cube(colors["ItemRoutes"])
+        self.itempointfirst = Cube(colors["FirstItemPoint"])
+
         self.checkpointleft = Cube(colors["CheckpointLeft"])
         self.checkpointright = Cube(colors["CheckpointRight"])
 
@@ -75,7 +78,8 @@ class ObjectModels(object):
                     filename = os.path.basename(file)
                     objectname = filename.rsplit(".", 1)[0]
                     self.models[objectname] = TexturedModel.from_obj_path(os.path.join(dirpath, file), rotate=True)
-        for cube in (self.cube, self.checkpointleft, self.checkpointright, self.camerapoint, self.objectpoint, self.enemypoint, self.itempoint,
+        for cube in (self.cube, self.checkpointleft, self.checkpointright, self.camerapoint, self.objectpoint, 
+                     self.enemypoint, self.enemypointfirst, self.itempoint, self.itempointfirst,
                      self.objects, self.areas, self.respawn, self.startpoints, self.camera, self.unusedpoint, self.areapoint,
                      self.unusedobjectpoint, self.unusedrespawn,
                      self.cannons, self.missions):

@@ -1047,7 +1047,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     if group in self.selected:
                         selected_groups[i] = True
 
-                    for point in group.points:
+                    for j, point in enumerate(group.points):
                         if point in select_optimize:
                             selected_groups[i] = True
                             glColor3f(0.3, 0.3, 0.3)
@@ -1061,7 +1061,11 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                             glColor3f(0.0, 0.0, 1.0)
                             self.models.draw_sphere(point.position, 600)
 
-                        self.models.render_generic_position_colored(point.position, point in select_optimize, "enemypoint")
+                        point_type = "enemypoint"
+                        if i == 0 and j == 0:
+                            point_type = "enemypointfirst"
+
+                        self.models.render_generic_position_colored(point.position, point in select_optimize, point_type)
 
                         enemyaction_colors = [ [1.0, 0.0, 0.0], [0.5, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.5, 0.0]    ]
                         if point.enemyaction in [1, 2, 3, 4]:
@@ -1157,7 +1161,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     if group in self.selected:
                         selected_groups[i] = True
 
-                    for point in group.points:
+                    for j, point in enumerate(group.points):
                         if point in select_optimize:
                             group_selected = True
                             glColor3f(0.3, 0.3, 0.3)
@@ -1167,7 +1171,11 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                             glColor3f(1.0, 1.0, 0.0)
                             self.models.draw_sphere(point.position, 300)
 
-                        self.models.render_generic_position_colored(point.position, point in select_optimize, "itempoint")
+                        point_type = "itempoint"
+                        if i == 0 and j == 0:
+                            point_type = "itempointfirst"
+
+                        self.models.render_generic_position_colored(point.position, point in select_optimize, point_type)
 
 
                         billaction_colors = [ [1.0, 0.0, 0.0], [0.5, 0.5, 0.5], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]  ]

@@ -2,6 +2,7 @@
   "EnemyRoutes": [1.0, 0.2, 0.2, 1.0],
   "FirstEnemyPoint": [0.5, 0.1, 0.1, 1.0],
   "ItemRoutes": [1.0, 0.7, 0.7, 1.0],
+  "FirstItemPoint": [0.5, 0.35, 0.35, 1.0],
 
   "AreaRoutes":   [0.0, 0.0, 1.0, 1.0],
   "CameraRoutes": [0.8, 0.0, 0.8, 1.0],
