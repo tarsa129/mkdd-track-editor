@@ -966,7 +966,10 @@ class CheckpointGroup(PointGroup):
 
     def set_rspid(self, rsps):
         for point in self.points:
-            point.respawnid = rsps.index(point.respawn_obj)
+            if point.respawn_obj is not None:
+                point.respawnid = rsps.index(point.respawn_obj)
+            else:
+                point.respawnid = -1
 
     def write_ckpt(self, f, key, prev):
 
@@ -2678,13 +2681,11 @@ class KMP(object):
         if len(self.checkpoints.groups) == 0:
             return
 
-        rsp_id = self.get_index_of_respawn(respawn)
-
         for checkgroup in self.checkpoints.groups:
             for checkpoint in checkgroup.points:
-                old_assign = checkpoint.respawn
+                old_assign = checkpoint.respawn_obj
                 checkpoint.assign_to_closest(self.respawnpoints)
-                checkpoint.respawnid = old_assign if checkpoint.respawnid != rsp_id or old_assign == rsp_id else checkpoint.respawn
+                checkpoint.respawn_obj = old_assign if checkpoint.respawn_obj != respawn else checkpoint.respawn_obj
 
     def remove_respawn(self, rsp: JugemPoint):
         self.respawnpoints.remove(rsp)
