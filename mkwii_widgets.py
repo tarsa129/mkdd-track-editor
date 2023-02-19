@@ -790,7 +790,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                 if vismenu.cameras.is_selectable():
                     i = 0
                     for route in self.level_file.cameraroutes:
-                        for obj in route.points:
+                        for obj in route.points[1:]:
                             objlist.append(
                                 ObjectSelectionEntry(obj=obj,
                                                  pos1=obj.position,
