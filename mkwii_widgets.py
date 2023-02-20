@@ -762,7 +762,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                 if vismenu.cameras.is_selectable():
                     for i, obj in enumerate(self.level_file.cameras):
-                        if obj in self.selected:
+                        if obj.type in (4, 5):
                             objlist.append(
                                 ObjectSelectionEntry(obj=obj,
                                                      pos1=obj.position,
@@ -771,10 +771,8 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                                                      rotation=obj.rotation))
                             self.models.render_generic_position_rotation_colored_id(obj.position, obj.rotation,
                                                                                     id + (offset + i) * 4)
-                            if obj.type in (4, 5):
-
-                                self.models.render_generic_position_colored_id(obj.position2, id + (offset + i) * 4 + 1)
-                                self.models.render_generic_position_colored_id(obj.position3, id + (offset + i) * 4 + 2)
+                            self.models.render_generic_position_colored_id(obj.position2, id + (offset + i) * 4 + 1)
+                            self.models.render_generic_position_colored_id(obj.position3, id + (offset + i) * 4 + 2)
                         else:
                             objlist.append(
                                 ObjectSelectionEntry(obj=obj,
@@ -787,7 +785,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                 offset = len(objlist)
 
-                if vismenu.cameras.is_selectable():
+                if vismenu.cameras.is_selectable(): #camera routes
                     i = 0
                     for route in self.level_file.cameraroutes:
                         for obj in route.points[1:]:
@@ -805,7 +803,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                 if vismenu.replayareas.is_selectable():
                     i = 0
                     for route in self.level_file.replaycameraroutes:
-                        for obj in route.points:
+                        for obj in route.points[1:]:
                             objlist.append(
                                 ObjectSelectionEntry(obj=obj,
                                                  pos1=obj.position,
@@ -850,7 +848,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         (vismenu.areas.is_selectable(), self.level_file.areas),
                         (vismenu.replayareas.is_selectable(), self.level_file.replayareas),
                         (vismenu.replayareas.is_selectable(), self.level_file.replaycameras),
-                        (vismenu.respawnpoints.is_selectable(), self.level_file.respawnpoints),
+                        (vismenu.checkpoints.is_selectable(), self.level_file.respawnpoints),
                         (vismenu.cannonpoints.is_selectable(), self.level_file.cannonpoints),
                         (vismenu.missionpoints.is_selectable(), self.level_file.missionpoints)
 
@@ -1610,7 +1608,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     self.models.render_generic_position_rotation_colored("camera",
                                                                 object.position, object.rotation,
                                                                  object in select_optimize)
-                    if object in select_optimize and object.type in (4, 5):
+                    if object.type in (4, 5):
                         glColor3f(1.0, 0.0, 1.0)
                         pos1 = object.position2
                         pos2 = object.position3
@@ -1671,7 +1669,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     glEnd()
                     if selected:
                         glLineWidth(1.0)
-            if vismenu.respawnpoints.is_visible():
+            if vismenu.checkpoints.is_visible():
                 used_respawns = self.level_file.checkpoints.get_used_respawns()
                 for i, object in enumerate( self.level_file.respawnpoints):
                     render_type = "unusedrespawn"
@@ -1684,6 +1682,9 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     if object in respawns_to_highlight:
                         glColor3f(1.0, 1.0, 0.0) # will be replaced with the respawn color
                         self.models.draw_sphere(object.position, 600)
+                    self.models.draw_wireframe_cube( object.position,
+                                                        object.rotation,
+                                                        Vector3( 900, 50, 600   ), kartstart = True)
 
             if vismenu.cannonpoints.is_visible():
                 for object in self.level_file.cannonpoints:
@@ -1906,7 +1907,7 @@ class FilterViewMenu(QMenu):
         self.enemyroute = ObjectViewSelectionToggle("Enemy Routes", self)
         self.itemroute = ObjectViewSelectionToggle("Item Routes", self)
         self.checkpoints = ObjectViewSelectionToggle("Checkpoints", self)
-        self.respawnpoints = ObjectViewSelectionToggle("Respawn Points", self)
+        #self.respawnpoints = ObjectViewSelectionToggle("Respawn Points", self)
 
         self.objects = ObjectViewSelectionToggle("Objects", self)
         #self.objectroutes = ObjectViewSelectionToggle("Object Paths", self)
@@ -1932,7 +1933,6 @@ class FilterViewMenu(QMenu):
                 self.areas,
                 self.replayareas,
                 self.cameras,
-                self.respawnpoints,
                 self.kartstartpoints,
                 self.cannonpoints,
                 self.missionpoints

@@ -406,7 +406,7 @@ class GenEditor(QMainWindow):
         if self.visibility_menu.cameras.is_visible():
             for camera in self.level_file.cameras:
                 extend(camera.position)
-        if self.visibility_menu.respawnpoints.is_visible():
+        if self.visibility_menu.checkpoints.is_visible():
             for respawn_point in self.level_file.respawnpoints:
                 extend(respawn_point.position)
         if self.visibility_menu.kartstartpoints.is_visible():

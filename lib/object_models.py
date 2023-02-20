@@ -132,7 +132,6 @@ class ObjectModels(object):
         glPushMatrix()
 
         glTranslatef(position.x, -position.z, position.y)
-        #glTranslatef(position.x, position.y, position.z)
         glScalef(radius, height, radius)
 
         self.cylinder.render()
@@ -141,17 +140,9 @@ class ObjectModels(object):
     def draw_wireframe_cylinder(self, position, rotation, scale):
         glPushMatrix()
         glTranslatef(position.x, -position.z, position.y)
-        #glTranslatef(position.x, position.y, position.z)
         #mtx = rotation.mtx
         #glMultMatrixf(mtx)
         do_rotation(rotation)
-        """
-        euler = rotation.get_euler(True)
-        glRotatef( euler[0], 1.0, 0.0, 0.0)
-        glRotatef( euler[1], 0.0, 1.0, 0.0)
-        glRotatef( euler[2], 0.0, 0.0, 1.0)
-        """
-
         glTranslatef(0, 0, scale.y / 2)
         glScalef(scale.x, scale.z, scale.y)
         self.wireframe_cylinder.render()

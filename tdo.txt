@@ -7,7 +7,7 @@ enemy/item/checkpoint
 - checkpoints: fix concave checkpoints
 - checkpoints: add lap completion %
 - checkpoints: also highlight the lines going from the checkpoints
-- checkpoints: check if none
+- checkpoints: better handling for weird respawn point stuff
 
 gobj:
 - manually improve all descriptions / settings / and add default values
@@ -21,9 +21,6 @@ poti:
 - add radius of route points with areas for multiple point rouetes
 - when route is highlighted, highlight the objects that are used
 - make sure that at most 255 routes are being created between camears and areas
-
-jgpt:
-- render the box
 
 area:
 - add tabs for camera editing
@@ -54,5 +51,3 @@ make sure that arrows work in toportho (do not consider y value)
 
 level view context menu (should only be stuff related to the *group* it's connected to):
 enemy/item/checkpoint: select/delete group.
-area: move with route, select <assoc>
-camera: move with route, select route, for starting: set as start
