@@ -22,9 +22,7 @@ poti:
 
 area:
 - add tabs for camera editing
-- create route if one does not exist
 - add back helper functions for copy
-- replay area: render differently if it needs a camera
 
 came:
 - camera replaying (long shot)

@@ -2441,7 +2441,7 @@ class KMP(object):
         """separate areas into replay and not"""
         self.replayareas.extend( self.areas.get_type(0) )
         for area in self.replayareas:
-            self.areas.remove(area)
+            self.areas.remove(area)            
         self.areas.sort( key = lambda h: h.type)
 
         """snap cameras to routes"""
@@ -2475,14 +2475,17 @@ class KMP(object):
         self.remove_invalid_cameras()
 
         """do type assertions on replay cams"""
+        repl_area_without_cams = [area for area in self.replayareas if area.camera is None]
+        for area in repl_area_without_cams:
+            return_string += "An area of type Camera did not reference a camera. It will be removed.\n"
+            self.replayarea.remove(area)
         for area in self.replayareas:
-            if area.camera is not None and area.camera.type not in (1, 2, 3, 4, 6):
+            if area.camera.type not in (1, 2, 3, 4, 6):
                 return_string += "An area of type Camera references a camera of type {0}, which is not a valid replay camera \
                     It will be converted to a type 1 camera (FixSearch)\n".format(area.camera.type)
                 area.camera.type = 1
-                area.camera.used_by.append(area)
-            elif area.camera is not None:
-                area.camera.used_by.append(area)
+            area.camera.used_by.append(area)
+
 
         invalid_nonreplay = []
         for camera in self.cameras:
