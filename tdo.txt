@@ -7,7 +7,6 @@ enemy/item/checkpoint
 - checkpoints: fix concave checkpoints
 - checkpoints: add lap completion %
 - checkpoints: also highlight the lines going from the checkpoints
-- checkpoints: better handling for weird respawn point stuff
 
 gobj:
 - manually improve all descriptions / settings / and add default values

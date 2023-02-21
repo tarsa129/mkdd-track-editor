@@ -1880,7 +1880,7 @@ class ObjectViewSelectionToggle(object):
 
     def change_select_status(self):
         if self.is_selectable():
-            self.action_view_toggle.setChecked(False)
+            #self.action_view_toggle.setChecked(False)
             self.action_select_toggle.setChecked(False)
         else:
             self.action_view_toggle.setChecked(True)

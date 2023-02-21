@@ -47,8 +47,8 @@ class VisiSelecButtons(QWidget):
             else: #turning visbutton on
                 self.visbutton.set_state(True)
         elif index == 1:
-            if self.selbutton.status: #turning visbuton off
-                self.visbutton.set_state(False)
+            if self.selbutton.status: #turning selbuton off
+                #self.visbutton.set_state(False)
                 self.selbutton.set_state(False)
             else: #turning selbutton true
                 self.visbutton.set_state(True)
