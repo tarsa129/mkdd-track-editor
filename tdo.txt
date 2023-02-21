@@ -3,7 +3,6 @@ drag n drop opening
 refactor options code to move stuff to libkmp
 
 enemy/item/checkpoint
-- add option to set enemy point as first
 - checkpoints: fix concave checkpoints
 - checkpoints: add lap completion %
 - checkpoints: also highlight the lines going from the checkpoints

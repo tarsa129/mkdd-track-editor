@@ -1675,7 +1675,7 @@ class GenEditor(QMainWindow):
             self.objects_to_be_added.append( [new_route, None, None ]  )
 
             if isinstance(obj, libkmp.Camera):
-                new_camera = libkmp.Camera.default()
+                new_camera = libkmp.OpeningCamera.default()
                 self.objects_to_be_added.append( [new_camera, None, None ]  )
 
             elif isinstance(obj, libkmp.MapObject):
@@ -1741,10 +1741,10 @@ class GenEditor(QMainWindow):
 
                 #self.addobjectwindow_last_selected_category = 8
                 self.objects_to_be_added.append( [new_route, None, None ]  )
-                self.objects_to_be_added.append( [libkmp.Camera.default(obj), None, None ] )
+                self.objects_to_be_added.append( [libkmp.OpeningCamera.default(obj), None, None ] )
             else:
                 self.objects_to_be_added = None
-                self.object_to_be_added = [libkmp.Camera.default(obj), None, None ]
+                self.object_to_be_added = [libkmp.OpeningCamera.default(obj), None, None ]
 
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
@@ -1772,7 +1772,7 @@ class GenEditor(QMainWindow):
         elif option == 12: #area camera route add
             self.objects_to_be_added = []
             new_area = libkmp.Area.default()
-            new_camera = libkmp.Camera.default()
+            new_camera = libkmp.ReplayCamera.default(2)
             new_route = libkmp.CameraRoute.new()
 
             for i in range(2):
@@ -1792,7 +1792,7 @@ class GenEditor(QMainWindow):
         elif option == 12.5: #area camera add
             self.objects_to_be_added = []
             new_area = libkmp.Area.default()
-            new_camera = libkmp.Camera.default(1)
+            new_camera = libkmp.ReplayCamera.default(1)
 
             self.objects_to_be_added.append( [new_camera, None, None ]  )
             self.objects_to_be_added.append( [new_area, None, None ]  )
@@ -2095,8 +2095,10 @@ class GenEditor(QMainWindow):
                 elif placeobject.type == 4:
                     placeobject.find_closest_enemypoint()
                     #assign to closest enemypoint
-            elif isinstance(object, libkmp.Camera):
+            elif isinstance(object, libkmp.OpeningCamera):
                 self.level_file.cameras.append(placeobject)
+            elif isinstance(object, libkmp.ReplayCamera):
+                self.level_file.replaycameras.append(placeobject)
             else:
                 raise RuntimeError("Unknown object type {0}".format(type(object)))
 
@@ -2129,6 +2131,9 @@ class GenEditor(QMainWindow):
         placed_objects = []
 
         added_area = False
+        for object, group, position in self.objects_to_be_added:
+            if isinstance(object, libkmp.Area):
+                added_area = object.type
 
         for object, group, position in self.objects_to_be_added:
 
@@ -2167,7 +2172,14 @@ class GenEditor(QMainWindow):
                         self.button_stop_adding()
 
                 elif isinstance(object, libkmp.RoutePoint):
-                    self.level_file.routes[group].points.insert(position, placeobject)
+                    route_container = self.level_file.get_route_container(object.partof)
+                    if isinstance(group, Route):
+                        placeobject.partof = group
+                        group.points.insert(position + self.points_added, placeobject)
+                    else:
+                        placeobject.partof = route_container[group]
+                        route_container[group].points.insert(position + self.points_added, placeobject)
+                    self.points_added += 1
                 elif isinstance(object, libkmp.MapObject):
                     self.level_file.objects.objects.append(placeobject)
                 elif isinstance(object, libkmp.KartStartPoint):
@@ -2177,40 +2189,45 @@ class GenEditor(QMainWindow):
                     if group:
                         self.level_file.reassign_one_respawn(object)
                 elif isinstance(object, libkmp.Area):
-                    added_area = True
                     if object.type == 0:
                         self.level_file.replayareas.append(placeobject)
                     else:
                         self.level_file.areas.append(placeobject)
-                elif isinstance(object, libkmp.Camera):
+                elif isinstance(object, libkmp.OpeningCamera):
                     self.level_file.cameras.append(placeobject)
+                elif isinstance(object, libkmp.ReplayCamera):
+                    self.level_file.replaycameras.append(placeobject)
                 elif isinstance(object, Route):
-                    route_container = self.level_file.get_route_container(object)
-                    route_container.append(placeobject)
+                    if added_area == 0:
+                        self.level_file.replaycameraroutes.append(placeobject)
+                    else:
+                        route_container = self.level_file.get_route_container(object)
+                        route_container.append(placeobject)
                 else:
                     raise RuntimeError("Unknown object type {0}".format(type(object)))
 
         for object in placed_objects:
-            if isinstance(object, libkmp.Camera):
-                object.position.y += 3000
-                if added_area:
-                    object.position.x += 3000
-                    if object.type in routed_cameras:
-                        object.route_obj = self.level_file.cameraroutes[-1]
-                        object.route_obj.used_by.append(object)
-
-                        object.route_obj.points[0].position = Vector3( object.position.x, object.position.y, object.position.z + 3500)
-                        object.route_obj.points[1].position = Vector3( object.position.x, object.position.y, object.position.z - 3500)
-                elif object.type in routed_cameras:
+            if isinstance(object, libkmp.OpeningCamera):
+                object.position.y += 1000
+                if object.type in routed_cameras:
                     object.route_obj = self.level_file.cameraroutes[-1]
                     object.route_obj.used_by.append(object)
                     for point in object.route_obj.points:
                         point.position = point.position + object.position
                         self.action_ground_spec_object(point)
+            if isinstance(object, libkmp.ReplayCamera):
+                object.position.y += 1000
+                object.position.x += 3000
+                if object.type in routed_cameras:
+                    object.route_obj = self.level_file.replaycameraroutes[-1]
+                    object.route_obj.used_by.append(object)
+
+                    object.route_obj.points[0].position = object.position
+                    object.route_obj.points[1].position = Vector3( object.position.x, object.position.y, object.position.z - 3500)
             if isinstance(object, libkmp.Area):
                 if object.type == 0:
-                    object.camera = self.level_file.cameras[-1]
-                    self.level_file.cameras[-1].used_by.append(object)
+                    object.camera = self.level_file.replaycameras[-1]
+                    self.level_file.replaycameras[-1].used_by.append(object)
                 elif object.type == 3:
                     object.route_obj =self.level_file.routes[-1]
                     object.route_obj.used_by.append(object)
@@ -2456,7 +2473,8 @@ class GenEditor(QMainWindow):
                 else:
                     self.level_file.areas.remove_area(obj)
             elif isinstance(obj, libkmp.Camera):
-                self.level_file.remove_camera(obj)
+                if isinstance(obj, libkmp.OpeningCamera):
+                    self.level_file.remove_camera(obj)
             elif isinstance(obj, PointGroup ):
                 self.level_file.remove_group(obj)
 
@@ -2726,7 +2744,7 @@ class GenEditor(QMainWindow):
 
                 elif isinstance(currentobj, libkmp.MapObject):
                     item = get_treeitem(self.leveldatatreeview.objects, currentobj)
-                elif isinstance(currentobj, libkmp.Camera):
+                elif isinstance(currentobj, libkmp.OpeningCamera):
                     item = get_treeitem(self.leveldatatreeview.cameras, currentobj)
                 elif isinstance(currentobj, libkmp.Area):
                     if currentobj.type == 0:

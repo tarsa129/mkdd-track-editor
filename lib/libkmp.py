@@ -1710,6 +1710,17 @@ class Cameras(ObjectContainer):
         if 0 not in came_types_exist:
             self.append(  Camera.new_type_0() )
 
+    def to_opening(self):
+        for camera in self:
+            camera.__class__ = OpeningCamera
+    
+    def to_replay(self):
+       for camera in self:
+            camera.__class__ = ReplayCamera
+
+    def get_type(self, type):
+        return [cam for cam in self if cam.type == type]
+
 class Camera(object):
     level_file = None
     can_copy = True
@@ -1888,8 +1899,18 @@ class Camera(object):
         return -1
 
 class ReplayCamera(Camera):
-    def __init__(self):
-        super().__init__()
+    @classmethod
+    def from_generic(cls, generic):
+        generic.__class__ = cls
+        return generic
+
+class OpeningCamera(Camera):
+
+    @classmethod
+    def from_generic(cls, generic):
+        generic.__class__ = cls
+        return generic
+
 # Section 9
 # Jugem Points
 class JugemPoint(object):
@@ -2438,6 +2459,7 @@ class KMP(object):
             self.cameras.append(new_camera)
 
         self.replaycameras.extend( replaycams )
+        self.replaycameras.to_replay()
         for camera in self.replaycameras:
             self.cameras.remove(camera)
 
@@ -2448,8 +2470,9 @@ class KMP(object):
         for area in self.replayareas:
             if area.camera is not None and area.camera.type not in (1, 2, 3, 4, 6):
                 return_string += "An area of type Camera references a camera of type {0}, which is not a valid replay camera \
-                    The reference will be removed\n".format(area.camera.type)
-                area.camera = None
+                    It will be converted to a type 1 camera (FixSearch)\n".format(area.camera.type)
+                area.camera.type = 1
+                area.camera.used_by.append(area)
             elif area.camera is not None:
                 area.camera.used_by.append(area)
 
@@ -2460,6 +2483,8 @@ class KMP(object):
                 invalid_nonreplay.append(camera)
         for camera in invalid_nonreplay:
             self.remove_camera(camera)
+
+        self.cameras.to_opening()
 
         """split camera routes into replay routes and other routes"""
         self.replaycameraroutes.extend( [camera.route_obj for camera in self.replaycameras if camera.route_obj is not None]  )
@@ -2858,8 +2883,10 @@ class KMP(object):
 
     #ruoutes code
     def get_route_container(self, obj):
-        if isinstance(obj, (CameraRoute, Camera)):
+        if isinstance(obj, (CameraRoute, OpeningCamera)):
             return self.cameraroutes
+        if isinstance(obj, (CameraRoute, ReplayCamera)):
+            return self.replaycameraroutes
         elif isinstance(obj, (AreaRoute, Area)):
             return self.arearoutes
         else:
@@ -2949,6 +2976,9 @@ class KMP(object):
 
 
     def remove_camera(self, cam : Camera):
+        if cam.type == 0 and len(self.cameras.get_type(0)) < 2:
+            return
+
         for camera in self.cameras:
             if camera.nextcam == cam:
                 camera.nextcam = None
