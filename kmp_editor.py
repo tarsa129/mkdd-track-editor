@@ -1801,6 +1801,11 @@ class GenEditor(QMainWindow):
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
 
             self.object_to_be_added = None
+        elif option == 13:
+            self.object_to_be_added = [obj, None, None ]
+            self.pik_control.button_add_object.setChecked(True)
+            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
+            self.objects_to_be_added = None
         elif option == 15: #add new route point here
             group_id = -1
             pos_in_grp = -1
@@ -2040,9 +2045,9 @@ class GenEditor(QMainWindow):
 
         else:
             try:
-                placeobject = deepcopy(object)
-            except:
                 placeobject = object.copy()
+            except:
+                placeobject = deepcopy(object)
             placeobject.position.x = x
             placeobject.position.y = y
             placeobject.position.z = z
@@ -2074,7 +2079,6 @@ class GenEditor(QMainWindow):
                 placeobject.set_route_info()
                 if placeobject.route_obj is not None:
                     placeobject.route_obj.used_by.append(placeobject)
-
             elif isinstance(object, libkmp.KartStartPoint):
                 self.level_file.kartpoints.positions.append(placeobject)
                 if len(self.level_file.kartpoints.positions) == 1:
@@ -2086,15 +2090,19 @@ class GenEditor(QMainWindow):
                 if group:
                     self.level_file.reassign_one_respawn(placeobject)
                 self.level_file.rotate_one_respawn(placeobject)
-
             elif isinstance(object, libkmp.Area):
-                self.level_file.areas.append(placeobject)
-                if placeobject.type == 3:
-                    self.auto_route_obj(placeobject)
-                    self.object_to_be_added = [object, group, position]
-                elif placeobject.type == 4:
-                    placeobject.find_closest_enemypoint()
-                    #assign to closest enemypoint
+                if placeobject.type == 0:
+                    self.level_file.replayareas.append(placeobject)
+                    if placeobject.camera is not None:
+                        placeobject.camera.used_by.append(placeobject)
+                else:
+                    self.level_file.areas.append(placeobject)
+                    if placeobject.type == 3:
+                        self.auto_route_obj(placeobject)
+                        self.object_to_be_added = [object, group, position]
+                    elif placeobject.type == 4:
+                        placeobject.find_closest_enemypoint()
+                        #assign to closest enemypoint
             elif isinstance(object, libkmp.OpeningCamera):
                 self.level_file.cameras.append(placeobject)
             elif isinstance(object, libkmp.ReplayCamera):
@@ -2448,14 +2456,16 @@ class GenEditor(QMainWindow):
 
             elif isinstance(obj, libkmp.RoutePoint):
                 #route_container = self.level_file.get_route_container(obj.partof)
-                obj.partof.points.remove(obj)
+                #do not allow route to fall under 2 points
+                if len(obj.partof.points) > 2:
+                    obj.partof.points.remove(obj)
 
-                if len(obj.partof.points) == 0:
-                    route_container = self.level_file.get_route_container(obj.partof)
+                    if len(obj.partof.points) == 0:
+                        route_container = self.level_file.get_route_container(obj.partof)
 
-                    for object in obj.partof.used_by:
-                        object.route_obj = None
-                    route_container.remove(obj.partof)
+                        for object in obj.partof.used_by:
+                            object.route_obj = None
+                        route_container.remove(obj.partof)
 
             elif isinstance(obj, libkmp.Checkpoint):
                 self.level_file.checkpoints.remove_point(obj)

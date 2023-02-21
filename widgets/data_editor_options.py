@@ -38,7 +38,7 @@ START_SQUEEZE["Narrow"] = 1
 
 AREA_Type = OrderedDict()
 AREA_Type["Camera"] = 0
-AREA_Type["Environment Effort"] = 1
+AREA_Type["Environment Effect"] = 1
 AREA_Type["BFG Swapper"] = 2
 AREA_Type["Moving Road"] = 3
 AREA_Type["Destination Point"] = 4
@@ -50,7 +50,7 @@ AREA_Type["Group Unloading"] = 9
 AREA_Type["Fall Boundary"] = 10
 AREA_Type["INVALID"] = 11
 
-AREA_TYPES = [ "Camera","Environment Effect","BFG Swapper", "Moving Road", "Destination Point" , "Minimap Control",
+AREA_TYPES = [ "Camera (don't use aaaa)", "Environment Effect","BFG Swapper", "Moving Road", "Destination Point" , "Minimap Control",
                "BBLM Swapper", "Flying Boos", "Object Grouper", "Group Unloading", "Fall Boundary"]
 
 AREA_Shape = OrderedDict()

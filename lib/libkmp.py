@@ -1631,6 +1631,12 @@ class Area(object):
     def remove_self(self):
         if self.camera is not None:
             self.camera.used_by.remove(self)
+            if len(self.camera.used_by) == 0:
+                #delete the camera
+                self.__class__.level_file.remove_camera(self.camera)
+                if not self.camera.route_obj.used_by:
+                    #delete the route as well
+                    self.__class__.level_file.replaycameraroutes.remove(self.camera.route_obj)
         if self.route_obj is not None:
             self.route_obj.used_by.remove(self)
 
@@ -2978,13 +2984,18 @@ class KMP(object):
     def remove_camera(self, cam : Camera):
         if cam.type == 0 and len(self.cameras.get_type(0)) < 2:
             return
+        if isinstance(cam, OpeningCamera):
 
-        for camera in self.cameras:
-            if camera.nextcam == cam:
-                camera.nextcam = None
+            for camera in self.cameras:
+                if camera.nextcam == cam:
+                    camera.nextcam = None
 
-        if self.cameras.startcam is cam:
-            self.cameras.startcam = cam.nextcam
+            if self.cameras.startcam is cam:
+                self.cameras.startcam = cam.nextcam
+
+            self.cameras.remove(cam)
+        elif isinstance(cam, ReplayCamera):
+            self.replaycameras.remove(cam)
 
         if cam.route_obj is not None:
             cam.route_obj.used_by.remove(cam)
@@ -2992,7 +3003,6 @@ class KMP(object):
         for area in cam.used_by:
             area.camera = None
 
-        self.cameras.remove(cam)
 
     def remove_invalid_cameras(self):
         invalid_cams = [camera for camera in self.cameras if camera.type < 0 or camera.type > 9]

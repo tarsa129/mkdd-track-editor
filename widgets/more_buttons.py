@@ -199,7 +199,12 @@ class MoreButtons(QWidget):
 
         elif isinstance(obj, Area):
             area : Area = obj
-            if area.type == 3:
+            if area.type == 0:
+                copy_same_cam = QPushButton(self)
+                copy_same_cam.setText("Copy With Same Camera")
+                copy_same_cam.clicked.connect(lambda: self.parent.button_add_from_addi_options(13, obj) )
+                self.vbox.addWidget(copy_same_cam)
+            elif area.type == 3:
                 create_route = QPushButton(self)
                 create_route.setText("Add Object Route")
                 create_route.clicked.connect(lambda: self.parent.button_add_from_addi_options(16, obj) )
@@ -210,6 +215,7 @@ class MoreButtons(QWidget):
                 assign_to_closest.clicked.connect(lambda: self.parent.button_add_from_addi_options(16, obj) )
                 self.vbox.addWidget(assign_to_closest)
                 # delete with camera / route
+
 
 
         elif isinstance(obj, Camera):

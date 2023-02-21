@@ -1075,7 +1075,7 @@ class AreaEdit(DataEditor):
                                                      -inf, +inf)
         self.rotation = self.add_rotation_input()
 
-        self.area_type = self.add_dropdown_input("Area Type", "type", AREA_Type)
+        self.area_type, self.area_type_label = self.add_dropdown_input("Area Type", "type", AREA_Type, True)
 
         self.shape = self.add_dropdown_input("Shape", "shape", AREA_Shape)
 
@@ -1111,6 +1111,8 @@ class AreaEdit(DataEditor):
 
         self.shape.setCurrentIndex( obj.shape )
         self.area_type.setCurrentIndex( obj.type )
+        self.area_type.setVisible(obj.type != 0)
+        self.area_type_label.setVisible(obj.type != 0)
 
         self.priority.setText(str(obj.priority))
 

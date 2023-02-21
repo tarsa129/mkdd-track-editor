@@ -28,7 +28,7 @@ area:
 
 came:
 - camera replaying (long shot)
-- render unused cameras differently
+- render unused cameras differently (or just don't have them)
 - remove rotation
 
 cnpt:
