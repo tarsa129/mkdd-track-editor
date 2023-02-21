@@ -2057,6 +2057,8 @@ class KMP(object):
         first_checkgroup.add_new_next(first_checkgroup)
         kmp.kartpoints.positions.append( KartStartPoint.new() )
 
+        kmp.respawnpoints.append(JugemPoint.new())
+
         kmp.cameras.add_goal_camera()
 
         return kmp
@@ -2687,6 +2689,8 @@ class KMP(object):
                 checkpoint.respawn_obj = old_assign if checkpoint.respawn_obj != respawn else checkpoint.respawn_obj
 
     def remove_respawn(self, rsp: JugemPoint):
+        if len(self.respawnpoints) <= 1:
+            return
         self.respawnpoints.remove(rsp)
         for checkgroup in self.checkpoints.groups:
             for checkpoint in checkgroup.points:

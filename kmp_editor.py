@@ -373,11 +373,11 @@ class GenEditor(QMainWindow):
                 extend(selected_position)
             return tuple(extent) or (0, 0, 0, 0, 0, 0)
 
-        if self.visibility_menu.enemyroute.is_visible():
+        if self.visibility_menu.enemyroutes.is_visible():
             for enemy_path in self.level_file.enemypointgroups.groups:
                 for enemy_path_point in enemy_path.points:
                     extend(enemy_path_point.position)
-        if self.visibility_menu.itemroute.is_visible():
+        if self.visibility_menu.itemroutes.is_visible():
             for item_path in self.level_file.itempointgroups.groups:
                 for item_path_point in item_path.points:
                     extend(item_path_point.position)
@@ -400,7 +400,7 @@ class GenEditor(QMainWindow):
         if self.visibility_menu.areas.is_visible():
             for area in self.level_file.areas:
                 extend(area.position)
-        if self.visibility_menu.replayareas.is_visible():
+        if self.visibility_menu.replaycameras.is_visible():
             for area in self.level_file.replayareas:
                 extend(area.position)
         if self.visibility_menu.cameras.is_visible():
@@ -417,7 +417,7 @@ class GenEditor(QMainWindow):
             for karts_point in self.level_file.cannonpoints:
                 extend(karts_point.position)
 
-        if self.visibility_menu.missionpoints.is_visible():
+        if self.visibility_menu.missionsuccesspoints.is_visible():
             for karts_point in self.level_file.missionpoints:
                 extend(karts_point.position)
 
@@ -474,7 +474,7 @@ class GenEditor(QMainWindow):
         self.horizontalLayout = QSplitter()
         self.centralwidget = self.horizontalLayout
         self.setCentralWidget(self.horizontalLayout)
-        self.leveldatatreeview = LevelDataTreeView(self.centralwidget)
+        self.leveldatatreeview = LevelDataTreeView(self.centralwidget, self.visibility_menu)
         #self.leveldatatreeview.itemClicked.connect(self.tree_select_object)
         self.leveldatatreeview.itemDoubleClicked.connect(self.do_goto_action)
         self.leveldatatreeview.itemSelectionChanged.connect(self.tree_select_arrowkey)
@@ -668,7 +668,7 @@ class GenEditor(QMainWindow):
 
         self.menubar.addAction(self.file_menu.menuAction())
         self.menubar.addAction(self.edit_menu.menuAction())
-        self.menubar.addAction(self.visibility_menu.menuAction())
+        #self.menubar.addAction(self.visibility_menu.menuAction())
         self.menubar.addAction(self.collision_menu.menuAction())
         self.menubar.addAction(self.misc_menu.menuAction())
 
@@ -935,6 +935,15 @@ class GenEditor(QMainWindow):
             recent_file_action.triggered.connect(
                 lambda checked, filepath=filepath: self.button_load_level(checked, filepath))
 
+    def on_visible_menu_changed(self, element, index):
+        if hasattr(self.visibility_menu, element):
+            toggle = getattr(self.visibility_menu, element)
+            if index == 0:
+                toggle.change_view_status()
+            elif index == 1:
+                toggle.change_select_status()
+            self.level_view.do_redraw()
+
     def on_filter_update(self):
         filters = []
         for object_toggle in self.visibility_menu.get_entries():
@@ -1059,6 +1068,7 @@ class GenEditor(QMainWindow):
         self.leveldatatreeview.split.connect(self.split_group_from_tree)
         self.leveldatatreeview.remove_type.connect(self.remove_all_of_type)
         self.leveldatatreeview.remove_all.connect(self.remove_all_points)
+        self.leveldatatreeview.visible_changed.connect(lambda element, index: self.on_visible_menu_changed(element, index))
 
 
 

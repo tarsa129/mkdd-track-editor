@@ -1,13 +1,36 @@
-from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem
+from PyQt5.QtWidgets import QTreeWidget, QTreeWidgetItem, QPushButton, QHBoxLayout, QWidget
 from lib.libkmp import KMP,  get_kmp_name, KMPPoint, Area, Camera, PointGroups, MapObject
 from widgets.data_editor_options import AREA_TYPES, CAME_TYPES, routed_cameras
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QAction, QMenu
 
+class ToggleButton(QPushButton):
+    def __init__(self, text, status) -> None:
+        super().__init__()
+        self.setText(text)
+        self.status = status
+
+class VisiSelecButtons(QWidget):
+    def __init__(self, signal, element, status):
+        super().__init__()
+        self.hlayout = QHBoxLayout()
+        self.visbutton = ToggleButton("V", status[0])
+        self.visbutton.clicked.connect(lambda: self.emit_change(0))
+        self.selbutton = ToggleButton("S", status[1])
+        self.selbutton.clicked.connect(lambda: self.emit_change(1))
+        self.hlayout.addWidget(self.visbutton)
+        self.hlayout.addWidget(self.selbutton)
+        self.setLayout(self.hlayout)
+
+        self.emitter = signal
+        self.element = element.replace(" ", "").lower()
+    def emit_change(self, index):
+        self.emitter.emit(self.element, index)
 
 class KMPHeader(QTreeWidgetItem):
     def __init__(self):
         super().__init__()
+
         self.setText(0, "Track Settings")
 
 
@@ -17,7 +40,7 @@ class ObjectGroup(QTreeWidgetItem):
             super().__init__()
         else:
             super().__init__(parent)
-        self.setText(0, name)
+        self.setText(1, name)
         self.bound_to = bound_to
 
     def remove_children(self):
@@ -47,7 +70,7 @@ class ObjectGroupKartPoints(ObjectGroup):
             display_string += "Left, " if self.bound_to.pole_position == 0 else "Right, "
             display_string += "Normal" if self.bound_to.start_squeeze == 0 else "Narrow"
 
-            self.setText(0, display_string)
+            self.setText(1, display_string)
 
     def update_name(self):
         self.set_name()
@@ -65,7 +88,7 @@ class EnemyPointGroup(PointGroup):
         index = self.parent().indexOfChild(self)
 
         self.setText(
-            0,
+            1,
             "Enemy Path {0}".format(index,          self.bound_to.id))
 
 class ItemPointGroup(PointGroup):
@@ -246,7 +269,7 @@ class KartpointEntry(NamedItem):
             result = "All"
         else:
             result = "ID:{0}".format(playerid)
-        self.setText(0, "Kart Start Point {0}".format(result))
+        self.setText(0, "{0}".format(result))
 
 class AreaEntry(NamedItem):
     def __init__(self, parent, name, bound_to):
@@ -332,13 +355,16 @@ class LevelDataTreeView(QTreeWidget):
     split = pyqtSignal(PointGroup, RoutePoint)
     remove_type = pyqtSignal(NamedItem)
     remove_all = pyqtSignal(PointGroups)
+
+    visible_changed = pyqtSignal(str, int)
     #split_checkpoint = pyqtSignal(CheckpointGroup, Checkpoint)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args)
+    def __init__(self, central_widget, vis_menu):
+        super().__init__(central_widget)
+        self.vis_menu = vis_menu
         #self.setMaximumWidth(600)
         self.resize(200, self.height())
-        self.setColumnCount(1)
+        self.setColumnCount(2)
         self.setHeaderLabel("Track Data Entries")
         self.setHeaderHidden(True)
 
@@ -346,10 +372,10 @@ class LevelDataTreeView(QTreeWidget):
         self.addTopLevelItem(self.kmpheader)
 
         self.kartpoints = self._add_group("Kart Start Points", ObjectGroupKartPoints)
-        self.enemyroutes = self._add_group("Enemy Paths")
-        self.itemroutes = self._add_group("Item Groups")
+        self.enemyroutes = self._add_group("Enemy Routes")
+        self.itemroutes = self._add_group("Item Routes")
 
-        self.checkpointgroups = self._add_group("Checkpoint Groups")
+        self.checkpointgroups = self._add_group("Checkpoints")
         self.respawnpoints = self._add_group("Respawn Points")
 
         self.objects = self._add_group("Objects", ObjectGroupObjects)
@@ -361,8 +387,8 @@ class LevelDataTreeView(QTreeWidget):
         #self.cameraroutes = self._add_group("Camera Paths")
         #self.cameras.set_name()
 
-        self.cannons = self._add_group("Cannon Points ")
-        self.missions = self._add_group("Mission Success Points ")
+        self.cannons = self._add_group("Cannon Points")
+        self.missions = self._add_group("Mission Success Points")
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.run_context_menu)
@@ -449,6 +475,10 @@ class LevelDataTreeView(QTreeWidget):
         else:
             group = customgroup(name)
         self.addTopLevelItem(group)
+
+        status = self.get_status(name)
+
+        self.setItemWidget(group, 0, VisiSelecButtons(self.visible_changed, name, status))
         return group
 
     def reset(self):
@@ -544,6 +574,7 @@ class LevelDataTreeView(QTreeWidget):
 
         # Restore expansion states.
         self._set_expansion_states(self.enemyroutes, enemyroutes_expansion_states)
+        self._set_expansion_states(self.itemroutes, enemyroutes_expansion_states)
         self._set_expansion_states(self.checkpointgroups, checkpointgroups_expansion_states)
         #self._set_expansion_states(self.objectroutes, routes_expansion_states)
         #self._set_expansion_states(self.cameraroutes, routes_expansion_states)
@@ -606,3 +637,9 @@ class LevelDataTreeView(QTreeWidget):
         for i in range(item_count):
             item = parent_item.child(i)
             item.setExpanded(expansion_states[i])
+
+    def get_status(self, name):
+        if hasattr(self.vis_menu, name.replace(" ", "").lower() ):
+            toggle = getattr(self.vis_menu, name.replace(" ", "").lower() )
+            return (toggle.is_visible(), toggle.is_selectable())
+        return (None, None)

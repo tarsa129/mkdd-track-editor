@@ -720,7 +720,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                 #self.dolphin.render_collision(self, objlist)
                 offset = len(objlist)
 
-                if vismenu.enemyroute.is_selectable():
+                if vismenu.enemyroutes.is_selectable():
                     for i, obj in enumerate(self.level_file.enemypointgroups.points()):
                         objlist.append(
                             ObjectSelectionEntry(obj=obj,
@@ -733,7 +733,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                 offset = len(objlist)
 
-                if vismenu.itemroute.is_selectable():
+                if vismenu.itemroutes.is_selectable():
                     for i, obj in enumerate(self.level_file.itempointgroups.points()):
                         objlist.append(
                             ObjectSelectionEntry(obj=obj,
@@ -800,7 +800,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                 offset = len(objlist)
 
-                if vismenu.replayareas.is_selectable():
+                if vismenu.replaycameras.is_selectable():
                     i = 0
                     for route in self.level_file.replaycameraroutes:
                         for obj in route.points[1:]:
@@ -846,11 +846,11 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         (vismenu.objects.is_selectable(), self.level_file.objects.objects),
                         (vismenu.kartstartpoints.is_selectable(), self.level_file.kartpoints.positions),
                         (vismenu.areas.is_selectable(), self.level_file.areas),
-                        (vismenu.replayareas.is_selectable(), self.level_file.replayareas),
-                        (vismenu.replayareas.is_selectable(), self.level_file.replaycameras),
-                        (vismenu.checkpoints.is_selectable(), self.level_file.respawnpoints),
+                        (vismenu.replaycameras.is_selectable(), self.level_file.replayareas),
+                        (vismenu.replaycameras.is_selectable(), self.level_file.replaycameras),
+                        (vismenu.respawnpoints.is_selectable(), self.level_file.respawnpoints),
                         (vismenu.cannonpoints.is_selectable(), self.level_file.cannonpoints),
-                        (vismenu.missionpoints.is_selectable(), self.level_file.missionpoints)
+                        (vismenu.missionsuccesspoints.is_selectable(), self.level_file.missionpoints)
 
                         ):
                     offset = len(objlist)
@@ -1025,7 +1025,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
             select_optimize = {x:True for x in selected}
 
-            if vismenu.enemyroute.is_visible():
+            if vismenu.enemyroutes.is_visible():
                 enemypoints_to_highlight = set()
                 all_groups = self.level_file.enemypointgroups.groups
                 selected_groups = [False] * len(all_groups) #used to determine if a group should be selected - use instead of group_selected
@@ -1125,7 +1125,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                         if selected_groups[i]: #or selected_groups[group]:
                             glLineWidth(1.0)
-            if vismenu.itemroute.is_visible():
+            if vismenu.itemroutes.is_visible():
                 enemypoints_to_highlight = set()
 
                 all_groups = self.level_file.itempointgroups.groups
@@ -1525,7 +1525,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     if selected or circle:
                         glLineWidth(1.0)
 
-            if vismenu.replayareas.is_visible():
+            if vismenu.replaycameras.is_visible():
 
                 for object in self.level_file.replayareas:
                     self.models.render_generic_position_rotation_colored("areas",
@@ -1669,7 +1669,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     glEnd()
                     if selected:
                         glLineWidth(1.0)
-            if vismenu.checkpoints.is_visible():
+            if vismenu.respawnpoints.is_visible():
                 used_respawns = self.level_file.checkpoints.get_used_respawns()
                 for i, object in enumerate( self.level_file.respawnpoints):
                     render_type = "unusedrespawn"
@@ -1691,7 +1691,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     self.models.render_generic_position_rotation_colored("cannon",
                                                                 object.position, object.rotation,
                                                                  object in select_optimize)
-            if vismenu.missionpoints.is_visible():
+            if vismenu.missionsuccesspoints.is_visible():
                 for object in self.level_file.missionpoints:
                     self.models.render_generic_position_rotation_colored("mission",
                                                                 object.position, object.rotation,
@@ -1871,6 +1871,21 @@ class ObjectViewSelectionToggle(object):
         menuparent.addAction(self.action_view_toggle)
         menuparent.addAction(self.action_select_toggle)
 
+    def change_view_status(self):
+        if self.is_visible():
+            self.action_view_toggle.setChecked(False)
+            self.action_select_toggle.setChecked(False)
+        else:
+            self.action_view_toggle.setChecked(True)
+
+    def change_select_status(self):
+        if self.is_selectable():
+            self.action_view_toggle.setChecked(False)
+            self.action_select_toggle.setChecked(False)
+        else:
+            self.action_view_toggle.setChecked(True)
+            self.action_select_toggle.setChecked(True)
+
     def handle_view_toggle(self, val):
         if not val:
             self.action_select_toggle.setChecked(False)
@@ -1904,21 +1919,21 @@ class FilterViewMenu(QMenu):
         self.addAction(self.hide_all)
 
         self.kartstartpoints = ObjectViewSelectionToggle("Kart Start Points", self)
-        self.enemyroute = ObjectViewSelectionToggle("Enemy Routes", self)
-        self.itemroute = ObjectViewSelectionToggle("Item Routes", self)
+        self.enemyroutes = ObjectViewSelectionToggle("Enemy Routes", self)
+        self.itemroutes = ObjectViewSelectionToggle("Item Routes", self)
         self.checkpoints = ObjectViewSelectionToggle("Checkpoints", self)
-        #self.respawnpoints = ObjectViewSelectionToggle("Respawn Points", self)
+        self.respawnpoints = ObjectViewSelectionToggle("Respawn Points", self)
 
         self.objects = ObjectViewSelectionToggle("Objects", self)
         #self.objectroutes = ObjectViewSelectionToggle("Object Paths", self)
 
         self.areas = ObjectViewSelectionToggle("Areas", self)
-        self.replayareas = ObjectViewSelectionToggle("Replay Cameras", self)
+        self.replaycameras = ObjectViewSelectionToggle("Replay Cameras", self)
         self.cameras = ObjectViewSelectionToggle("Cameras", self)
         #self.cameraroutes = ObjectViewSelectionToggle("Camera Paths", self)
 
         self.cannonpoints = ObjectViewSelectionToggle("Cannon Points", self)
-        self.missionpoints = ObjectViewSelectionToggle("Mission Success Points", self)
+        self.missionsuccesspoints = ObjectViewSelectionToggle("Mission Success Points", self)
 
 
         for action in self.get_entries():
@@ -1926,16 +1941,16 @@ class FilterViewMenu(QMenu):
             action.action_select_toggle.triggered.connect(self.emit_update)
 
     def get_entries(self):
-        return (self.enemyroute,
-                self.itemroute,
+        return (self.enemyroutes,
+                self.itemroutes,
                 self.checkpoints,
                 self.objects,
                 self.areas,
-                self.replayareas,
+                self.replaycameras,
                 self.cameras,
                 self.kartstartpoints,
                 self.cannonpoints,
-                self.missionpoints
+                self.missionsuccesspoints
                )
 
 
