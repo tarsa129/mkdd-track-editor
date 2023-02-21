@@ -1944,6 +1944,7 @@ class FilterViewMenu(QMenu):
         return (self.enemyroutes,
                 self.itemroutes,
                 self.checkpoints,
+                self.respawnpoints,
                 self.objects,
                 self.areas,
                 self.replaycameras,

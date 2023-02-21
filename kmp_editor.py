@@ -942,7 +942,7 @@ class GenEditor(QMainWindow):
                 toggle.change_view_status()
             elif index == 1:
                 toggle.change_select_status()
-            self.level_view.do_redraw()
+            self.on_filter_update()
 
     def on_filter_update(self):
         filters = []

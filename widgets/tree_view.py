@@ -3,12 +3,27 @@ from lib.libkmp import KMP,  get_kmp_name, KMPPoint, Area, Camera, PointGroups, 
 from widgets.data_editor_options import AREA_TYPES, CAME_TYPES, routed_cameras
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QAction, QMenu
+from PyQt5.QtGui import QIcon
 
 class ToggleButton(QPushButton):
     def __init__(self, text, status) -> None:
         super().__init__()
-        self.setText(text)
+
+        if text == "V":
+            self.yes_icon = QIcon('resources/visible.png')
+            self.no_icon = QIcon('resources/novis.png')
+        elif text == "S":
+            self.yes_icon = QIcon('resources/select.png')
+            self.no_icon = QIcon('resources/noselec.png')
+
+        self.set_state(status)
+
+    def set_state(self, status):
         self.status = status
+        if self.status:
+            self.setIcon(self.yes_icon)
+        else:
+            self.setIcon(self.no_icon)
 
 class VisiSelecButtons(QWidget):
     def __init__(self, signal, element, status):
@@ -25,6 +40,20 @@ class VisiSelecButtons(QWidget):
         self.emitter = signal
         self.element = element.replace(" ", "").lower()
     def emit_change(self, index):
+        if index == 0:
+            if self.visbutton.status: #turning visbutton off
+                self.visbutton.set_state(False)
+                self.selbutton.set_state(False)
+            else: #turning visbutton on
+                self.visbutton.set_state(True)
+        elif index == 1:
+            if self.selbutton.status: #turning visbuton off
+                self.visbutton.set_state(False)
+                self.selbutton.set_state(False)
+            else: #turning selbutton true
+                self.visbutton.set_state(True)
+                self.selbutton.set_state(True)
+
         self.emitter.emit(self.element, index)
 
 class KMPHeader(QTreeWidgetItem):
@@ -133,7 +162,7 @@ class CameraPointGroup(ObjectGroup):
 class NamedItem(QTreeWidgetItem):
     def __init__(self, parent, name, bound_to, index=None):
         super().__init__(parent)
-        self.setText(0, name)
+        #self.setText(0, name)
         self.bound_to = bound_to
         self.index = index
         self.update_name()
@@ -256,7 +285,7 @@ class ObjectEntry(NamedItem):
         elif (obj.route_info is None or obj.route_info == -1) and obj.route_obj is not None:
             text_descrip += " (HAS USELESS ROUTE)"
 
-        self.setText(0, text_descrip)
+        self.setText(1, text_descrip)
 
 
     def __lt__(self, other):
@@ -269,7 +298,7 @@ class KartpointEntry(NamedItem):
             result = "All"
         else:
             result = "ID:{0}".format(playerid)
-        self.setText(0, "{0}".format(result))
+        self.setText(1, "{0}".format(result))
 
 class AreaEntry(NamedItem):
     def __init__(self, parent, name, bound_to):
@@ -303,7 +332,7 @@ class AreaEntry(NamedItem):
                     disp_string += ", (Group: {0})".format(area.setting1)
         else:
             disp_string = "INVALID"
-        self.setText(0, disp_string)
+        self.setText(1, disp_string)
 
 class CameraEntry(NamedItem):
     def __init__(self, parent, name, bound_to, index):
@@ -322,7 +351,7 @@ class CameraEntry(NamedItem):
                     text_descrip += " (NEEDS A ROUTE)"
         else:
             text_descrip += "INVALID"
-        self.setText(0, text_descrip)
+        self.setText(1, text_descrip)
 
 class RespawnEntry(NamedItem):
     def update_name(self):
@@ -639,6 +668,7 @@ class LevelDataTreeView(QTreeWidget):
             item.setExpanded(expansion_states[i])
 
     def get_status(self, name):
+
         if hasattr(self.vis_menu, name.replace(" ", "").lower() ):
             toggle = getattr(self.vis_menu, name.replace(" ", "").lower() )
             return (toggle.is_visible(), toggle.is_selectable())
