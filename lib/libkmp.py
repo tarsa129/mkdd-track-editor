@@ -1639,6 +1639,8 @@ class Area(object):
                     self.__class__.level_file.replaycameraroutes.remove(self.camera.route_obj)
         if self.route_obj is not None:
             self.route_obj.used_by.remove(self)
+            if len(self.route_obj.used_by) == 0:
+                self.__class__.level_file.arearoutes.remove(self.route_obj)
 
 class Areas(ObjectContainer):
     def __init__(self):

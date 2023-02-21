@@ -1563,11 +1563,10 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                 routes_to_highlight = [camera.route_obj for camera in self.level_file.replaycameras if camera in select_optimize]
                 routes_to_circle = [camera.route_obj for camera in self.level_file.replaycameras if camera in cameras_to_circle]
-
                 for i, route in enumerate(self.level_file.replaycameraroutes):
                     selected = route in routes_to_highlight
 
-                    if route in self.selected:
+                    if route in self.selected: #probably pointless
                         selected = True
                     last_point = None
                     if route.used_by:
@@ -1589,7 +1588,6 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                             if last_point is not None:
                                 self.models.draw_arrow_head(last_point.position, point.position)
                             last_point = point
-
                     if selected:
                         glLineWidth(3.0)
                     glBegin(GL_LINE_STRIP)
