@@ -3046,6 +3046,8 @@ class GenEditor(QMainWindow):
                     old_camera = area.camera
                     area.camera = endpoint
                     self.update_camera_used_by(area, old_camera, area.camera )
+                    if not old_camera.used_by:
+                        self.level_file.remove_camera(old_camera)
                 if self.connect_start.type == 3 and isinstance(endpoint, RoutePoint) and isinstance(endpoint.partof, AreaRoute):
                     old_route = area.route_obj
                     area.route_obj = endpoint.partof
