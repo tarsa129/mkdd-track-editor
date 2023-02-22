@@ -1343,25 +1343,19 @@ class MapObject(object):
         return 1
     def copy(self):
 
+        route_obj = self.route_obj
+        widget = self.widget
+        self.route_obj = None
+        self.widget = None
 
-        this_class = self.__class__
-        obj = this_class.new()
-        obj.position = Vector3(self.position.x, self.position.y, self.position.z)
-        obj.rotation =  self.rotation.copy()
-        obj.scale = Vector3(self.scale.x, self.scale.y, self.scale.z)
-        obj.objectid = self.objectid
-        obj.route = self.route
+        new_object = deepcopy(self)
 
-        obj.single = self.single
-        obj.double = self.double
-        obj.triple = self.triple
+        self.route_obj = route_obj
+        self.widget = widget
 
-        obj.userdata = []
-        for setting in self.userdata:
-            obj.userdata.append(setting)
-        obj.route_info = self.route_info
+        new_object.route_obj = route_obj
 
-        return obj
+        return new_object
 
     def has_route(self):
          from widgets.data_editor import load_route_info

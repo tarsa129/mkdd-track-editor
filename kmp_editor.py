@@ -1659,7 +1659,6 @@ class GenEditor(QMainWindow):
             self.object_to_be_added = None
 
             new_route = self.level_file.get_route_for_obj(obj)
-
             if obj.route_obj is not None :
                 for point in obj.route_obj.points:
                     new_point = libkmp.RoutePoint.new()
@@ -2138,7 +2137,7 @@ class GenEditor(QMainWindow):
 
         placed_objects = []
 
-        added_area = False
+        added_area = -1
         for object, group, position in self.objects_to_be_added:
             if isinstance(object, libkmp.Area):
                 added_area = object.type
@@ -2166,7 +2165,10 @@ class GenEditor(QMainWindow):
                     self.last_position_clicked = [(x, y, z)]
 
             else:
-                placeobject = deepcopy(object)
+                try:
+                    placeobject = object.copy()
+                except:
+                    placeobject = deepcopy(object)
                 placed_objects.append(placeobject)
 
                 if hasattr(placeobject, "position"):
@@ -2254,7 +2256,7 @@ class GenEditor(QMainWindow):
                 object.route_obj.used_by.append(object)
 
                 for point in object.route_obj.points:
-                    point.position = point.position + object.position
+                    point.position = point.position + placeobject.position
                     self.action_ground_spec_object(point)
 
         self.pik_control.update_info()
