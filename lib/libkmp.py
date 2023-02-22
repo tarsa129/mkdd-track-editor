@@ -1573,7 +1573,10 @@ class Area(object):
         route_obj = self.route_obj
         widget = self.widget
 
-        self.enemypoint = self.camera = self.route_obj = self.widget = None
+        self.enemypoint = None
+        self.camera = None
+        self.route_obj = None
+        self.widget = None
 
         new_area = deepcopy(self)
 
@@ -3000,7 +3003,7 @@ class KMP(object):
             cam.route_obj.used_by.remove(cam)
             if not cam.route_obj.used_by:
                 #delete the route as well
-                self.level_file.replaycameraroutes.remove(self.camera.route_obj)
+                self.replaycameraroutes.remove(cam.route_obj)
 
 
 
