@@ -1813,6 +1813,13 @@ class Camera(object):
         return cam
 
     def copy(self):
+        nextcam_obj = self.nextcam_obj
+        route_obj = self.route_obj
+        widget = self.widget
+        used_by = self.used_by
+
+
+
         new_camera = self.__class__.new()
         new_camera.position = Vector3(self.position.x, self.position.y, self.position.z)
         new_camera.position2 = Vector3(self.position2.x, self.position2.y, self.position2.z)

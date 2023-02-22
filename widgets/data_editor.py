@@ -152,7 +152,7 @@ class DataEditor(QWidget):
             layout.addLayout(child_layout)
         elif widgetlist:
             layout.addWidget(widgetlist[0])
-        return layout
+        return layout, label
 
 
     def create_clickable_widgets(self, parent, text, widgetlist):
@@ -368,13 +368,13 @@ class DataEditor(QWidget):
             line_edit.editingFinished.connect(input_edited)
             line_edits.append(line_edit)
 
-        layout = self.create_labeled_widgets(self, text, line_edits)
+        layout, labels = self.create_labeled_widgets(self, text, line_edits)
         self.vbox.addLayout(layout)
 
 
         return line_edits
 
-    def add_multiple_decimal_input(self, text, attribute, subattributes, min_val, max_val):
+    def add_multiple_decimal_input(self, text, attribute, subattributes, min_val, max_val, return_both = False):
         line_edits = []
         for subattr in subattributes:
             line_edit = QLineEdit(self)
@@ -385,9 +385,11 @@ class DataEditor(QWidget):
             line_edit.editingFinished.connect(input_edited)
             line_edits.append(line_edit)
 
-        layout = self.create_labeled_widgets(self, text, line_edits)
+        layout, labels = self.create_labeled_widgets(self, text, line_edits)
         self.vbox.addLayout(layout)
 
+        if return_both:
+            return line_edits, labels
         return line_edits
 
     def add_multiple_integer_input_list(self, text, attribute, min_val, max_val):
@@ -403,7 +405,7 @@ class DataEditor(QWidget):
             line_edit.editingFinished.connect(input_edited)
             line_edits.append(line_edit)
 
-        layout = self.create_labeled_widgets(self, text, line_edits)
+        layout, labels = self.create_labeled_widgets(self, text, line_edits)
         self.vbox.addLayout(layout)
 
         return line_edits
@@ -507,7 +509,7 @@ class DataEditor(QWidget):
 
 
 
-        layout = self.create_labeled_widgets(self, "Angles", angle_edits)
+        layout, labels = self.create_labeled_widgets(self, "Angles", angle_edits)
 
 
 
@@ -1157,12 +1159,11 @@ class CameraEdit(DataEditor):
     def setup_widgets(self):
         self.position = self.add_multiple_decimal_input("Position", "position", ["x", "y", "z"],
                                                         -inf, +inf)
-        self.rotation = self.add_rotation_input()
-
-        self.position2 = self.add_multiple_decimal_input("Start Point", "position2", ["x", "y", "z"],
-                                                        -inf, +inf)
-        self.position3 = self.add_multiple_decimal_input("End Point", "position3", ["x", "y", "z"],
-                                                        -inf, +inf)
+        #self.rotation = self.add_rotation_input()
+        self.position2, self.position2_label = self.add_multiple_decimal_input("Start Point", "position2", ["x", "y", "z"],
+                                                        -inf, +inf, True)
+        self.position3, self.position3_label = self.add_multiple_decimal_input("End Point", "position3", ["x", "y", "z"],
+                                                        -inf, +inf, True)
 
         self.type = self.add_dropdown_input("Camera Type", "type", CAME_Type)
 
@@ -1217,7 +1218,13 @@ class CameraEdit(DataEditor):
         self.position3[1].setText(str(round(obj.position3.y, 3)))
         self.position3[2].setText(str(round(obj.position3.z, 3)))
 
-        self.update_rotation(*self.rotation)
+        for widget_group in (self.position2, self.position3):
+            for widget in widget_group:
+                widget.setVisible(obj.type in (0, 1,  3, 4,5))
+        self.position2_label.setVisible(obj.type in (0, 1,  3, 4,5))
+        self.position3_label.setVisible(obj.type in (0, 1,  3, 4,5))
+
+        #self.update_rotation(*self.rotation)
 
 
         self.type.setCurrentIndex( obj.type )
