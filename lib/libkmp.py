@@ -1107,8 +1107,19 @@ class Route(object):
         self.used_by = []
 
     @classmethod
-    def new(cls):
-        return cls()
+    def new(cls, obj = None):
+        route = cls ()
+        if obj is not None:
+            point1 = RoutePoint.new()
+            point1.position = obj.position
+            route.points.append(point1)
+
+            point2 = RoutePoint.new()
+            point2.position = obj.position + Vector3(500, 0, 0)
+            route.points.append(point2)
+
+            route.used_by.append(obj)
+        return route
 
     def copy(self):
         this_class = self.__class__
@@ -1193,18 +1204,11 @@ class ObjectRoute(Route):
         super().__init__()
         self.type = 0
 
-    @classmethod
-    def new(cls):
-        return cls()
-
 class CameraRoute(Route):
     def __init__(self):
         super().__init__()
         self.type = 1
 
-    @classmethod
-    def new(cls):
-        return cls()
 
 class AreaRoute(Route):
     def __init__(self):
@@ -1415,6 +1419,9 @@ class MapObjects(object):
         #print(bol2kmp)
         for object in self.objects:
             object.write(f, start_route)
+
+    def get_routes(self):
+        return list(set([obj.route_obj for obj in self.objects if obj.route_obj is not None and obj.has_route()]))
 
 # Section 6
 # Kart/Starting positions
@@ -1687,6 +1694,10 @@ class ReplayAreas(Areas):
 
     def get_cameras(self):
         return [area.camera for area in self]
+
+    def get_routes(self):
+        cameras = self.get_cameras()
+        return list(set([cam.route_obj for cam in cameras if cam.route_obj is not None and cam.has_route()]))
 # Section 8
 # Cameras
 class FOV:
@@ -1716,13 +1727,16 @@ class Cameras(ObjectContainer):
     def to_opening(self):
         for camera in self:
             camera.__class__ = OpeningCamera
-    
+
     def to_replay(self):
        for camera in self:
             camera.__class__ = ReplayCamera
 
     def get_type(self, type):
         return [cam for cam in self if cam.type == type]
+
+    def get_routes(self):
+        return list(set([cam.route_obj for cam in self if cam.route_obj is not None and cam.has_route()]))
 
 class Camera(object):
     level_file = None
@@ -1845,12 +1859,12 @@ class Camera(object):
 
         return new_camera
 
-    def write(self, f, route_start = 0, cam_start = 0):
+    def write(self, f, route_start = 0, cam_start = 0, camroutes = None):
 
         f.write(pack(">B", self.type ) )
         nextcam = self.set_nextcam()
         nextcam = 255 if nextcam < 0 else nextcam + cam_start
-        route = self.set_route()
+        route = self.set_route(camroutes)
         route = 255 if route < 0 else route + route_start
         f.write(pack(">BBB", nextcam, 0, route) )
 
@@ -1887,17 +1901,11 @@ class Camera(object):
     def has_route(self):
         return (self.type in [2, 5, 6])
 
-    def set_route(self):
-        if self.has_route:
-            replayroutes = __class__.level_file.replaycameraroutes
-            for i,route in enumerate(replayroutes):
+    def set_route(self, routes):
+        if self.has_route():
+            for i,route in enumerate(routes):
                 if route == self.route_obj:
                     return i
-
-            routes = __class__.level_file.cameraroutes
-            for i, route in enumerate(routes):
-                if route == self.route_obj:
-                    return i + len(replayroutes)
         return -1
 
     def set_nextcam(self):
@@ -1908,11 +1916,17 @@ class Camera(object):
                 return i
         return -1
 
+    def handle_route_change(self):
+        if self.has_route() and self.route_obj is None:
+            self.route_obj = CameraRoute.new(self)
+
+
 class ReplayCamera(Camera):
     @classmethod
     def from_generic(cls, generic):
         generic.__class__ = cls
         return generic
+
 
 class OpeningCamera(Camera):
 
@@ -2443,7 +2457,7 @@ class KMP(object):
         """separate areas into replay and not"""
         self.replayareas.extend( self.areas.get_type(0) )
         for area in self.replayareas:
-            self.areas.remove(area)            
+            self.areas.remove(area)
         self.areas.sort( key = lambda h: h.type)
 
         """snap cameras to routes"""
@@ -2549,12 +2563,15 @@ class KMP(object):
         ktph_offset = self.checkpoints.write(f)
         offsets.append(ktph_offset) #offset 7 for ktph
 
+        cameraroutes = self.cameras.get_routes()
+        replaycameraroutes = self.replayareas.get_routes()
+
         offsets.append(f.tell() ) #offset 8 for gobj
-        self.objects.write(f, len(self.replaycameraroutes) + len(self.cameraroutes) + len(self.arearoutes))
+        self.objects.write(f, len(replaycameraroutes) + len(cameraroutes) + len(self.arearoutes))
 
         routes = ObjectContainer()
-        routes.extend(self.replaycameraroutes)
-        routes.extend(self.cameraroutes)
+        routes.extend(replaycameraroutes)
+        routes.extend(cameraroutes)
         routes.extend(self.arearoutes)
         routes.extend(self.routes)
 
@@ -2578,7 +2595,7 @@ class KMP(object):
         areas = Areas()
         areas.extend( self.areas  )
         areas.extend( self.replayareas )
-        areas.write(f, len(self.cameraroutes) + len(self.replaycameraroutes) )
+        areas.write(f, len(cameraroutes) + len(replaycameraroutes) )
 
         cameras = Cameras()
         cameras.extend( self.replaycameras )
@@ -2595,7 +2612,7 @@ class KMP(object):
         f.write(pack(">BB", startcamid, 0) )
 
         for camera in cameras:
-            camera.write(f, 0, len(self.replaycameras))
+            camera.write(f, 0, len(self.replaycameras), routes)
 
         offset = f.tell()  #offset 12 for JPGT
         offsets.append(offset)

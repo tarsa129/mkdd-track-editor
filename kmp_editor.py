@@ -2345,12 +2345,10 @@ class GenEditor(QMainWindow):
                 self.connect_start = self.level_view.selected[0]
                 self.level_view.connecting_mode = True
                 self.level_view.connecting_start = self.connect_start.get_mid()
-            elif isinstance( sel_obj , (KMPPoint, MapObject, Camera, Area) ):
+            elif isinstance( sel_obj , (KMPPoint, MapObject, OpeningCamera, Area) ):
                 if isinstance(sel_obj, MapObject) and sel_obj.route_info is None:
                     return
                 if isinstance(sel_obj, Area) and sel_obj.type not in [0, 3, 4]:
-                    return
-                if isinstance(sel_obj, Camera) and not sel_obj.has_route():
                     return
                 self.connect_start = self.level_view.selected[0]
                 self.level_view.connecting_mode = True
@@ -2533,6 +2531,7 @@ class GenEditor(QMainWindow):
     def on_copy_action_triggered(self):
         # Widgets are unpickleable, so they need to be temporarily stashed. This needs to be done
         # recursively, as top-level groups main contain points associated with widgets too.
+
         object_to_widget = {}
         object_to_usedby = {}
         object_to_partof = {}
@@ -2540,6 +2539,7 @@ class GenEditor(QMainWindow):
         object_to_enemypoint = {}
         object_to_camera = {}
         pending = list(self.level_view.selected)
+
         while pending:
             obj = pending.pop(0)
             if hasattr(obj, 'widget'):
@@ -2553,7 +2553,7 @@ class GenEditor(QMainWindow):
                 obj.partof = None
             if hasattr(obj, 'route_obj'):
                 object_to_routeobj[obj] = obj.route_obj
-                obj.route = obj.set_route()
+                obj.route = obj.set_route( self.level_file.cameras.get_routes() + self.level_file.replayareas.get_routes()  )
                 obj.route_obj = None
             if hasattr(obj, 'enemypoint'):
                 object_to_enemypoint[obj] = obj.enemypoint

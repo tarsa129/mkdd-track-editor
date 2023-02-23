@@ -218,25 +218,13 @@ class MoreButtons(QWidget):
 
 
 
-        elif isinstance(obj, Camera):
+        elif isinstance(obj, OpeningCamera):
 
             if obj.has_route():
-            #auto route camera
-                do_auto_route = QPushButton(self)
-                do_auto_route.setText("Auto Route")
-                do_auto_route.clicked.connect(lambda: self.parent.button_add_from_addi_options(16, obj) )
-                self.vbox.addWidget(do_auto_route)
-
-
                 copy_camera = QPushButton(self)
                 copy_camera.setText("Copy and Place Camera (New Route)")
                 copy_camera.clicked.connect(lambda: self.parent.button_add_from_addi_options(4.5, obj.copy()) )
                 self.vbox.addWidget(copy_camera)
-
-                snap_camera = QPushButton(self)
-                snap_camera.setText("Snap to Route")
-                snap_camera.clicked.connect(lambda: self.parent.button_add_from_addi_options(19, obj) )
-                self.vbox.addWidget(snap_camera)
             else:
                 copy_camera = QPushButton(self)
                 copy_camera.setText("Copy and Place Camera")
@@ -250,16 +238,6 @@ class MoreButtons(QWidget):
             remove_unused_cams.clicked.connect(lambda: self.parent.button_add_from_addi_options(25, obj) )
             self.vbox.addWidget(remove_unused_cams)
 
-            auto_route_all = QPushButton(self)
-            auto_route_all.setText("Auto Route All Cameras")
-            auto_route_all.clicked.connect(lambda: self.parent.button_add_from_addi_options(17, obj) )
-            self.vbox.addWidget(auto_route_all)
-            """
-            snap_camera = QPushButton(self)
-            snap_camera.setText("Snap All Cameras to Route")
-            snap_camera.clicked.connect(lambda: self.parent.button_add_from_addi_options(20, obj) )
-            self.vbox.addWidget(snap_camera)
-            """
             new_camera = QPushButton(self)
             new_camera.setText("Add Opening Camera Type 4 (KartPathFollow)")
             new_camera.clicked.connect(lambda: self.parent.button_add_from_addi_options(8, 4) )
@@ -270,10 +248,11 @@ class MoreButtons(QWidget):
             new_camera.clicked.connect(lambda: self.parent.button_add_from_addi_options(8, 5) )
             self.vbox.addWidget(new_camera)
 
-            new_goal = QPushButton(self)
-            new_goal.setText("Add Goal Camera (if currently none)")
-            new_goal.clicked.connect(lambda: self.parent.button_add_from_addi_options(8, 0) )
-            self.vbox.addWidget(new_goal)
+            if not obj.get_type(0):
+                new_goal = QPushButton(self)
+                new_goal.setText("Add Goal Camera")
+                new_goal.clicked.connect(lambda: self.parent.button_add_from_addi_options(8, 0) )
+                self.vbox.addWidget(new_goal)
 
         elif isinstance(obj, ObjectContainer) and obj.assoc is JugemPoint:
 

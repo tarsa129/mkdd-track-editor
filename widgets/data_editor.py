@@ -522,15 +522,15 @@ class DataEditor(QWidget):
         field.setText(str(val))
 
     def update_name(self):
-        if hasattr(self.bound_to, "widget"):
-            if self.bound_to.widget is None:
-                return
+        if hasattr(self.bound_to, "widget") and self.bound_to.widget is not None:
             self.bound_to.widget.update_name()
             if hasattr(self.bound_to.widget, "parent") and self.bound_to.widget.parent() is not None:
                 self.bound_to.widget.parent().sort()
             self.bound_to.widget.setSelected(True)
         if isinstance(self.bound_to, MapObject):
             self.bound_to.set_route_info()
+        elif isinstance(self.bound_to, Camera):
+            self.bound_to.handle_route_change()
 
 
 def create_setter_list(lineedit, bound_to, attribute, index):

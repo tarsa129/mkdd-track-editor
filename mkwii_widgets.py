@@ -676,6 +676,13 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
             pixels = glReadPixels(mouse_pos.x(), self.canvas_height - mouse_pos.y(), 1, 1, GL_RGB, GL_UNSIGNED_BYTE)
             gizmo_hover_id = pixels[2]
 
+        objectroutes = []
+        cameraroutes = self.level_file.cameras.get_routes()
+        replaycameraroutes = self.level_file.replayareas.get_routes()
+        arearoutes = []
+
+        replaycameras = []
+
         #print(self.gizmo.position, campos)
         vismenu: FilterViewMenu = self.visibility_menu
         while len(self.selectionqueue) > 0:
@@ -706,6 +713,8 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                 #if hit != 0xFF and do_:
 
             glClearColor(1.0, 1.0, 1.0, 1.0)
+
+
 
             if self.level_file is not None and hit == 0xFF and not do_gizmo:
                 #objects = self.pikmin_generators.generators
@@ -787,7 +796,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                 if vismenu.cameras.is_selectable(): #camera routes
                     i = 0
-                    for route in self.level_file.cameraroutes:
+                    for route in cameraroutes:
                         for obj in route.points[1:]:
                             objlist.append(
                                 ObjectSelectionEntry(obj=obj,
@@ -802,7 +811,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                 if vismenu.replaycameras.is_selectable():
                     i = 0
-                    for route in self.level_file.replaycameraroutes:
+                    for route in replaycameraroutes:
                         for obj in route.points[1:]:
                             objlist.append(
                                 ObjectSelectionEntry(obj=obj,
@@ -1563,7 +1572,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                 routes_to_highlight = [camera.route_obj for camera in self.level_file.replaycameras if camera in select_optimize]
                 routes_to_circle = [camera.route_obj for camera in self.level_file.replaycameras if camera in cameras_to_circle]
-                for i, route in enumerate(self.level_file.replaycameraroutes):
+                for i, route in enumerate(replaycameraroutes):
                     selected = route in routes_to_highlight
 
                     if route in self.selected: #probably pointless
@@ -1636,7 +1645,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                 routes_to_highlight = set( [camera.route_obj for camera in self.level_file.cameras if camera in select_optimize]  )
                 glLineWidth(1.0)
-                for i, route in enumerate(self.level_file.cameraroutes):
+                for i, route in enumerate(cameraroutes):
                     selected = route in routes_to_highlight or route in self.selected
 
                     last_point = None
