@@ -2850,8 +2850,8 @@ class KMP(object):
         for i, group in enumerate( self.enemypointgroups.groups ):
 
             new_cp_group = CheckpointGroup()
-            new_cp_group.prevgroup = group.prevgroup
-            new_cp_group.nextgroup = group.nextgroup
+            #new_cp_group.prevgroup = group.prevgroup
+            #new_cp_group.nextgroup = group.nextgroup
 
             self.checkpoints.groups.append( new_cp_group )
 
@@ -2899,9 +2899,8 @@ class KMP(object):
 
         for group in self.enemypointgroups.groups:
             new_group = ItemPointGroup()
-            new_group.id = group.id
-            new_group.prevgroup = group.prevgroup.copy()
-            new_group.nextgroup = group.nextgroup.copy()
+            new_group.prevgroup = [self.enemypointgroups.get_idx(prev) for prev in group.prevgroup]
+            new_group.nextgroup = [self.enemypointgroups.get_idx(next) for next in group.nextgroup]
 
             for point in group.points:
                 new_point = ItemPoint.new()
@@ -2910,6 +2909,10 @@ class KMP(object):
                 new_group.points.append(new_point)
 
             self.itempointgroups.groups.append(new_group)
+
+        for group in self.itempointgroups.groups:
+            group.prevgroup = [self.itempointgroups.groups[prev] for prev in group.prevgroup]
+            group.nextgroup = [self.itempointgroups.groups[next] for next in group.nextgroup]
 
     #ruoutes code
     def get_route_container(self, obj):
