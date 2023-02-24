@@ -1197,7 +1197,7 @@ class GenEditor(QMainWindow):
             filepath, chosentype = QFileDialog.getOpenFileName(
                 self, "Open File",
                 self.pathsconfig["kmp"],
-                "KMP or SZS(*.kmp *.szs);;KMP files (*.kmp);;Archived files (*.szs);;All files (*)",
+                "KMP(*.kmp);;KMP files (*.kmp);;All files (*)",
                 self.last_chosen_type)
         else:
             chosentype = None
@@ -1320,7 +1320,7 @@ class GenEditor(QMainWindow):
         filepath, choosentype = QFileDialog.getSaveFileName(
             self, "Save File",
             self.pathsconfig["kmp"],
-            "MKWii Track Data (*.kmp);;All files (*)",
+            "KMP(*.kmp);;All files (*)",
             self.last_chosen_type)
 
         if filepath:

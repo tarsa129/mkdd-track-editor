@@ -1263,10 +1263,7 @@ class RoutePoint(object):
 
     def write(self, f, force_actual = False):
         f.write(pack(">fff", self.position.x, self.position.y, self.position.z ) )
-        if self.unk1 == 0 and not force_actual:
-            f.write(pack(">HH", 30, 0) )
-        else:
-            f.write(pack(">HH", self.unk1 & 0xFFFF, self.unk2) )
+        f.write(pack(">HH", self.unk1, self.unk2) )
 
 # Section 5
 # Objects
