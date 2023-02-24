@@ -217,7 +217,8 @@ class Collision(object):
         for i, face in triangles:#face in self.faces:#
             #print(face)
             if len(face) > 3:
-                if (face[3] in self.hidden_coltypes) or ( face[3] & 0x1F in self.hidden_colgroups):
+                if ( str(face[3]) in str(self.hidden_coltypes)) \
+                    or ( str(face[3] & 0x1F) in str(self.hidden_colgroups)):
                     continue
 
             v1 = face[0]
