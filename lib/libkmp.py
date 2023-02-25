@@ -1317,7 +1317,7 @@ class MapObject(object):
         object.route = read_uint16(f)
         if object.route == 65535:
             object.route = -1
-        object.userdata = unpack(">hhhhhhhh", f.read(2 * 8))
+        object.userdata = list(unpack(">hhhhhhhh", f.read(2 * 8)))
         object.split_prescence( read_uint16(f) )
 
         return object

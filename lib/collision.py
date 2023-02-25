@@ -253,7 +253,6 @@ class Collision(object):
             if ((normal.dot(vectest1)) >= 0 and (normal.dot(vectest2)) >= 0 and (normal.dot(vectest3)) >= 0):
 
                 height = point.y
-
                 if hit is None or abs(y - height) < abs(y - hit):
                     hit = height
 
