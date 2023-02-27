@@ -1245,8 +1245,8 @@ class RoutePoint(object):
         position = Vector3(*unpack(">fff", f.read(12)))
         point = cls(position)
 
-        point.unk1 = read_uint16(f) & 0xFF
-        point.unk2 = read_uint16(f) & 0xFF
+        point.unk1 = read_uint16(f)
+        point.unk2 = read_uint16(f)
         point.partof = partof
         return point
 
