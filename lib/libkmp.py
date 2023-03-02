@@ -1299,8 +1299,8 @@ class MapObject(object):
 
     def split_prescence(self, prescence):
         self.single = prescence & 0x1
-        self.double = prescence & 0x2
-        self.triple = prescence & 0x4
+        self.double = prescence & 0x2 >> 1
+        self.triple = prescence & 0x4 >> 2
 
     @classmethod
     def from_file(cls, f):
