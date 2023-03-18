@@ -1778,6 +1778,7 @@ class GenEditor(QMainWindow):
                 point = libkmp.RoutePoint.new()
                 point.partof = new_route
                 new_route.points.append(point)
+            new_route.points[0].unk1 = 30
 
             self.objects_to_be_added.append( [new_route, None, None ]  )
             self.objects_to_be_added.append( [new_camera, None, None ]  )
