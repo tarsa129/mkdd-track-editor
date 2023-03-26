@@ -1067,6 +1067,7 @@ class GenEditor(QMainWindow):
         self.leveldatatreeview.reverse.connect(self.reverse_all_of_group)
         self.leveldatatreeview.split.connect(self.split_group_from_tree)
         self.leveldatatreeview.remove_type.connect(self.remove_all_of_type)
+        self.leveldatatreeview.select_type.connect(self.select_all_of_type)
         self.leveldatatreeview.remove_all.connect(self.remove_all_points)
         self.leveldatatreeview.visible_changed.connect(lambda element, index: self.on_visible_menu_changed(element, index))
 
@@ -1139,6 +1140,22 @@ class GenEditor(QMainWindow):
         self.leveldatatreeview.set_objects(self.level_file)
         self.set_has_unsaved_changes(True)
 
+    def select_all_of_type(self, item):
+        if hasattr(item, "bound_to"):
+            obj = item.bound_to
+        else:
+            obj = item
+        print("hello")
+        if isinstance(obj, MapObject):
+            to_select = [mapobject for mapobject in self.level_file.objects.objects if mapobject.objectid == obj.objectid]
+        elif isinstance(obj, Area):
+            to_select = [area for area in self.level_file.areas if area.type == obj.type]
+        self.level_view.selected = to_select
+        self.level_view.selected_positions = [mapobject.position for mapobject in to_select]
+        self.level_view.selected_rotations = [mapobject.rotation for mapobject in to_select]
+
+        self.update_3d()
+        self.pik_control.reset_info()
 
     def remove_all_points(self, pointgroups : PointGroups):
         pointgroups.remove_all()
@@ -2866,6 +2883,10 @@ class GenEditor(QMainWindow):
                 set_as_first = QAction("Set as First", self)
                 set_as_first.triggered.connect(lambda: self.set_as_first(obj))
                 context_menu.addAction(set_as_first)
+            if isinstance(obj, MapObject):
+                select_type = QAction("Select All of Type", self)
+                select_type.triggered.connect(lambda: self.select_all_of_type(obj))
+                context_menu.addAction(select_type)
 
         context_menu.exec(self.sender().mapToGlobal(position))
         context_menu.destroy()

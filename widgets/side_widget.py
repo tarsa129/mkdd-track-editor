@@ -175,6 +175,9 @@ class PikminSideWidget(QWidget):
         self.objectlist = []
         self.comment_label.setText("")
 
+    def set_info_multiple(self, objs):
+        pass
+
     #updates the side buttons
     def set_buttons(self, obj):
         #so obj is used to determined - this is when stuff switches?

@@ -383,6 +383,7 @@ class LevelDataTreeView(QTreeWidget):
     duplicate = pyqtSignal(ObjectGroup)
     split = pyqtSignal(PointGroup, RoutePoint)
     remove_type = pyqtSignal(NamedItem)
+    select_type = pyqtSignal(NamedItem)
     remove_all = pyqtSignal(PointGroups)
 
     visible_changed = pyqtSignal(str, int)
@@ -474,14 +475,21 @@ class LevelDataTreeView(QTreeWidget):
         elif isinstance(item, (ObjectEntry, AreaEntry)):
             context_menu = QMenu(self)
             remove_all_type = QAction("Remove All of Type", self)
+            select_all_type = QAction("Select All of Type", self)
 
             def emit_remove_typeall():
                 item = self.itemAt(pos)
                 self.remove_type.emit(item)
 
+            def emit_select_typeall():
+                item = self.itemAt(pos)
+                self.select_type.emit(item)
+
             remove_all_type.triggered.connect(emit_remove_typeall)
+            select_all_type.triggered.connect(emit_select_typeall)
 
             context_menu.addAction(remove_all_type)
+            context_menu.addAction(select_all_type)
 
             context_menu.exec(self.mapToGlobal(pos))
             context_menu.destroy()

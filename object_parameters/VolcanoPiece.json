@@ -1,7 +1,7 @@
 {
     "Object Parameters": [
         "Model/KCL reference",
-        "Time until it shakes in seconds at 150cc and mirror mode (already starts 4 seconds before in-game timer)",
+        "Sec until it shakes in seconds at 150cc and mirror mode (starts 4 seconds before in-game timer)",
         "Time it shakes in seconds at 150cc and mirror mode",
         "Time until it shakes in seconds at 100cc (already starts 4 seconds before in-game timer)",
         "Time it shakes in seconds at 100cc",
