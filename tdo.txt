@@ -4,7 +4,6 @@ refactor options code to move stuff to libkmp
 
 enemy/item/checkpoint
 - checkpoints: fix concave checkpoints
-- checkpoints: add lap completion %
 - checkpoints: also highlight the lines going from the checkpoints
 
 gobj:
@@ -21,18 +20,14 @@ poti:
 - make sure that at most 255 routes are being created between camears and areas
 
 area:
-- add tabs for camera editing
 - add back helper functions for copy
 
 came:
 - camera replaying (long shot)
 - render unused cameras differently (or just don't have them)
-- remove rotation
 
 cnpt:
 - add stuff in general (make sure it works in top ortho)
-
-before release: match lorenzis with colors
 
 general:
 error analyzer

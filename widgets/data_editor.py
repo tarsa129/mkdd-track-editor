@@ -790,11 +790,15 @@ class CheckpointEdit(DataEditor):
     def update_data(self):
         obj: Checkpoint = get_cmn_obj(self.bound_to)
 
-        self.start[0].setText(str(round(obj.start.x, 3)))
-        self.start[1].setText(str(round(obj.start.z, 3)))
+        if obj.start.x is not None:
+            self.start[0].setText(str(round(obj.start.x, 3)))
+        if obj.start.z is not None:
+            self.start[1].setText(str(round(obj.start.z, 3)))
 
-        self.end[0].setText(str(round(obj.end.x, 3)))
-        self.end[1].setText(str(round(obj.end.z, 3)))
+        if obj.end.x is not None:
+            self.end[0].setText(str(round(obj.end.x, 3)))
+        if obj.end.z is not None:
+            self.end[1].setText(str(round(obj.end.z, 3)))
 
         self.lapcounter.setChecked(obj.lapcounter != 0)
         self.type.setChecked(obj.type != 0)
@@ -802,7 +806,7 @@ class CheckpointEdit(DataEditor):
         self.update_checkpoint_types()
 
     def update_checkpoint_types(self):
-        obj: Checkpoint = self.bound_to
+        obj: Checkpoint = get_cmn_obj(self.bound_to)
         self.type.setDisabled( obj.lapcounter != 0 )
         self.lapcounter.setDisabled( obj.type != 0)
         self.update_name()

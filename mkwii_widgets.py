@@ -21,7 +21,7 @@ from PyQt5.QtCore import Qt
 
 from helper_functions import calc_zoom_in_factor, calc_zoom_out_factor
 from lib.collision import Collision
-from widgets.editor_widgets import catch_exception, catch_exception_with_dialog
+from widgets.editor_widgets import catch_exception, catch_exception_with_dialog, check_box_convex
 from opengltext import draw_collision
 from lib.vectors import Matrix4x4, Vector3, Line, Plane, Triangle
 from lib.model_rendering import TexturedPlane, Model, Grid, GenericObject, Material
@@ -1273,7 +1273,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                     glColor3f(*colors[i % 4])
 
                     #draw the lines between the points and between successive points
-                    for checkpoint in group.points:
+                    for j, checkpoint in enumerate(group.points):
                         pos1 = checkpoint.start
                         pos2 = checkpoint.end
 
@@ -1286,7 +1286,12 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         elif checkpoint.type == 1 or selected_groups[i] or checkpoint.lapcounter == 1:
                             glLineWidth(highligh_cp_width)
 
-                        if checkpoint.lapcounter == 1:
+                        concave_next = j + 1 < len(group.points) and check_box_convex(checkpoint, group.points[j+1])
+                        concave_prev = j - 1 >= 0 and check_box_convex(checkpoint, group.points[j-1])
+                        if concave_next or concave_prev:
+                            glColor3f( 1.0, 0.0, 0.0 )                            
+
+                        elif checkpoint.lapcounter == 1:
                             glColor3f( 1.0, 0.5, 0.0 )
                         elif checkpoint.type == 1:
                             glColor3f( 1.0, 1.0, 0.0 )
@@ -1296,8 +1301,9 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         glVertex3f(pos2.x, -pos2.z, pos2.y)
                         glEnd()
 
-                        #draw between successive checkpoints
-                        glColor3f(*colors[i % 4])
+                        #draw lines between successive checkpoints
+                        if not concave_prev:
+                            glColor3f(*colors[i % 4])
                         glLineWidth(normal_width)
                         glBegin(GL_LINES)
                         if prev is not None:
