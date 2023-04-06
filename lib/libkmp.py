@@ -1289,6 +1289,19 @@ class MapObject(object):
         self.route_info = None
 
     @classmethod
+    def get_empty(cls):
+        null_obj = cls.new()
+        null_obj.objectid = None
+        null_obj.position = None
+        null_obj.rotation = None
+        null_obj.scale = None
+        null_obj.route_obj = None
+        null_obj.userdata = [None] * 8
+        null_obj.single = 0
+        null_obj.double = 0
+        null_obj.triple = 0
+
+    @classmethod
     def new(cls, obj_id = 101):
         return cls(Vector3(0.0, 0.0, 0.0), obj_id)
 
@@ -1301,6 +1314,18 @@ class MapObject(object):
         self.single = prescence & 0x1
         self.double = prescence & 0x2 >> 1
         self.triple = prescence & 0x4 >> 2
+
+    @classmethod
+    def all_of_same_id(cls, objs):
+        return all([obj.objectid == objs[0].objectid for obj in objs])
+
+    @classmethod
+    def common_obj(cls, objs):
+        cmn = objs[0].copy()
+        members = [attr for attr in dir(cmn) if not callable(getattr(cmn, attr)) and not attr.startswith("__")]
+        print(members)
+        return cmn
+
 
     @classmethod
     def from_file(cls, f):

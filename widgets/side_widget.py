@@ -7,6 +7,17 @@ from PyQt5.QtCore import QSize, pyqtSignal, QPoint, QRect
 from PyQt5.QtCore import Qt
 from widgets.data_editor import choose_data_editor, ObjectEdit, CameraEdit, AreaEdit
 from widgets.more_buttons import MoreButtons
+from lib.libkmp import Area, Camera
+
+def all_of_same_type(objs):
+    all_same =  all( [ isinstance(x, type(objs[0])) for x in objs])
+    if not (all_same):
+        return False
+    if isinstance(objs[0], Area):
+        types = [obj.type for obj in objs]
+        if 0 in types and not all([type == 0 for type in types]):
+            return False
+    return True
 
 class PikminSideWidget(QWidget):
     def __init__(self, *args, **kwargs):
@@ -163,19 +174,35 @@ class PikminSideWidget(QWidget):
         #return a CLASS to add
         editor = choose_data_editor(obj)
         if editor is not None:
-            self.object_data_edit = editor(self, obj)
+            self.object_data_edit = editor(self, [obj])
             self.verticalLayout.addWidget(self.object_data_edit)
             self.object_data_edit.emit_3d_update.connect(update3d)
 
             if isinstance(self.object_data_edit, (ObjectEdit, AreaEdit, CameraEdit) ):
-                self.object_data_edit.emit_route_update.connect(lambda obj, old, new: self.parent.update_route_used_by(obj, old, new) )
+                self.object_data_edit.emit_route_update.connect(lambda obj, old, new: self.parent.update_route_used_by([obj], old, new) )
             elif isinstance(self.object_data_edit, AreaEdit):
-                self.object_data_edit.emit_camera_update.connect(lambda obj, old, new: self.parent.update_camera_used_by(obj, old, new) )
+                self.object_data_edit.emit_camera_update.connect(lambda obj, old, new: self.parent.update_camera_used_by([obj], old, new) )
 
         self.objectlist = []
         self.comment_label.setText("")
 
-    def set_info_multiple(self, objs):
+    
+
+    def set_info_multiple(self, objs, update3d):
+        if not objs:
+            return
+        print(objs)
+        if all_of_same_type(objs):
+            editor = choose_data_editor(objs[0])
+            if editor is not None:
+                self.object_data_edit = editor(self, objs)
+                self.verticalLayout.addWidget(self.object_data_edit)
+                self.object_data_edit.emit_3d_update.connect(update3d)
+
+                if isinstance(self.object_data_edit, (ObjectEdit, AreaEdit, CameraEdit) ):
+                    self.object_data_edit.emit_route_update.connect(lambda objs, old, new: self.parent.update_route_used_by(objs, old, new) )
+                elif isinstance(self.object_data_edit, AreaEdit):
+                    self.object_data_edit.emit_camera_update.connect(lambda objs, old, new: self.parent.update_camera_used_by(objs, old, new) )
         pass
 
     #updates the side buttons
@@ -209,6 +236,6 @@ class PikminSideWidget(QWidget):
         else:
             text = ""
 
-        self.comment_label.setText(text)
+        self.comment_label.setText("")
 
 

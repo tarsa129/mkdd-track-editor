@@ -2524,23 +2524,27 @@ class GenEditor(QMainWindow):
         self.level_view.do_redraw()
         self.set_has_unsaved_changes(True)
 
-    def update_route_used_by(self, obj, old, new):
+    def update_route_used_by(self, objs, old, new):
         #print("update route used by", obj, old, new)
         if old == new:
             return
         if old is not None:
-            old.used_by.remove(obj)
+            for obj in objs:
+                old.used_by.remove(obj)
         if new is not None:
-            new.used_by.append(obj)
+            for obj in objs:
+                new.used_by.append(obj)
 
-    def update_camera_used_by(self, obj, old : Camera, new : Camera):
+    def update_camera_used_by(self, objs, old : Camera, new : Camera):
         #print("update route used by", obj, old, new)
         if old == new:
             return
         if old is not None:
-            old.used_by.remove(obj)
+            for obj in objs:
+                old.used_by.remove(obj)
         if new is not None:
-            new.used_by.append(obj)
+            for obj in objs:
+                new.used_by.append(obj)
 
     def on_cut_action_triggered(self):
         self.on_copy_action_triggered()
@@ -2794,7 +2798,7 @@ class GenEditor(QMainWindow):
                 self.pik_control.set_buttons(currentobj)
     @catch_exception
     def action_update_info(self):
-
+        self.pik_control.reset_info()
         if self.level_file is not None:
             selected = self.level_view.selected
             if len(selected) == 1:
@@ -2820,19 +2824,22 @@ class GenEditor(QMainWindow):
 
                 self.pik_control.update_info()
 
-
-
-            else:
-                #need a way to add a control for cameras being selected
-                if self.leveldatatreeview.cameras.isSelected():
-                    self.pik_control.set_info(self.leveldatatreeview.cameras.bound_to, self.update_3d)
-                    self.pik_control.update_info()
-                elif self.leveldatatreeview.kartpoints.isSelected():
+            elif len(selected) == 0:
+                #if self.leveldatatreeview.cameras.isSelected():
+                #    self.pik_control.set_info(self.leveldatatreeview.cameras.bound_to, self.update_3d)
+                #    self.pik_control.update_info()
+                if self.leveldatatreeview.kartpoints.isSelected():
                     self.pik_control.set_info(self.leveldatatreeview.kartpoints.bound_to, self.update_3d)
                     self.pik_control.update_info()
                 else:
-                    self.pik_control.reset_info("{0} objects selected".format(len(self.level_view.selected)))
-                    self.pik_control.set_objectlist(selected)
+                    self.pik_control.reset_info()
+
+            else:
+
+                self.pik_control.set_info_multiple(selected, self.update_3d)
+                #self.pik_control.reset_info("{0} objects selected".format(len(self.level_view.selected)))
+                self.pik_control.set_objectlist(selected)
+                self.pik_control.update_info()
 
                 # Without emitting any signal, programmatically update the currently selected item
                 # in the tree view.
@@ -3075,7 +3082,7 @@ class GenEditor(QMainWindow):
                 if self.connect_start.type == 3 and isinstance(endpoint, RoutePoint) and isinstance(endpoint.partof, AreaRoute):
                     old_route = area.route_obj
                     area.route_obj = endpoint.partof
-                    self.update_route_used_by(area, old_route, area.route_obj)
+                    self.update_route_used_by([area], old_route, area.route_obj)
                 elif self.connect_start.type == 4 and isinstance(endpoint, EnemyPoint):
                     self.connect_start.enemypoint = endpoint
             elif isinstance(endpoint, Camera) and isinstance(self.connect_start, Camera):

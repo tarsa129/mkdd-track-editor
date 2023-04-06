@@ -1,5 +1,6 @@
 import os
 import json
+from copy import copy, deepcopy
 
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QHBoxLayout, QVBoxLayout, QLabel, QCheckBox, QLineEdit, QComboBox, QSizePolicy, QColorDialog, QPushButton
 from PyQt5.QtGui import QIntValidator, QDoubleValidator, QValidator, QColor
@@ -12,7 +13,42 @@ from lib.vectors import Vector3
 from PyQt5.QtCore import pyqtSignal
 from widgets.data_editor_options import *
 
-#test comment
+def set_attr_mult(objs, attr, value):
+    for obj in objs:
+        setattr(obj, attr, value)
+
+#make a common thing to find all common, esp if copy is going to be used
+def get_cmn_obj(objs):
+    try:
+        cmn_obj = objs[0].copy()
+    except:
+        cmn_obj = deepcopy(objs[0])
+
+    members = [attr for attr in dir(cmn_obj) if not callable(getattr(cmn_obj, attr)) and not attr.startswith("__")]
+    #print(members)
+
+    for obj in objs[1:]:
+        for member in members:
+            #print(getattr(obj, member),  getattr(cmn_obj, member))
+            if getattr(cmn_obj, member) is not None and getattr(obj, member) is not None:
+                if type( getattr(cmn_obj, member) ) == list:
+                    cmn_list = getattr(cmn_obj, member)
+                    obj_list = getattr(obj, member)
+                    for i in range(len(cmn_list)):
+                        if cmn_list[i] != obj_list[i]:
+                            cmn_list[i] = None
+                elif isinstance( getattr(cmn_obj, member), (Vector3, Rotation) ):
+                    cmn_vec = getattr(cmn_obj, member)
+                    obj_vec = getattr(obj, member)
+                    cmn_vec.x = None if cmn_vec.x != obj_vec.x else cmn_vec.x
+                    cmn_vec.y = None if cmn_vec.y != obj_vec.y else cmn_vec.y
+                    cmn_vec.z = None if cmn_vec.z != obj_vec.z else cmn_vec.z
+                elif getattr(obj, member) != getattr(cmn_obj, member):
+                    setattr(cmn_obj, member, None)
+
+    return cmn_obj
+
+
 
 def load_route_info(objectname):
 
@@ -170,9 +206,9 @@ class DataEditor(QWidget):
 
         def checked(state):
             if state == 0:
-                setattr(self.bound_to, attribute, off_value)
+                set_attr_mult(self.bound_to, attribute, off_value)
             else:
-                setattr(self.bound_to, attribute, on_value)
+                set_attr_mult(self.bound_to, attribute, on_value)
 
         checkbox.stateChanged.connect(checked)
         self.vbox.addLayout(layout)
@@ -190,7 +226,7 @@ class DataEditor(QWidget):
             text = line_edit.text()
             #print("input:", text)
 
-            setattr(self.bound_to, attribute, int(text))
+            set_attr_mult(self.bound_to, attribute, int(text))
 
         line_edit.editingFinished.connect(input_edited)
 
@@ -213,9 +249,9 @@ class DataEditor(QWidget):
             if "." in attribute:
                 sub_obj, attr = attribute.split('.')
                 if self.bound_to.route_obj is not None:
-                    setattr( self.bound_to.route_obj.points[0], attr, val)
+                    set_attr_mult( self.bound_to.route_obj.points[0], attr, val)
             else:
-                setattr(self.bound_to, attribute, val)
+                set_attr_mult(self.bound_to, attribute, val)
 
         line_edit.editingFinished.connect(input_edited)
 
@@ -232,8 +268,9 @@ class DataEditor(QWidget):
         def input_edited():
             text = line_edit.text()
             #print("input:", text)
-            mainattr = getattr(self.bound_to, attribute)
-            mainattr[index] = int(text)
+            for obj in self.bound_to:
+                mainattr = getattr(obj, attribute)
+                mainattr[index] = int(text)
 
         line_edit.editingFinished.connect(input_edited)
         label = layout.itemAt(0).widget()
@@ -251,7 +288,7 @@ class DataEditor(QWidget):
             text = line_edit.text()
             #print("input:", text)
             self.catch_text_update()
-            setattr(self.bound_to, attribute, float(text))
+            set_attr_mult(self.bound_to, attribute, float(text))
 
         line_edit.editingFinished.connect(input_edited)
 
@@ -268,7 +305,7 @@ class DataEditor(QWidget):
         def input_edited():
             text = line_edit.text()
             text = text.rjust(maxlength)
-            setattr(self.bound_to, attribute, text)
+            set_attr_mult(self.bound_to, attribute, text)
 
         line_edit.editingFinished.connect(input_edited)
         self.vbox.addLayout(layout)
@@ -284,7 +321,7 @@ class DataEditor(QWidget):
         def input_edited():
             text = line_edit.text()
             text = text.rjust(maxlength)
-            setattr(self.bound_to, attribute, text)
+            set_attr_mult(self.bound_to, attribute, text)
 
         line_edit.editingFinished.connect(input_edited)
         self.vbox.addLayout(layout)
@@ -309,9 +346,9 @@ class DataEditor(QWidget):
             #print("selected", item)
             if "." in attribute:
                 sub_obj, attr = attribute.split('.')
-                setattr( getattr(self.bound_to, sub_obj), attr, val)
+                set_attr_mult( getattr(self.bound_to, sub_obj), attr, val)
             else:
-                setattr(self.bound_to, attribute, val)
+                set_attr_mult(self.bound_to, attribute, val)
         combobox.currentTextChanged.connect(item_selected)
 
         #print("created for", text, attribute)
@@ -331,7 +368,7 @@ class DataEditor(QWidget):
         def item_selected(item):
             val = keyval_dict[item]
             #print("selected", item)
-            setattr(self.bound_to, attribute, val)
+            set_attr_mult(self.bound_to, attribute, val)
 
         combobox.currentTextChanged.connect(item_selected)
 
@@ -344,7 +381,7 @@ class DataEditor(QWidget):
             text = line_edit.text()
             #print("input:", text)
 
-            setattr(self.bound_to, attribute, int(text))
+            set_attr_mult(self.bound_to, attribute, int(text))
 
         line_edit.editingFinished.connect(input_edited)
         layout.addWidget(line_edit)
@@ -431,7 +468,8 @@ class DataEditor(QWidget):
         return layout.itemAt(0).widget(), line_edits
 
     def update_rotation(self, xang, yang, zang):
-        rotation = self.bound_to.rotation
+        cmn_obj = get_cmn_obj(self.bound_to)
+        rotation = cmn_obj.rotation
         euler_angs = rotation.get_euler()
 
         """
@@ -449,14 +487,14 @@ class DataEditor(QWidget):
         """
         for attr in ("x", "y", "z"):
             if getattr(forward, attr) == 0.0:
-                setattr(forward, attr, 0.0)
+                set_attr_mult(forward, attr, 0.0)
         for attr in ("x", "y", "z"):
             if getattr(up, attr) == 0.0:
-                setattr(up, attr, 0.0)
+                set_attr_mult(up, attr, 0.0)
 
         for attr in ("x", "y", "z"):
             if getattr(left, attr) == 0.0:
-                setattr(left, attr, 0.0)
+                set_attr_mult(left, attr, 0.0)
         """
         """
         forwardedits[0].setText(str(round(degs[0], 4)))
@@ -482,8 +520,6 @@ class DataEditor(QWidget):
         self.catch_text_update()
 
     def add_rotation_input(self):
-        rotation = self.bound_to.rotation
-
 
         angle_edits = [] #these are the checkboxes
         for attr in ("x", "y", "z"):
@@ -522,16 +558,25 @@ class DataEditor(QWidget):
         field.setText(str(val))
 
     def update_name(self):
-        if hasattr(self.bound_to, "widget") and self.bound_to.widget is not None:
-            self.bound_to.widget.update_name()
-            if hasattr(self.bound_to.widget, "parent") and self.bound_to.widget.parent() is not None:
-                self.bound_to.widget.parent().sort()
-            self.bound_to.widget.setSelected(True)
-        if isinstance(self.bound_to, MapObject):
-            self.bound_to.set_route_info()
-        elif isinstance(self.bound_to, Camera):
-            self.bound_to.handle_route_change()
+        for obj in self.bound_to:
+            if hasattr(obj, "widget") and obj.widget is not None:
+                obj.widget.update_name()
+                if hasattr(obj.widget, "parent") and obj.widget.parent() is not None:
+                    obj.widget.parent().sort()
+                obj.widget.setSelected(True)
+            if isinstance(obj, MapObject):
+                obj.set_route_info()
+            elif isinstance(obj, Camera):
+                obj.handle_route_change()
 
+    def update_vector3(self, attr, vec):
+        inputs = getattr(self, attr)
+        if vec.x is not None:
+            inputs[0].setText(str(round(vec.x, 3)))
+        if vec.y is not None:
+            inputs[1].setText(str(round(vec.y, 3)))
+        if vec.z is not None:
+            inputs[2].setText(str(round(vec.z, 3)))
 
 def create_setter_list(lineedit, bound_to, attribute, index):
     def input_edited():
@@ -542,13 +587,14 @@ def create_setter_list(lineedit, bound_to, attribute, index):
     return input_edited
 
 
+
 def create_setter(lineedit, bound_to, attribute, subattr, update3dview, isFloat):
     if isFloat:
         def input_edited():
             text = lineedit.text()
             mainattr = getattr(bound_to, attribute)
 
-            setattr(mainattr, subattr, float(text))
+            set_attr_mult(mainattr, subattr, float(text))
             update3dview()
         return input_edited
     else:
@@ -556,7 +602,7 @@ def create_setter(lineedit, bound_to, attribute, subattr, update3dview, isFloat)
             text = lineedit.text()
             mainattr = getattr(bound_to, attribute)
 
-            setattr(mainattr, subattr, int(text))
+            set_attr_mult(mainattr, subattr, int(text))
             update3dview()
         return input_edited
 
@@ -649,10 +695,8 @@ class EnemyPointEdit(DataEditor):
                                             MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
 
     def update_data(self):
-        obj: EnemyPoint = self.bound_to
-        self.position[0].setText(str(round(obj.position.x, 3)))
-        self.position[1].setText(str(round(obj.position.y, 3)))
-        self.position[2].setText(str(round(obj.position.z, 3)))
+        obj: EnemyPoint = get_cmn_obj(self.bound_to)
+        self.update_vector3("position", obj.position)
 
         self.scale.setText(str(obj.scale))
 
@@ -697,10 +741,8 @@ class ItemPointEdit(DataEditor):
 
 
     def update_data(self):
-        obj: ItemPoint = self.bound_to
-        self.position[0].setText(str(round(obj.position.x, 3)))
-        self.position[1].setText(str(round(obj.position.y, 3)))
-        self.position[2].setText(str(round(obj.position.z, 3)))
+        obj: ItemPoint = get_cmn_obj(self.bound_to)
+        self.update_vector3("position", obj.position)
 
         if obj.setting1 < len(ITPT_Setting1):
             self.setting1.setCurrentIndex(obj.setting1)
@@ -746,7 +788,7 @@ class CheckpointEdit(DataEditor):
         self.type.stateChanged.connect(self.update_checkpoint_types)
 
     def update_data(self):
-        obj: Checkpoint = self.bound_to
+        obj: Checkpoint = get_cmn_obj(self.bound_to)
 
         self.start[0].setText(str(round(obj.start.x, 3)))
         self.start[1].setText(str(round(obj.start.z, 3)))
@@ -787,10 +829,8 @@ class ObjectRoutePointEdit(DataEditor):
                                               MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
 
     def update_data(self):
-        obj: RoutePoint = self.bound_to
-        self.position[0].setText(str(round(obj.position.x, 3)))
-        self.position[1].setText(str(round(obj.position.y, 3)))
-        self.position[2].setText(str(round(obj.position.z, 3)))
+        obj: RoutePoint = get_cmn_obj(self.bound_to)
+        self.update_vector3("position", obj.position)
         self.unk1.setText(str(obj.unk1))
         self.unk2.setText(str(obj.unk2))
 
@@ -818,7 +858,7 @@ class KMPEdit(DataEditor):
 
 
     def update_data(self):
-        obj: KMP = self.bound_to
+        obj: KMP = get_cmn_obj(self.bound_to)
         #self.roll.setText(str(obj.roll))
         self.lap_count.setText(str(obj.lap_count))
         self.lens_flare.setChecked(obj.lens_flare != 0)
@@ -879,7 +919,7 @@ class ObjectEdit(DataEditor):
         self.smooth, self.smooth_label = self.add_dropdown_input("Sharp/Smooth motion", "route_obj.smooth", POTI_Setting1, return_both = True)
         self.cyclic, self.cyclic_label = self.add_dropdown_input("Cyclic/Back and forth motion", "route_obj.cyclic", POTI_Setting2, return_both = True)
 
-        if self.bound_to.route_obj is None:
+        if get_cmn_obj(self.bound_to).route_obj is None:
             self.smooth.setVisible(False)
             self.smooth_label.setVisible(False)
             self.cyclic.setVisible(False)
@@ -948,10 +988,11 @@ class ObjectEdit(DataEditor):
                 if parameter_names[i] == "Unused":
                     self.userdata[i][0].setVisible(False)
                     self.userdata[i][1].setVisible(False)
+                    """
                     if self.bound_to.userdata[i] != 0:
                         Warning("Parameter with index {0} in object {1} is marked as Unused but has value {2}".format(
                             i, current, self.bound_to.userdata[i]
-                        ))
+                        ))"""
                 else:
                     self.userdata[i][0].setVisible(True)
                     self.userdata[i][1].setVisible(True)
@@ -965,7 +1006,12 @@ class ObjectEdit(DataEditor):
             self.set_default_values()
     def set_default_values(self):
 
-        obj: MapObject = self.bound_to
+        objs = self.bound_to
+        if not MapObject.all_of_same_id(objs):
+            self.update_data()
+            return
+
+        obj = objs[0]
 
         if obj.objectid not in OBJECTNAMES:
             name = "INVALID"
@@ -989,34 +1035,30 @@ class ObjectEdit(DataEditor):
                     self.userdata[i][1].setText("0")
         self.update_data()
     def update_data(self, load_defaults = False):
-        obj: MapObject = self.bound_to
-        self.position[0].setText(str(round(obj.position.x, 3)))
-        self.position[1].setText(str(round(obj.position.y, 3)))
-        self.position[2].setText(str(round(obj.position.z, 3)))
+        obj: MapObject = get_cmn_obj(self.bound_to)
 
-        self.scale[0].setText(str(round(obj.scale.x, 3)))
-        self.scale[1].setText(str(round(obj.scale.y, 3)))
-        self.scale[2].setText(str(round(obj.scale.z, 3)))
-
-        self.update_rotation(*self.rotation)
+        self.update_vector3("position", obj.position)
+        self.update_vector3("rotation", obj.rotation)
+        self.update_vector3("scale", obj.scale)
 
         self.update_combobox(obj.objectid)
         self.update_lineedit(obj.objectid)
 
         self.rename_object_parameters( self.get_objectname(obj.objectid) )
 
-        self.single.setChecked( obj.single != 0)
-        self.double.setChecked( obj.double != 0)
-        self.triple.setChecked( obj.triple != 0)
+        self.single.setChecked( obj.single != 0 and obj.single != None)
+        self.double.setChecked( obj.double != 0 and obj.double != None)
+        self.triple.setChecked( obj.triple != 0 and obj.triple != None)
 
         if load_defaults:
             self.in_production = load_defaults
             self.set_default_values()
         else:
             for i in range(8):
-                self.userdata[i][1].setText(str(obj.userdata[i]))
+                text = str(obj.userdata[i]) if obj.userdata[i] is not None else ""
+                self.userdata[i][1].setText(text)
 
-        obj: Route = self.bound_to.route_obj
+        obj: Route = obj.route_obj
         if obj is not None:
             self.smooth.setCurrentIndex( min(obj.smooth, 1))
             self.cyclic.setCurrentIndex( min(obj.cyclic, 1))
@@ -1034,14 +1076,14 @@ class KartStartPointsEdit(DataEditor):
         self.pole_position.currentIndexChanged.connect(self.update_starting_info)
         self.start_squeeze.currentIndexChanged.connect(self.update_starting_info)
     def update_data(self):
-        obj: KartStartPoints = self.bound_to
+        obj: KartStartPoints = self.bound_to[0]
         self.pole_position.setCurrentIndex( min(1, obj.pole_position) )
         self.start_squeeze.setCurrentIndex( min(1, obj.start_squeeze) )
 
     def update_starting_info(self):
-        self.bound_to.pole_position = self.pole_position.currentIndex()
-        self.bound_to.start_squeeze = self.start_squeeze.currentIndex()
-
+        #self.bound_to[0].pole_position = self.pole_position.currentIndex()
+        #self.bound_to[0].start_squeeze = self.start_squeeze.currentIndex()
+        #print( self.pole_position.currentIndex(), self.start_squeeze.currentIndex())
         self.update_name()
 
     def update_name(self):
@@ -1058,12 +1100,9 @@ class KartStartPointEdit(DataEditor):
 
 
     def update_data(self):
-        obj: KartStartPoint = self.bound_to
-        self.position[0].setText(str(round(obj.position.x, 3)))
-        self.position[1].setText(str(round(obj.position.y, 3)))
-        self.position[2].setText(str(round(obj.position.z, 3)))
-
-        self.update_rotation(*self.rotation)
+        obj: KartStartPoint = get_cmn_obj(self.bound_to)
+        self.update_vector3("position", obj.position)
+        self.update_vector3("rotation", obj.rotation)
         self.playerid.setText(str(obj.playerid))
 
 class AreaEdit(DataEditor):
@@ -1100,16 +1139,10 @@ class AreaEdit(DataEditor):
 
 
     def update_data(self):
-        obj: Area = self.bound_to
-        self.position[0].setText(str(round(obj.position.x, 3)))
-        self.position[1].setText(str(round(obj.position.y, 3)))
-        self.position[2].setText(str(round(obj.position.z, 3)))
-
-        self.scale[0].setText(str(round(obj.scale.x, 3)))
-        self.scale[1].setText(str(round(obj.scale.y, 3)))
-        self.scale[2].setText(str(round(obj.scale.z, 3)))
-
-        self.update_rotation(*self.rotation)
+        obj: Area = get_cmn_obj(self.bound_to)
+        self.update_vector3("position", obj.position)
+        self.update_vector3("rotation", obj.rotation)
+        self.update_vector3("scale", obj.scale)
 
         self.shape.setCurrentIndex( obj.shape )
         self.area_type.setCurrentIndex( obj.type )
@@ -1189,7 +1222,7 @@ class CameraEdit(DataEditor):
         self.route_unk2, self.route_unk2_label = self.add_integer_input_hideable(\
             "Sharp/Smooth motion", "route_obj.unk2", MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
 
-        if self.bound_to.route_obj is None:
+        if get_cmn_obj(self.bound_to).route_obj is None:
             self.smooth.setVisible(False)
             self.smooth_label.setVisible(False)
             self.cyclic.setVisible(False)
@@ -1205,18 +1238,10 @@ class CameraEdit(DataEditor):
         self.type.currentTextChanged.connect(self.update_name)
 
     def update_data(self):
-        obj: Camera = self.bound_to
-        self.position[0].setText(str(round(obj.position.x, 3)))
-        self.position[1].setText(str(round(obj.position.y, 3)))
-        self.position[2].setText(str(round(obj.position.z, 3)))
-
-        self.position2[0].setText(str(round(obj.position2.x, 3)))
-        self.position2[1].setText(str(round(obj.position2.y, 3)))
-        self.position2[2].setText(str(round(obj.position2.z, 3)))
-
-        self.position3[0].setText(str(round(obj.position3.x, 3)))
-        self.position3[1].setText(str(round(obj.position3.y, 3)))
-        self.position3[2].setText(str(round(obj.position3.z, 3)))
+        obj: Camera = get_cmn_obj(self.bound_to)
+        self.update_vector3("position", obj.position)
+        self.update_vector3("position2", obj.position2)
+        self.update_vector3("position3", obj.position3)
 
         for widget_group in (self.position2, self.position3):
             for widget in widget_group:
@@ -1239,7 +1264,7 @@ class CameraEdit(DataEditor):
         self.fov[1].setText(str(obj.fov.end))
         self.camduration.setText(str(obj.camduration))
 
-        obj: Route = self.bound_to.route_obj
+        obj: Route = obj.route_obj
         if obj is not None:
             self.smooth.setCurrentIndex( min(obj.smooth, 1))
             self.cyclic.setCurrentIndex( min(obj.cyclic, 1))
@@ -1258,7 +1283,6 @@ class CameraEdit(DataEditor):
         self.route_unk2.setVisible(obj is not None)
         self.route_unk2_label.setVisible(obj is not None)
 
-
 class RespawnPointEdit(DataEditor):
     def setup_widgets(self):
         self.position = self.add_multiple_decimal_input("Position", "position", ["x", "y", "z"],
@@ -1270,11 +1294,9 @@ class RespawnPointEdit(DataEditor):
                                            MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
 
     def update_data(self):
-        obj: JugemPoint = self.bound_to
-        self.position[0].setText(str(round(obj.position.x, 3)))
-        self.position[1].setText(str(round(obj.position.y, 3)))
-        self.position[2].setText(str(round(obj.position.z, 3)))
-        self.update_rotation(*self.rotation)
+        obj: JugemPoint = get_cmn_obj(self.bound_to)
+        self.update_vector3("position", obj.position)
+        self.update_vector3("rotation", obj.rotation)
         self.range.setText(str(obj.range))
 
 class CannonPointEdit(DataEditor):
@@ -1287,11 +1309,9 @@ class CannonPointEdit(DataEditor):
 
 
     def update_data(self):
-        obj: CannonPoint = self.bound_to
-        self.position[0].setText(str(round(obj.position.x, 3)))
-        self.position[1].setText(str(round(obj.position.y, 3)))
-        self.position[2].setText(str(round(obj.position.z, 3)))
-        self.update_rotation(*self.rotation)
+        obj: CannonPoint = get_cmn_obj(self.bound_to)
+        self.update_vector3("position", obj.position)
+        self.update_vector3("rotation", obj.rotation)
         self.cannon_id.setText(str(obj.id))
         self.shooteffect.setCurrentIndex( obj.shoot_effect )
 
@@ -1305,10 +1325,9 @@ class MissionPointEdit(DataEditor):
                                            MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
 
     def update_data(self):
-        obj: MissionPoint = self.bound_to
-        self.position[0].setText(str(round(obj.position.x, 3)))
-        self.position[1].setText(str(round(obj.position.y, 3)))
-        self.position[2].setText(str(round(obj.position.z, 3)))
-        self.update_rotation(*self.rotation)
+        obj: MissionPoint = get_cmn_obj(self.bound_to)
+
+        self.update_vector3("position", obj.position)
+        self.update_vector3("rotation", obj.rotation)
         #self.mission_id.setText(str(obj.mission_id))
         self.unk.setText(str(obj.unk))
