@@ -215,10 +215,13 @@ class Collision(object):
     def _collide(self, triangles, x, y, z, dir_y):
         hit = None
         for i, face in triangles:#face in self.faces:#
-            #print(face)
+            if isinstance(self.hidden_colgroups, str):
+                self.hidden_colgroups = [int(x) for x in self.hidden_colgroups.spilt(",")]
+            if isinstance(self.hidden_coltypes, str):
+                self.hidden_coltypes = [int(x) for x in self.hidden_coltypes.spilt(",")]
             if len(face) > 3:
-                if ( str(face[3]) in str(self.hidden_coltypes)) \
-                    or ( str(face[3] & 0x1F) in str(self.hidden_colgroups)):
+                if ( face[3] in self.hidden_coltypes) \
+                    or ( face[3] & 0x1F in self.hidden_colgroups):
                     continue
 
             v1 = face[0]

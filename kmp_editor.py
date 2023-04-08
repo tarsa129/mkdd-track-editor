@@ -524,20 +524,15 @@ class GenEditor(QMainWindow):
         self.file_load_action.setShortcut("Ctrl+O")
         self.save_file_as_action.setShortcut("Ctrl+Alt+S")
 
-        self.save_file_copy_as_action = QAction("Save Copy As", self)
-
         self.file_load_action.triggered.connect(self.button_load_level)
         self.save_file_action.triggered.connect(self.button_save_level)
         self.save_file_as_action.triggered.connect(self.button_save_level_as)
-        self.save_file_copy_as_action.triggered.connect(self.button_save_level_copy_as)
-
 
         self.file_menu.addAction(self.file_load_action)
         self.file_menu.addMenu(self.file_load_recent_menu)
         self.file_menu.addSeparator()
         self.file_menu.addAction(self.save_file_action)
         self.file_menu.addAction(self.save_file_as_action)
-        self.file_menu.addAction(self.save_file_copy_as_action)
 
         self.file_menu.aboutToShow.connect(self.on_file_menu_aboutToShow)
 
@@ -2445,7 +2440,6 @@ class GenEditor(QMainWindow):
             if self.level_view.collision is None:
                 return None
             height = self.level_view.collision.collide_ray_closest(pos.x, pos.z, pos.y)
-
             if height is not None:
                 pos.y = height
 

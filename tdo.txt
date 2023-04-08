@@ -3,7 +3,6 @@ drag n drop opening
 refactor options code to move stuff to libkmp
 
 enemy/item/checkpoint
-- checkpoints: fix concave checkpoints
 - checkpoints: also highlight the lines going from the checkpoints
 
 gobj:
