@@ -216,9 +216,9 @@ class Collision(object):
         hit = None
         for i, face in triangles:#face in self.faces:#
             if isinstance(self.hidden_colgroups, str):
-                self.hidden_colgroups = [int(x) for x in self.hidden_colgroups.spilt(",")]
+                self.hidden_colgroups = [int(x) for x in self.hidden_colgroups.split(",")]
             if isinstance(self.hidden_coltypes, str):
-                self.hidden_coltypes = [int(x) for x in self.hidden_coltypes.spilt(",")]
+                self.hidden_coltypes = [int(x) for x in self.hidden_coltypes.split(",")]
             if len(face) > 3:
                 if ( face[3] in self.hidden_coltypes) \
                     or ( face[3] & 0x1F in self.hidden_colgroups):

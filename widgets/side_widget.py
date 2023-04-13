@@ -191,7 +191,7 @@ class PikminSideWidget(QWidget):
     def set_info_multiple(self, objs, update3d):
         if not objs:
             return
-        print(objs)
+        #print(objs)
         if all_of_same_type(objs):
             editor = choose_data_editor(objs[0])
             if editor is not None:

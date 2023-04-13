@@ -80,7 +80,7 @@ class GenEditor(QMainWindow):
         self.pathsconfig = self.configuration["default paths"]
         self.editorconfig = self.configuration["editor"]
         self.current_gen_path = None
-
+        self.setAcceptDrops(True)
         self.setup_ui()
 
         self.level_view.level_file = self.level_file
@@ -106,6 +106,7 @@ class GenEditor(QMainWindow):
         self.last_position_clicked = []
 
         self.connect_start = None
+        self.select_start = None
         self.ready_to_connect = False
 
         self._dontselectfromtree = False
@@ -1105,7 +1106,11 @@ class GenEditor(QMainWindow):
         self.set_has_unsaved_changes(True)
 
     def select_all_of_group(self, item):
-        group = item.bound_to
+        if hasattr(item, "bound_to"):
+            group = item.bound_to
+        else:
+            to_deal_with = self.level_file.get_to_deal_with(item)
+            group_idx, group, point_idx = to_deal_with.find_group_of_point(item)
         self.level_view.selected = []
         self.level_view.selected_positions = []
         self.level_view.selected_rotations = []
@@ -1118,6 +1123,17 @@ class GenEditor(QMainWindow):
             else:
                 self.level_view.selected_positions.append(point.position)
         self.update_3d()
+        self.action_update_info()
+
+    def delete_all_of_group(self, item):
+        to_deal_with = self.level_file.get_to_deal_with(item)
+        group_idx, group, point_idx = to_deal_with.find_group_of_point(item)
+        for point in reversed(group.points):
+            to_deal_with.remove_point(point)
+        self.update_3d()
+        self.action_update_info()
+        self.leveldatatreeview.set_objects(self.level_file)
+        self.set_has_unsaved_changes(True)
 
     def remove_all_of_type(self, item):
         obj = item.bound_to
@@ -1130,8 +1146,8 @@ class GenEditor(QMainWindow):
             to_delete = [area for area in self.level_file.areas if area.type == obj.type]
             for obj in to_delete:
                 self.level_file.areas.remove(obj)
+        self.update_3d()
         self.pik_control.update_info()
-        self.level_view.do_redraw()
         self.leveldatatreeview.set_objects(self.level_file)
         self.set_has_unsaved_changes(True)
 
@@ -1140,7 +1156,6 @@ class GenEditor(QMainWindow):
             obj = item.bound_to
         else:
             obj = item
-        print("hello")
         if isinstance(obj, MapObject):
             to_select = [mapobject for mapobject in self.level_file.objects.objects if mapobject.objectid == obj.objectid]
         elif isinstance(obj, Area):
@@ -1202,7 +1217,7 @@ class GenEditor(QMainWindow):
         return recent_files
 
     #@catch_exception
-    def button_load_level(self, checked=False, filepath=None):
+    def button_load_level(self, checked=False, filepath=None, add_to_ini=True ):
         _ = checked
 
         if filepath is None:
@@ -1233,7 +1248,7 @@ class GenEditor(QMainWindow):
                         initial_errors.exec_()
                         initial_errors.deleteLater()
 
-                    self.setup_kmp_file(kmp_file, filepath)
+                    self.setup_kmp_file(kmp_file, filepath, add_to_ini)
                     self.leveldatatreeview.set_objects(kmp_file)
                     self.leveldatatreeview.bound_to_group(kmp_file)
                     self.current_gen_path = filepath
@@ -1277,7 +1292,7 @@ class GenEditor(QMainWindow):
         model = CollisionModel(bco_coll)
         self.setup_collision(verts, faces, collisionfile, alternative_mesh=model)
 
-    def setup_kmp_file(self, bol_file, filepath):
+    def setup_kmp_file(self, bol_file, filepath, add_to_ini):
         self.level_file = bol_file
         self.level_view.level_file = self.level_file
         # self.pikmin_gen_view.update()
@@ -1290,8 +1305,9 @@ class GenEditor(QMainWindow):
         # path_parts = path.split(filepath)
         self.set_base_window_title(filepath)
         self.pathsconfig["kmp"] = filepath
-        self.update_recent_files_list(filepath)
-        save_cfg(self.configuration)
+        if add_to_ini:
+            self.update_recent_files_list(filepath)
+            save_cfg(self.configuration)
         self.current_gen_path = filepath
 
     @catch_exception_with_dialog
@@ -2350,9 +2366,7 @@ class GenEditor(QMainWindow):
 
         #C IS FOR "connecting"
         #
-        if event.key() == Qt.Key_C:
-            if len(self.level_view.selected) != 1:
-                return
+        if event.key() == Qt.Key_C and len(self.level_view.selected) == 1:
             sel_obj = self.level_view.selected[0]
             if isinstance(sel_obj, Checkpoint):
                 self.connect_start = self.level_view.selected[0]
@@ -2366,6 +2380,11 @@ class GenEditor(QMainWindow):
                 self.connect_start = self.level_view.selected[0]
                 self.level_view.connecting_mode = True
                 self.level_view.connecting_start = self.connect_start.position
+        elif event.key() == Qt.Key_B and self.level_view.selected:
+            if self.select_start is not None:
+                self.select_start = [x for x in self.level_view.selected]
+
+            pass
     def keyReleaseEvent(self, event: QtGui.QKeyEvent):
         if event.key() == Qt.Key_Shift:
             self.level_view.shift_is_pressed = False
@@ -2392,6 +2411,8 @@ class GenEditor(QMainWindow):
             self.level_view.connecting_start = None
             self.connect_start = None
             self.connect_mode = None
+        if event.key() == Qt.Key_B:
+            self.select_start = None
 
     def reset_move_flags(self):
         self.level_view.MOVE_FORWARD = 0
@@ -2884,6 +2905,14 @@ class GenEditor(QMainWindow):
                 set_as_first = QAction("Set as First", self)
                 set_as_first.triggered.connect(lambda: self.set_as_first(obj))
                 context_menu.addAction(set_as_first)
+
+                select_all_group = QAction("Select All in Group", self)
+                select_all_group.triggered.connect(lambda: self.select_all_of_group(obj))
+                context_menu.addAction(select_all_group)
+
+                delete_all_group = QAction("Delete All in Group", self)
+                delete_all_group.triggered.connect(lambda: self.delete_all_of_group(obj))
+                context_menu.addAction(delete_all_group)
             if isinstance(obj, MapObject):
                 select_type = QAction("Select All of Type", self)
                 select_type.triggered.connect(lambda: self.select_all_of_type(obj))
@@ -3084,6 +3113,7 @@ class GenEditor(QMainWindow):
                     self.connect_start.nextcam_obj = endpoint
 
         self.connect_start = None
+        self.select_start = None
 
         self.leveldatatreeview.set_objects(self.level_file)
         self.update_3d()
@@ -3197,6 +3227,26 @@ class GenEditor(QMainWindow):
         self.leveldatatreeview.bound_to_group(self.level_file)
         self.level_view.do_redraw()
         self.update_3d()
+
+    def dragEnterEvent(self, event):
+        mime_data = event.mimeData()
+        if mime_data.hasUrls:
+            url = mime_data.urls()[0]
+            filepath = url.toLocalFile()
+            exten = filepath[filepath.rfind("."):].lower()
+            if exten in [".kmp", ".kcl"]:
+                event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        mime_data = event.mimeData()
+        if mime_data.hasUrls:
+            url = mime_data.urls()[0]
+            filepath = url.toLocalFile()
+            exten = filepath[filepath.rfind("."):].lower()
+            if exten == ".kmp":
+                self.button_load_level( False, filepath, add_to_ini = False)
+            elif exten == ".kcl":
+                self.load_collision_kcl(filepath)
 
 def find_file(rarc_folder, ending):
     for filename in rarc_folder.files.keys():

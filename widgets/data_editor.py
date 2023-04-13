@@ -347,7 +347,7 @@ class DataEditor(QWidget):
             com_obj = get_cmn_obj(self.bound_to)
             if "." in attribute:
                 sub_obj, attr = attribute.split('.')
-                set_attr_mult( getattr(com_obj, sub_obj), attr, val)
+                set_attr_mult( [getattr(com_obj, sub_obj)], attr, val)
             else:
                 set_attr_mult(com_obj, attribute, val)
         combobox.currentTextChanged.connect(item_selected)

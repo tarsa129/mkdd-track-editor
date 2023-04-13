@@ -164,6 +164,8 @@ class ErrorAnalyzer(QDialog):
                     write_line("Route {0} is used, but does not have any points".format( i ))
                 elif len(group.points) == 1:
                     write_line("Route {0} is used, but only has one point".format( i ))
+            if len(group.points) == 2 and group.smooth != 0:
+                write_line("Route {0} has two points, but is set to smooth".format( i ))
 
         # Validate path id in objects
         for object in kmp.objects.objects:

@@ -1467,6 +1467,8 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                     glBegin(GL_LINE_STRIP)
                     glColor3f(0.0, 0.0, 0.0)
+                    if len(route.points) == 2 and route.smooth != 0:
+                        glColor3f(1.0, 0.0, 0.0 )
                     for point in route.points:
                         pos = point.position
                         glVertex3f(pos.x, -pos.z, pos.y)
@@ -1533,6 +1535,8 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         glLineWidth(3.0)
                     glBegin(GL_LINE_STRIP)
                     glColor3f(0.0, 0.0, 0.0)
+                    if len(route.points) == 2 and route.smooth != 0:
+                        glColor3f(1.0, 0.0, 0.0 )
                     for point in route.points:
                         pos = point.position
                         glVertex3f(pos.x, -pos.z, pos.y)
@@ -1607,6 +1611,8 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         glLineWidth(3.0)
                     glBegin(GL_LINE_STRIP)
                     glColor3f(0.0, 0.0, 0.0)
+                    if len(route.points) == 2 and route.smooth != 0:
+                        glColor3f(1.0, 0.0, 0.0 )
                     for point in route.points:
                         pos = point.position
                         glVertex3f(pos.x, -pos.z, pos.y)
@@ -1676,6 +1682,8 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                         glLineWidth(3.0)
                     glBegin(GL_LINE_STRIP)
                     glColor3f(0.8, 0.0, 0.8)
+                    if len(route.points) == 2 and route.smooth != 0:
+                        glColor3f(1.0, 0.0, 0.0 )
                     for point in route.points:
                         pos = point.position
                         glVertex3f(pos.x, -pos.z, pos.y)
