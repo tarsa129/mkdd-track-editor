@@ -349,7 +349,7 @@ class DataEditor(QWidget):
                 sub_obj, attr = attribute.split('.')
                 set_attr_mult( [getattr(com_obj, sub_obj)], attr, val)
             else:
-                set_attr_mult(com_obj, attribute, val)
+                set_attr_mult([com_obj], attribute, val)
         combobox.currentTextChanged.connect(item_selected)
 
         #print("created for", text, attribute)
@@ -700,15 +700,16 @@ class EnemyPointEdit(DataEditor):
         self.update_vector3("position", obj.position)
 
         self.scale.setText(str(obj.scale))
-
-        if obj.enemyaction < len(ENPT_Setting1):
-            self.enemyaction.setCurrentIndex(obj.enemyaction)
-        else:
-            self.enemyaction.setCurrentIndex(-1)
-        if obj.enemyaction2 < len(ENPT_Setting2):
-            self.enemyaction2.setCurrentIndex(obj.enemyaction2)
-        else:
-            self.enemyaction2.setCurrentIndex(-1)
+        if obj.enemyaction  is not None:
+            if obj.enemyaction < len(ENPT_Setting1):
+                self.enemyaction.setCurrentIndex(obj.enemyaction)
+            else:
+                self.enemyaction.setCurrentIndex(-1)
+        if obj.enemyaction2 is not None:
+            if obj.enemyaction2 < len(ENPT_Setting2):
+                self.enemyaction2.setCurrentIndex(obj.enemyaction2)
+            else:
+                self.enemyaction2.setCurrentIndex(-1)
         self.unknown.setText(str(obj.unknown))
 
 class ItemPointGroupEdit(DataEditor):
@@ -1136,7 +1137,7 @@ class AreaEdit(DataEditor):
         self.smooth, self.smooth_label = self.add_dropdown_input("Sharp/Smooth motion", "route_obj.smooth", POTI_Setting1, return_both = True)
         self.cyclic, self.cyclic_label = self.add_dropdown_input("Cyclic/Back and forth motion", "route_obj.cyclic", POTI_Setting2, return_both = True)
 
-        if self.bound_to.route_obj is None:
+        if get_cmn_obj(self.bound_to).route_obj is None:
             self.smooth.setVisible(False)
             self.smooth_label.setVisible(False)
             self.cyclic.setVisible(False)
@@ -1159,7 +1160,7 @@ class AreaEdit(DataEditor):
         self.setting1.setText(str(obj.setting1))
         self.setting2.setText(str(obj.setting2))
 
-        obj: Route = self.bound_to.route_obj
+        obj: Route = obj.route_obj
         if obj is not None:
             self.smooth.setCurrentIndex( min(obj.smooth, 1))
             self.cyclic.setCurrentIndex( min(obj.cyclic, 1))
@@ -1172,7 +1173,7 @@ class AreaEdit(DataEditor):
         self.set_settings_visible()
 
     def set_settings_visible(self):
-        obj: Area = self.bound_to
+        obj: Area = get_cmn_obj(self.bound_to)
         obj.type = self.area_type.currentIndex()
 
         setting1_labels = { 2: "BFG Entry", 3: "Acceleration Modifier", 6: "BBLM Entry", 8: "Group ID", 9: "Group ID" }
