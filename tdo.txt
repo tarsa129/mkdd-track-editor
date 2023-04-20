@@ -13,6 +13,7 @@ poti:
 - add radius of route points with areas for multiple point rouetes
 - when route is highlighted, highlight the objects that are used
 - make sure that at most 255 routes are being created between camears and areas
+- when creating routes, make sure that the route settings are being set
 
 area:
 - add back helper functions for copy

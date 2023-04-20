@@ -16,6 +16,9 @@ from widgets.data_editor_options import *
 def set_attr_mult(objs, attr, value):
     for obj in objs:
         setattr(obj, attr, value)
+def set_subattr_mult(objs, attr, subattr, value):
+    for obj in objs:
+        setattr( getattr(obj, attr), subattr, value)
 
 #make a common thing to find all common, esp if copy is going to be used
 def get_cmn_obj(objs):
@@ -593,17 +596,18 @@ def create_setter(lineedit, bound_to, attribute, subattr, update3dview, isFloat)
     if isFloat:
         def input_edited():
             text = lineedit.text()
-            mainattr = getattr(bound_to, attribute)
+            #print(bound_to, attribute, subattr)
+            #mainattr = getattr(get_cmn_obj(bound_to), attribute)
 
-            set_attr_mult(mainattr, subattr, float(text))
+            set_subattr_mult(bound_to, attribute, subattr, float(text))
             update3dview()
         return input_edited
     else:
         def input_edited():
             text = lineedit.text()
-            mainattr = getattr(bound_to, attribute)
+            #mainattr = getattr(get_cmn_obj(bound_to), attribute)
 
-            set_attr_mult(mainattr, subattr, int(text))
+            set_subattr_mult(bound_to, attribute, subattr, int(text))
             update3dview()
         return input_edited
 
