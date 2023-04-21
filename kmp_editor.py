@@ -2489,8 +2489,10 @@ class GenEditor(QMainWindow):
 
             elif isinstance(obj, libkmp.RoutePoint):
                 #route_container = self.level_file.get_route_container(obj.partof)
-                #do not allow route to fall under 2 points
-                if len(obj.partof.points) > 2:
+                #do not allow used route to fall under 2 points
+                not_used = not obj.partof.used_by
+                not_used |= all( (x in self.level_view.selected) for x in obj.partof.used_by )
+                if len(obj.partof.points) > 2 or not_used:
                     obj.partof.points.remove(obj)
 
                     if len(obj.partof.points) == 0:
