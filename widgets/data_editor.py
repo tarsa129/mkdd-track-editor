@@ -958,8 +958,8 @@ class ObjectEdit(DataEditor):
         self.rename_object_parameters( self.get_objectname(new) )
 
     def update_name(self, new):
-        obj: MapObject = self.bound_to
-        obj.objectid = new
+        for obj in self.bound_to:
+            obj.objectid = new
         self.set_default_values()
 
         super().update_name()

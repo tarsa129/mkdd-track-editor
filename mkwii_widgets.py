@@ -1151,7 +1151,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
 
                     for j, point in enumerate(group.points):
                         if point in select_optimize:
-                            group_selected = True
+                            selected_groups[i] = True
                             glColor3f(0.3, 0.3, 0.3)
                             self.models.draw_sphere(point.position, point.scale * 50)
 
