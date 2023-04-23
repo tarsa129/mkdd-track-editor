@@ -565,7 +565,7 @@ class UserControl(object):
     def handle_release(self, event):
         editor = self._editor_widget
 
-        if editor.connecting_mode and editor.mode == MODE_TOPDOWN:
+        if editor.connecting_mode: #and editor.mode == MODE_TOPDOWN:
             #mapx, mapz = editor.mouse_coord_to_world_coord(event.x(), event.y())
             x = event.x()
             y = event.y()
@@ -595,10 +595,9 @@ class UserControl(object):
     def handle_move(self, event):
         editor = self._editor_widget
         
-        if editor.connecting_mode and editor.mode == MODE_TOPDOWN:
-            #self.handle_move_topdown(event)
-            #print("do not actually move the thing")
-
+        if editor.mode == MODE_TOPDOWN:
+            if not editor.connecting_mode:
+                self.handle_move_topdown(event)
             #update the view in the position thing
             if default_timer() - self.last_position_update > 0.1:  # True:  # self.highlighttriangle is not None:
                 mapx, mapz = editor.mouse_coord_to_world_coord(event.x(), event.y())
@@ -615,27 +614,9 @@ class UserControl(object):
                         editor.position_update.emit(event, (round(mapx, 2), None, round(-mapz, 2)))
                 else:
                     editor.position_update.emit(event, (round(mapx, 2), None, round(-mapz, 2)))
-
-        elif editor.mode == MODE_TOPDOWN:
-            self.handle_move_topdown(event)
-
-            if default_timer() - self.last_position_update > 0.1:  # True:  # self.highlighttriangle is not None:
-                mapx, mapz = editor.mouse_coord_to_world_coord(event.x(), event.y())
-                self.last_position_update = default_timer()
-
-                if editor.collision is not None:
-                    height = editor.collision.collide_ray_downwards(mapx, -mapz)
-
-                    if height is not None:
-                        # self.highlighttriangle = res[1:]
-                        # self.update()
-                        editor.position_update.emit(event, (round(mapx, 2), round(height, 2), round(-mapz, 2)))
-                    else:
-                        editor.position_update.emit(event, (round(mapx, 2), None, round(-mapz, 2)))
-                else:
-                    editor.position_update.emit(event, (round(mapx, 2), None, round(-mapz, 2)))
         else:
-            self.handle_move_3d(event)
+
+                self.handle_move_3d(event)
 
     def handle_press_topdown(self, event):
         editor = self._editor_widget

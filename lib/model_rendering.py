@@ -3,10 +3,8 @@ import math
 import os
 import re
 import sys
-
 from OpenGL.GL import *
 from PIL import Image
-
 from .vectors import Vector3
 
 
@@ -171,36 +169,18 @@ class TexturedMesh(object):
 class Material(object):
     def __init__(self, diffuse=None, texturepath=None):
         if texturepath is not None:
+            image = Image.open(texturepath)
+            image = image.convert('RGBA')
+
             ID = glGenTextures(1)
             glBindTexture(GL_TEXTURE_2D, ID)
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0)
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0)
+            glTexImage2D(GL_TEXTURE_2D, 0, 4, image.width, image.height, 0, GL_RGBA,
+                         GL_UNSIGNED_BYTE, image.tobytes())
 
-            if texturepath.endswith(".png"):
-                fmt = "png"
-            elif texturepath.endswith(".jpg"):
-                fmt = "jpg"
-            else:
-                raise RuntimeError("unknown tex format: {0}".format(texturepath))
-
-            # When SuperBMD is used through Wine, it generates some odd filepaths that need to be
-            # corrected.
-            if sys.platform != "win32":
-                texturepath = re.sub("lib/temp/[A-Z]:", "", texturepath).replace("\\", "/")
-
-            qimage = QtGui.QImage(texturepath, fmt)
-            qimage = qimage.convertToFormat(QtGui.QImage.Format_ARGB32)
-
-            if qimage.isNull():
-                qimage = QtGui.QImage(32, 32, QtGui.QImage.Format_ARGB32)
-                qimage.fill(QtGui.QColor(0, 0, 0, 255))
-
-            imgdata = bytes(qimage.bits().asarray(qimage.width() * qimage.height() * 4))
-
-            glTexImage2D(GL_TEXTURE_2D, 0, 4, qimage.width(), qimage.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, imgdata)
-
-            del qimage
+            del image
 
             self.tex = ID
         else:

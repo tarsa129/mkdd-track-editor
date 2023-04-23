@@ -28,7 +28,7 @@ class MoreButtons(QWidget):
     def add_buttons(self, obj = None):
         self.clear_buttons()
 
-        if obj is None: #nothing selected and top level stuff
+        if obj is None or isinstance(option, KMPHeader):
             return
 
         if isinstance(obj, (KMPPoint, PointGroup, PointGroups)):
@@ -39,10 +39,7 @@ class MoreButtons(QWidget):
                 point_type = "Checkpoint"
 
             if isinstance(obj, PointGroups):
-                new_enemy_group = QPushButton(self)
-                new_enemy_group.setText("v: Add New" + point_type + " Points")
-                new_enemy_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(0, obj) )
-                self.vbox.addWidget(new_enemy_group)
+                self.add_button("v: Add New" + point_type + " Points", "add_enemygroup", obj)
 
                 merge_paths = QPushButton(self)
                 merge_paths.setText("Merge " + point_type + " Paths")
@@ -66,10 +63,7 @@ class MoreButtons(QWidget):
                 copy_from_item.setText(action_text)
                 copy_from_item.clicked.connect(lambda: self.parent.button_add_from_addi_options(24) )
                 self.vbox.addWidget(copy_from_item)
-        if option is None or isinstance(option, BolHeader):
-            return
 
-        obj = option.bound_to
 
         if isinstance(obj, EnemyPointGroups):
             self.add_button("Add Enemy Path", "add_enemypath", obj)

@@ -435,6 +435,7 @@ class GenEditor(QMainWindow):
             for karts_point in self.level_file.missionpoints:
                 extend(karts_point.position)
 
+        """
         if self.level_view.collision is not None and self.level_view.collision.verts:
             vertices = self.level_view.collision.verts
             min_x = min(x for x, _y, _z in vertices)
@@ -453,7 +454,7 @@ class GenEditor(QMainWindow):
                 extent[5] = max(extent[5], max_z)
             else:
                 extend.extend([min_x, min_y, min_z, max_y, max_x, max_z])
-
+        """
         return tuple(extent) or (0, 0, 0, 0, 0, 0)
 
     def tree_select_arrowkey(self):
@@ -1675,7 +1676,7 @@ class GenEditor(QMainWindow):
         self.objects_to_be_added = None
         self.object_to_be_added = None
 
-        if option == 0: #add an empty enemy group
+        if option == "add_enemygroup": #add an empty enemy group
             to_deal_with = self.level_file.get_to_deal_with(obj)
             if len(to_deal_with.groups) != 1 or len(to_deal_with.groups[0].points) != 0:
                 to_deal_with.add_new_group()
@@ -2326,32 +2327,6 @@ class GenEditor(QMainWindow):
         self.level_view.do_redraw()
         self.leveldatatreeview.set_objects(self.level_file)
         self.set_has_unsaved_changes(True)
-
-
-    def button_side_button_action(self, option, obj=None):
-        #stop adding new stuff
-        self.pik_control.button_add_object.setChecked(False)
-        self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_NONE)
-        self.object_to_be_added = None
-
-        if option == "add_enemypath":
-            self.level_file.enemypointgroups.add_group()
-            self.level_view.selected = [self.level_file.enemypointgroups.groups[-1]]
-            self.level_view.selected_positions = []
-            self.level_view.selected_rotations = []
-        elif option == "add_enemypoints":
-            if isinstance(obj, libbol.EnemyPointGroup):
-                group_id = obj.id
-                pos = 0
-            else:
-                group_id = obj.group
-                group: libbol.EnemyPointGroup = self.level_file.enemypointgroups.groups[obj.group]
-                pos = group.get_index_of_point(obj)
-            self.object_to_be_added = [libbol.EnemyPoint.new(), group_id, pos + 1]
-            self.pik_control.button_add_object.setChecked(True)
-            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)
-
-        self.leveldatatreeview.set_objects(self.level_file)
 
     @catch_exception
     def action_move_objects(self, deltax, deltay, deltaz):

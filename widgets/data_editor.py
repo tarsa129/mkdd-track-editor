@@ -4,14 +4,14 @@ from copy import copy, deepcopy
 import widgets.tooltip_list as ttl
 
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QHBoxLayout, QVBoxLayout, QLabel, QCheckBox, QLineEdit, QComboBox, QSizePolicy, QColorDialog, QPushButton
-from PyQt5.QtGui import QIntValidator, QDoubleValidator, QValidator, QColor
+from PyQt5.QtGui import QIntValidator, QDoubleValidator, QValidator, QColor, QPixmap
 from math import inf
 from lib.libkmp import (EnemyPoint, EnemyPointGroup, CheckpointGroup, Checkpoint, Route, RoutePoint, ItemPoint, ItemPointGroup,
                         MapObject, KartStartPoint, KartStartPoints, Area, Camera, Cameras, KMP, JugemPoint, MapObject,
                         CannonPoint, MissionPoint, OBJECTNAMES, REVERSEOBJECTNAMES,
                          Rotation)
 from lib.vectors import Vector3
-from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtCore import pyqtSignal, Qt
 from widgets.data_editor_options import *
 
 def set_attr_mult(objs, attr, value):
@@ -127,7 +127,7 @@ class PythonIntValidator(QValidator):
         pass
 
 
-class ClickableLabel(QtWidgets.QLabel):
+class ClickableLabel(QLabel):
 
     clicked = pyqtSignal()
 
@@ -140,29 +140,29 @@ class ClickableLabel(QtWidgets.QLabel):
 
 class ColorPicker(ClickableLabel):
 
-    color_changed = QtCore.pyqtSignal(QtGui.QColor)
-    color_picked = QtCore.pyqtSignal(QtGui.QColor)
+    color_changed = pyqtSignal(QColor)
+    color_picked = pyqtSignal(QColor)
 
     def __init__(self, with_alpha=False):
         super().__init__()
 
         height = int(self.fontMetrics().height() / 1.5)
-        pixmap = QtGui.QPixmap(height, height)
-        pixmap.fill(QtCore.Qt.black)
+        pixmap = QPixmap(height, height)
+        pixmap.fill(Qt.black)
         self.setPixmap(pixmap)
         self.setFixedWidth(height)
 
-        self.color = QtGui.QColor(0, 0, 0, 0)
+        self.color = QColor(0, 0, 0, 0)
         self.with_alpha = with_alpha
-        self.tmp_color = QtGui.QColor(0, 0, 0, 0)
+        self.tmp_color = QColor(0, 0, 0, 0)
 
         self.clicked.connect(self.show_color_dialog)
 
     def show_color_dialog(self):
-        dialog = QtWidgets.QColorDialog(self)
-        dialog.setOption(QtWidgets.QColorDialog.DontUseNativeDialog, True)
+        dialog = QColorDialog(self)
+        dialog.setOption(QColorDialog.DontUseNativeDialog, True)
         if self.with_alpha:
-            dialog.setOption(QtWidgets.QColorDialog.ShowAlphaChannel, True)
+            dialog.setOption(QColorDialog.ShowAlphaChannel, True)
         dialog.setCurrentColor(self.color)
         dialog.currentColorChanged.connect(self.update_color)
         dialog.currentColorChanged.connect(self.color_changed)
@@ -180,7 +180,7 @@ class ColorPicker(ClickableLabel):
 
     def update_color(self, color):
         self.tmp_color = color
-        color = QtGui.QColor(color)
+        color = QColor(color)
         color.setAlpha(255)
         pixmap = self.pixmap()
         pixmap.fill(color)

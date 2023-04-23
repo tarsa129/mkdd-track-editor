@@ -247,9 +247,6 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
         self.modelviewmatrix = None
         self.projectionmatrix = None
 
-        self.arrow = None
-
-
     @catch_exception_with_dialog
     def initializeGL(self):
         self.rotation_visualizer = glGenLists(1)
@@ -263,8 +260,6 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
         glEndList()
 
         self.models.init_gl()
-        self.arrow = Material(texturepath="resources/arrow.png")
-
 
         # If multisampling is enabled, a secondary mono-sampled framebuffer needs to be created, as
         # reading pixels from multisampled framebuffers is not a supported GL operation.
@@ -1729,7 +1724,7 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
                 glBegin(GL_LINES)
                 glColor3f(0.0, 0.0, 0.0)
                 glVertex3f(pos1.x, -pos1.z, pos1.y)
-                glVertex3f(pos2.x, -pos2.z, pos2.y)
+                glVertex3f(pos2.x, -pos2.z, pos1.y)
                 glEnd()
                 self.models.draw_arrow_head(pos1, pos2)
 

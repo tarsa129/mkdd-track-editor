@@ -5,6 +5,11 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QAction, QMenu
 from PyQt5.QtGui import QIcon
 
+class BaseTreeWidgetItem(QTreeWidgetItem):
+
+    def get_index_in_parent(self):
+        return self.parent().indexOfChild(self)
+
 class ToggleButton(QPushButton):
     def __init__(self, text, status) -> None:
         super().__init__()
@@ -629,7 +634,7 @@ class LevelDataTreeView(QTreeWidget):
                     break
             item.setSelected(True)
 
-        self.bound_to_group(boldata)
+        self.bound_to_group(kmpdata)
 
     def sort_objects(self):
         self.objects.sort()
