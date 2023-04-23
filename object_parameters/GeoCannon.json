@@ -1,14 +1,22 @@
 {
   "Object Parameters":
           ["Respawn ID",
-            "Angle-related field",
+            "Unknown 2",
             "Invisibility",
-            "Sound Setting",
+            "Unknown 4",
             "Unused",
             "Unused",
             "Unused",
             "Unused"],
   "Assets": ["cannon1.bca", "cannon1.bmd", "cannon1.brk"],
-  "Default Values": [0, 0, 0, 2, null, null, null, null],
-  "Route Info": null
+  "Tooltips": [
+    "The Respawn ID that the cannon will shoot towards",
+    "",
+    "Sets model visibility. 0 = visible, 1 = invisible",
+    "",
+    "",
+    "",
+    "",
+    ""
+  ]
 }

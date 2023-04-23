@@ -10,5 +10,15 @@
             "Unused"],
   "Assets": [""],
   "Default Values": [0, 60, 65, 70, 87, null, null, null],
-  "Route Info": null
+  "Route Info": null,
+  "Tooltips": [
+    "The strength it'll pull with on 50cc",
+    "The strength it'll pull with on 100cc",
+    "The strength it'll pull with on 150cc",
+    "",
+    "",
+    "",
+    "",
+    ""
+  ]
 }

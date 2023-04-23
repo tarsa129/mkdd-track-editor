@@ -4,13 +4,19 @@ from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QAction, QMenu
 
 
-class BolHeader(QTreeWidgetItem):
+class BaseTreeWidgetItem(QTreeWidgetItem):
+
+    def get_index_in_parent(self):
+        return self.parent().indexOfChild(self)
+
+
+class BolHeader(BaseTreeWidgetItem):
     def __init__(self):
         super().__init__()
         self.setText(0, "Track Settings")
 
 
-class ObjectGroup(QTreeWidgetItem):
+class ObjectGroup(BaseTreeWidgetItem):
     def __init__(self, name, parent=None, bound_to=None):
         if parent is None:
             super().__init__()
@@ -104,7 +110,7 @@ class CameraPointGroup(ObjectGroup):
         index = self.parent().indexOfChild(self)
         self.setText(0, "Camera Path {0}".format(index))
 # Entries in groups or entries without groups
-class NamedItem(QTreeWidgetItem):
+class NamedItem(BaseTreeWidgetItem):
     def __init__(self, parent, name, bound_to, index=None):
         super().__init__(parent)
         self.setText(0, name)
@@ -486,6 +492,8 @@ class LevelDataTreeView(QTreeWidget):
                 else:
                     break
             item.setSelected(True)
+
+        self.bound_to_group(boldata)
 
     def sort_objects(self):
         self.objects.sort()

@@ -1,4 +1,5 @@
 from argparse import _MutuallyExclusiveGroup
+import contextlib
 import pickle
 import traceback
 import os
@@ -7,6 +8,7 @@ from copy import deepcopy
 from io import TextIOWrapper, BytesIO, StringIO
 from math import sin, cos, atan2
 import json
+from PIL import Image
 import PyQt5.QtWidgets as QtWidgets
 import PyQt5.QtCore as QtCore
 from PyQt5.QtCore import Qt
@@ -20,6 +22,7 @@ import PyQt5.QtGui as QtGui
 import opengltext
 import py_obj
 
+from lib import bti
 from widgets.editor_widgets import catch_exception
 from widgets.editor_widgets import AddPikObjectWindow
 from widgets.tree_view import LevelDataTreeView
@@ -28,15 +31,14 @@ from configuration import read_config, make_default_config, save_cfg
 
 import mkdd_widgets # as mkddwidgets
 from widgets.side_widget import PikminSideWidget
-from widgets.editor_widgets import open_error_dialog, catch_exception_with_dialog
-from widgets.data_editor import load_route_info
+from widgets.editor_widgets import open_error_dialog, open_info_dialog, catch_exception_with_dialog
 from mkdd_widgets import BolMapViewer, MODE_TOPDOWN
 from lib.libbol import BOL, MGEntry, MapObject, Area, Camera, Route, get_full_name, ObjectContainer, MapObjects, Rotation, ObjectRoute, CameraRoute
 import lib.libbol as libbol
 from lib.rarc import Archive
 from lib.BCOllider import RacetrackCollision
 from lib.model_rendering import TexturedModel, CollisionModel, Minimap
-from widgets.editor_widgets import ErrorAnalyzer, ErrorAnalyzerButton
+from widgets.editor_widgets import ErrorAnalyzer, ErrorAnalyzerButton, show_minimap_generator
 from lib.dolreader import DolFile, read_float, write_float, read_load_immediate_r0, write_load_immediate_r0, UnmappedAddress
 from widgets.file_select import FileSelect
 from PyQt5.QtWidgets import QTreeWidgetItem
@@ -120,6 +122,7 @@ class GenEditor(QMainWindow):
 
         self.undo_history: list[UndoEntry] = []
         self.redo_history: list[UndoEntry] = []
+        self.undo_history_disabled_count: int  = 0
 
         try:
             self.configuration = read_config()
@@ -153,6 +156,7 @@ class GenEditor(QMainWindow):
         self._user_made_change = False
         self._justupdatingselectedobject = False
 
+        self.bco_coll = None
         self.loaded_archive = None
         self.loaded_archive_file = None
         self.last_position_clicked = []
@@ -169,19 +173,8 @@ class GenEditor(QMainWindow):
 
         self.undo_history.append(self.generate_undo_entry())
 
-        self.obj_to_copy = None
-        self.objs_to_copy = None
-        self.points_added = 0
-
-
         self.leveldatatreeview.set_objects(self.level_file)
         self.leveldatatreeview.bound_to_group(self.level_file)
-        self.level_view.do_redraw()
-
-        if self.editorconfig.get("default_view") == "3dview":
-            self.change_to_3dview(True)
-
-        self.update_3d()
 
     def save_geometry(self):
         if "geometry" not in self.configuration:
@@ -347,6 +340,10 @@ class GenEditor(QMainWindow):
             self.load_top_undo_entry()
 
     def on_document_potentially_changed(self, update_unsaved_changes=True):
+        # Early out if undo history is temporarily disabled.
+        if self.undo_history_disabled_count:
+            return
+
         undo_entry = self.generate_undo_entry()
 
         if self.undo_history[-1] != undo_entry:
@@ -365,6 +362,16 @@ class GenEditor(QMainWindow):
     def update_undo_redo_actions(self):
         self.undo_action.setEnabled(len(self.undo_history) > 1)
         self.redo_action.setEnabled(bool(self.redo_history))
+
+    @contextlib.contextmanager
+    def undo_history_disabled(self):
+        self.undo_history_disabled_count += 1
+        try:
+            yield
+        finally:
+            self.undo_history_disabled_count -= 1
+
+        self.on_document_potentially_changed()
 
     @catch_exception_with_dialog
     def do_goto_action(self, item, index):
@@ -467,6 +474,25 @@ class GenEditor(QMainWindow):
                 and self.visibility_menu.minimap.is_visible()):
             extend(self.level_view.minimap.corner1)
             extend(self.level_view.minimap.corner2)
+
+        if self.level_view.collision is not None and self.level_view.collision.verts:
+            vertices = self.level_view.collision.verts
+            min_x = min(x for x, _y, _z in vertices)
+            min_y = min(y for _x, y, _z in vertices)
+            min_z = min(z for _x, _y, z in vertices)
+            max_y = max(y for _x, y, _z in vertices)
+            max_x = max(x for x, _y, _z in vertices)
+            max_z = max(z for _x, _y, z in vertices)
+
+            if extent:
+                extent[0] = min(extent[0], min_x)
+                extent[1] = min(extent[1], min_y)
+                extent[2] = min(extent[2], min_z)
+                extent[3] = max(extent[3], max_y)
+                extent[4] = max(extent[4], max_x)
+                extent[5] = max(extent[5], max_z)
+            else:
+                extend.extend([min_x, min_y, min_z, max_y, max_x, max_z])
 
         return tuple(extent) or (0, 0, 0, 0, 0, 0)
 
@@ -690,22 +716,36 @@ class GenEditor(QMainWindow):
         self.minimap_menu = QMenu(self.menubar)
         self.minimap_menu.setTitle("Minimap")
         load_minimap = QAction("Load Minimap Image", self)
+        save_minimap_png = QAction("Save Minimap Image as PNG", self)
+        save_minimap_bti = QAction("Save Minimap Image as BTI", self)
         load_coordinates_dol = QAction("Load Data from DOL", self)
         save_coordinates_dol = QAction("Save Data to DOL", self)
         load_coordinates_json = QAction("Load Data from JSON", self)
         save_coordinates_json = QAction("Save Data to JSON", self)
+        minimap_generator_action = QAction("Minimap Generator", self)
+        minimap_generator_action.setShortcut("Ctrl+M")
 
 
         load_minimap.triggered.connect(self.action_load_minimap_image)
+        save_minimap_png.triggered.connect(
+            lambda checked: self.action_save_minimap_image(checked, 'png'))
+        save_minimap_bti.triggered.connect(
+            lambda checked: self.action_save_minimap_image(checked, 'bti'))
         load_coordinates_dol.triggered.connect(self.action_load_dol)
         save_coordinates_dol.triggered.connect(self.action_save_to_dol)
         load_coordinates_json.triggered.connect(self.action_load_coordinates_json)
         save_coordinates_json.triggered.connect(self.action_save_coordinates_json)
+        minimap_generator_action.triggered.connect(self.minimap_generator_action)
         self.minimap_menu.addAction(load_minimap)
+        self.minimap_menu.addAction(save_minimap_png)
+        self.minimap_menu.addAction(save_minimap_bti)
+        self.minimap_menu.addSeparator()
         self.minimap_menu.addAction(load_coordinates_dol)
         self.minimap_menu.addAction(save_coordinates_dol)
         self.minimap_menu.addAction(load_coordinates_json)
         self.minimap_menu.addAction(save_coordinates_json)
+        self.minimap_menu.addSeparator()
+        self.minimap_menu.addAction(minimap_generator_action)
 
         # Misc
         self.misc_menu = QMenu(self.menubar)
@@ -824,16 +864,58 @@ class GenEditor(QMainWindow):
             open_error_dialog(error, self)
 
     def action_load_minimap_image(self):
+        supported_extensions = [f'*{ext}' for ext in Image.registered_extensions()]
+        supported_extensions.insert(0, '*.bti')
+        supported_extensions = ' '.join(supported_extensions)
+
+        if "minimap_image" not in self.pathsconfig:
+            self.pathsconfig["minimap_image"] = ""
+
         filepath, choosentype = QFileDialog.getOpenFileName(
-            self, "Open File",
-            self.pathsconfig["minimap_png"],
-            "Image (*.png);;All files (*)")
+            self, "Open Image", self.pathsconfig["minimap_image"],
+            f"Images ({supported_extensions});;All files (*)")
 
         if filepath:
-            self.level_view.minimap.set_texture(filepath)
+            if filepath.endswith('.bti'):
+                with open(filepath, 'rb') as f:
+                    bti_image = bti.BTI(f)
+                    self.level_view.minimap.set_texture(bti_image.render())
+            else:
+                self.level_view.minimap.set_texture(filepath)
             self.level_view.do_redraw()
 
-            self.pathsconfig["minimap_png"] = filepath
+            self.pathsconfig["minimap_image"] = filepath
+            save_cfg(self.configuration)
+
+    def action_save_minimap_image(self, checked: bool = False, extension: str = 'png'):
+        if not self.level_view.minimap.has_texture():
+            open_info_dialog('No minimap image has been loaded yet.', self)
+            return
+
+        initial_filepath = self.pathsconfig["minimap_image"]
+        stem, _ext = os.path.splitext(initial_filepath)
+        initial_filepath = f'{stem}.{extension}'
+
+        filepath, _choosentype = QFileDialog.getSaveFileName(
+            self, f"Save {extension.upper()} Image", initial_filepath,
+            f"{extension.upper()} (*.{extension})")
+
+        if filepath:
+            image = self.level_view.minimap.get_texture().convert('RGBA')
+            if extension == 'bti':
+                for pixel in image.getdata():
+                    if pixel[0] != pixel[1] or pixel[0] != pixel[2]:
+                        colorful = True
+                        break
+                else:
+                    colorful = False
+                image_format = bti.ImageFormat.RGB5A3 if colorful else bti.ImageFormat.IA4
+                bti_image = bti.BTI.create_from_image(image, image_format)
+                bti_image.save(filepath)
+            else:
+                image.save(filepath)
+
+            self.pathsconfig["minimap_image"] = filepath
             save_cfg(self.configuration)
 
     @catch_exception_with_dialog
@@ -980,6 +1062,17 @@ class GenEditor(QMainWindow):
             self.pathsconfig["minimap_json"] = filepath
             save_cfg(self.configuration)
 
+    @catch_exception_with_dialog
+    def minimap_generator_action(self, checked):
+        _ = checked
+
+        if self.bco_coll is None:
+            open_info_dialog('No BCO file has been loaded yet.', self)
+            return
+
+        with self.undo_history_disabled():
+            show_minimap_generator(self)
+
     def action_choose_bco_area(self):
         if not isinstance(self.level_view.alternative_mesh, CollisionModel):
             QtWidgets.QMessageBox.information(self, "Collision Areas (BCO)",
@@ -1017,25 +1110,25 @@ class GenEditor(QMainWindow):
             # https://mkdd.miraheze.org/wiki/BCO_(File_Format)#Collision_Flags
 
             group_descs = {
-                "0x00__": "Medium Offroad",
+                "0x00__": "Medium Off-road",
                 "0x01__": "Road",
                 "0x02__": "Wall",
-                "0x03__": "Medium Offroad",
+                "0x03__": "Medium Off-road",
                 "0x04__": "Slippery Ice",
-                "0x05__": "Deadzone",
-                "0x06__": "",
+                "0x05__": "Dead zone",
+                "0x06__": "Grassy Wall",
                 "0x07__": "Boost",
                 "0x08__": "Boost",
                 "0x09__": "Cannon Boost",
-                "0x0A__": "Deadzone",
-                "0x0C__": "Weak Offroad",
+                "0x0A__": "Dead zone",
+                "0x0C__": "Weak Off-road",
                 "0x0D__": "Teleport",
-                "0x0E__": "Sand Deadzone",
-                "0x0F__": "Wavy Deadzone",
-                "0x10__": "Quicksand Deadzone",
-                "0x11__": "Deadzone",
+                "0x0E__": "Sand Dead zone",
+                "0x0F__": "Wavy Dead zone",
+                "0x10__": "Quicksand Dead zone",
+                "0x11__": "Dead zone",
                 "0x12__": "Kart-Only Wall",
-                "0x13__": "Heavy Offroad",
+                "0x13__": "Heavy Off-road",
                 "0x37__": "Boost",
                 "0x47__": "Boost",
             }
@@ -1567,9 +1660,11 @@ class GenEditor(QMainWindow):
                             else:
                                 self.clear_collision()
                         elif bmdfile is not None and self.editorconfig["addi_file_on_load"] == "BMD":
-                            self.load_optional_bmd(bmdfile)
+                            if os.path.isfile(bmdfile):
+                                self.load_optional_bmd(bmdfile)
                         elif collisionfile is not None and self.editorconfig["addi_file_on_load"] == "BCO":
-                            self.load_optional_bco(collisionfile)
+                            if os.path.isfile(collisionfile):
+                                self.load_optional_bco(collisionfile)
                         elif self.editorconfig["addi_file_on_load"] == "None":
                             self.clear_collision()
 
@@ -1621,6 +1716,7 @@ class GenEditor(QMainWindow):
 
         with open(collisionfile, "rb") as f:
             bco_coll.load_file(f)
+        self.bco_coll = bco_coll
 
         for vert in bco_coll.vertices:
             verts.append(vert)
@@ -1640,7 +1736,7 @@ class GenEditor(QMainWindow):
             return
 
         if choice.endswith("(3D Model)"):
-            self.load_bco_from_arc(bmdfile, arcfilepath)
+            self.load_bmd_from_arc(bmdfile, arcfilepath)
 
         elif choice.endswith("(3D Collision)"):
             self.load_bco_from_arc(collisionfile, arcfilepath)
@@ -1662,6 +1758,7 @@ class GenEditor(QMainWindow):
         faces = []
 
         bco_coll.load_file(collisionfile)
+        self.bco_coll = bco_coll
 
         for vert in bco_coll.vertices:
             verts.append(vert)
@@ -1709,6 +1806,7 @@ class GenEditor(QMainWindow):
             bco_coll = RacetrackCollision()
             with open(collisionfile, "rb") as f:
                 bco_coll.load_file(f)
+            self.bco_coll = bco_coll
 
             verts = []
             for vert in bco_coll.vertices:
@@ -1764,6 +1862,7 @@ class GenEditor(QMainWindow):
 
             bco_coll = RacetrackCollision()
             bco_coll.load_file(collisionfile)
+            self.bco_coll = bco_coll
 
             verts = []
             for vert in bco_coll.vertices:
@@ -1955,9 +2054,11 @@ class GenEditor(QMainWindow):
                     collision_file = find_file(rarc.root, "_course.bco")
                     bco = rarc[root_name][collision_file]
                     bco_coll.load_file(bco)
+                    self.bco_coll = bco_coll
                 else:
                     with open(filepath, "rb") as f:
                         bco_coll.load_file(f)
+                    self.bco_coll = bco_coll
 
                 for vert in bco_coll.vertices:
                     verts.append(vert)
@@ -1975,6 +2076,7 @@ class GenEditor(QMainWindow):
             self.update_3d()
 
     def clear_collision(self):
+        self.bco_coll = None
         self.level_view.clear_collision()
 
         # Synchronously force a draw operation to provide immediate feedback.
@@ -2010,6 +2112,7 @@ class GenEditor(QMainWindow):
         self.set_has_unsaved_changes(True)
 
     def button_open_add_item_window(self):
+        self.add_object_window.update_label()
         accepted = self.add_object_window.exec_()
         if accepted:
             self.add_item_window_save()
@@ -2594,9 +2697,19 @@ class GenEditor(QMainWindow):
                 if group == 0 and not self.level_file.enemypointgroups.groups:
                     self.level_file.enemypointgroups.groups.append(libbol.EnemyPointGroup.new())
                 placeobject.group = group
-
-                self.level_file.enemypointgroups.groups[group].points.insert(position + self.points_added, placeobject)
-                self.points_added += 1
+                insertion_index = position
+                # If a selection exists, use it as reference for the insertion point.
+                selected_items = self.leveldatatreeview.selectedItems()
+                if selected_items:
+                    selected_item = selected_items[-1]
+                    if isinstance(selected_item.bound_to, libbol.EnemyPoint):
+                        placeobject.group = selected_item.parent().get_index_in_parent()
+                        insertion_index = selected_item.get_index_in_parent() + 1
+                    elif isinstance(selected_item.bound_to, libbol.EnemyPointGroup):
+                        placeobject.group = selected_item.get_index_in_parent()
+                        insertion_index = 0
+                self.level_file.enemypointgroups.groups[placeobject.group].points.insert(
+                    insertion_index, placeobject)
             elif isinstance(object, libbol.RoutePoint):
                 route_container = self.level_file.get_route_container(object.partof)
                 if group == 0 and not route_container:
@@ -2775,6 +2888,30 @@ class GenEditor(QMainWindow):
         self.set_has_unsaved_changes(True)
 
 
+    def button_side_button_action(self, option, obj=None):
+        #stop adding new stuff
+        self.pik_control.button_add_object.setChecked(False)
+        self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_NONE)
+        self.object_to_be_added = None
+
+        if option == "add_enemypath":
+            self.level_file.enemypointgroups.add_group()
+            self.level_view.selected = [self.level_file.enemypointgroups.groups[-1]]
+            self.level_view.selected_positions = []
+            self.level_view.selected_rotations = []
+        elif option == "add_enemypoints":
+            if isinstance(obj, libbol.EnemyPointGroup):
+                group_id = obj.id
+                pos = 0
+            else:
+                group_id = obj.group
+                group: libbol.EnemyPointGroup = self.level_file.enemypointgroups.groups[obj.group]
+                pos = group.get_index_of_point(obj)
+            self.object_to_be_added = [libbol.EnemyPoint.new(), group_id, pos + 1]
+            self.pik_control.button_add_object.setChecked(True)
+            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)
+
+        self.leveldatatreeview.set_objects(self.level_file)
 
     @catch_exception
     def action_move_objects(self, deltax, deltay, deltaz):
@@ -3278,6 +3415,7 @@ class GenEditor(QMainWindow):
                     for i in range(self.leveldatatreeview.checkpointgroups.childCount()):
                         child = self.leveldatatreeview.checkpointgroups.child(i)
                         item = get_treeitem(child, currentobj)
+
                         if item is not None:
                             break
 
@@ -3303,11 +3441,30 @@ class GenEditor(QMainWindow):
                 elif isinstance(currentobj, libbol.KartStartPoint):
                     item = get_treeitem(self.leveldatatreeview.kartpoints, currentobj)
 
-                #assert item is not None
+                # Temporarily suppress signals to prevent both checkpoints from
+                # being selected when just one checkpoint is selected in 3D view.
+                suppress_signal = False
+                if (isinstance(currentobj, libbol.Checkpoint)
+                    and (currentobj.start in self.level_view.selected_positions
+                         or currentobj.end in self.level_view.selected_positions)):
+                    suppress_signal = True
+
+                if suppress_signal:
+                    self.leveldatatreeview.blockSignals(True)
+
                 if item is not None:
-                    #self._dontselectfromtree = True
                     self.leveldatatreeview.setCurrentItem(item)
 
+                if suppress_signal:
+                    self.leveldatatreeview.blockSignals(False)
+
+            #if nothing is selected and the currentitem is something that can be selected
+            #clear out the buttons
+            curr_item = self.leveldatatreeview.currentItem()
+            if (not selected) and (curr_item is not None) and hasattr(curr_item, "bound_to"):
+                bound_to_obj = curr_item.bound_to
+                if bound_to_obj and hasattr(bound_to_obj, "position"):
+                    self.pik_control.set_buttons(None)
     @catch_exception
     def action_update_info(self):
 

@@ -17,43 +17,30 @@ class MoreButtons(QWidget):
         self.parent = parent
         self.vbox = QVBoxLayout(self)
 
+    def add_button(self, text, option, obj):
+        new_enemy_group = QPushButton(self)
+        new_enemy_group.setText(text)
+        new_enemy_group.clicked.connect(
+            lambda: self.parent().parent.button_side_button_action(option, obj) )
+        self.vbox.addWidget(new_enemy_group)
+
     #where the list of buttons is defined
     def add_buttons(self, option = None):
         self.clear_buttons()
         all_options = False
 
-
-        if option is None: #nothing selected and top level stuff
+        if option is None or isinstance(option, BolHeader):
             return
 
-        elif isinstance(option, BolHeader):
-            all_options = False
-            pass
+        obj = option.bound_to
 
-        elif isinstance(option.bound_to, EnemyPointGroups): #enemy point group select
-
-            new_enemy_group = QPushButton(self)
-            new_enemy_group.setText("Add Enemy Group")
-            new_enemy_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(0) )
-            self.vbox.addWidget(new_enemy_group)
-
-        elif isinstance(option.bound_to, EnemyPointGroup): #enemy point group select
-            all_options = False
-            new_enemy_group = QPushButton(self)
-            new_enemy_group.setText("Add Enemy Group")
-            new_enemy_group.clicked.connect(lambda: self.parent.button_add_from_addi_options(0) )
-            self.vbox.addWidget(new_enemy_group)
-
+        if isinstance(obj, EnemyPointGroups):
+            self.add_button("Add Enemy Path", "add_enemypath", obj)
+        elif isinstance(obj, (EnemyPointGroup, EnemyPoint)):
             new_enemy_point = QPushButton(self)
-            new_enemy_point.setText("Add Enemy Points To End")
-            new_enemy_point.clicked.connect(lambda: self.parent.button_add_from_addi_options(1, option.bound_to) )
-            self.vbox.addWidget(new_enemy_point)
-
-        elif isinstance(option.bound_to, EnemyPoint):
-            all_options = False
-            new_enemy_point = QPushButton(self)
-            new_enemy_point.setText("Add Enemy Points Here")
-            new_enemy_point.clicked.connect(lambda: self.parent.button_add_from_addi_options(11, option.bound_to) )
+            new_enemy_point.setText("Add Enemy Points")
+            new_enemy_point.clicked.connect(
+                lambda: self.parent().parent.button_side_button_action("add_enemypoints", obj) )
             self.vbox.addWidget(new_enemy_point)
 
         elif isinstance(option.bound_to, CheckpointGroups):
@@ -453,6 +440,3 @@ class MoreButtons(QWidget):
                 return obj_type
         return None
 
-    def clear_buttons(self):
-        for i in reversed(range(self.vbox.count())):
-            self.vbox.itemAt(i).widget().setParent(None)

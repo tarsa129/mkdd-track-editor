@@ -1,5 +1,6 @@
 import os
 import json
+import widgets.tooltip_list as ttl
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
@@ -48,12 +49,16 @@ def load_parameter_names(objectname):
             data = json.load(f)
             parameter_names = data["Object Parameters"]
             assets = data["Assets"]
+            if "Tooltips" in data:
+                tooltips = data["Tooltips"]
+            else:
+                tooltips = ""
             if len(parameter_names) != 8:
                 raise RuntimeError("Not enough or too many parameters: {0} (should be 8)".format(len(parameter_names)))
-            
-            
-            
-            return parameter_names, assets
+            if tooltips != "":
+                return parameter_names, assets, tooltips
+            else:
+                return parameter_names, assets
     except Exception as err:
         print(err)
         return None, None
@@ -110,6 +115,7 @@ class ColorPicker(ClickableLabel):
 
         self.color = QtGui.QColor(0, 0, 0, 0)
         self.with_alpha = with_alpha
+        self.tmp_color = QtGui.QColor(0, 0, 0, 0)
 
         self.clicked.connect(self.show_color_dialog)
 
@@ -119,8 +125,8 @@ class ColorPicker(ClickableLabel):
         if self.with_alpha:
             dialog.setOption(QtWidgets.QColorDialog.ShowAlphaChannel, True)
         dialog.setCurrentColor(self.color)
-        dialog.currentColorChanged.connect(self.color_changed)
         dialog.currentColorChanged.connect(self.update_color)
+        dialog.currentColorChanged.connect(self.color_changed)
 
         color = self.color
 
@@ -134,6 +140,7 @@ class ColorPicker(ClickableLabel):
             self.color_changed.emit(self.color)
 
     def update_color(self, color):
+        self.tmp_color = color
         color = QtGui.QColor(color)
         color.setAlpha(255)
         pixmap = self.pixmap()
@@ -317,6 +324,12 @@ class DataEditor(QWidget):
             val = keyval_dict[item]
             #print("selected", item)
             setattr(self.bound_to, attribute, val)
+
+            tt_dict = getattr(ttl, attribute, None)
+            if tt_dict is not None and item in tt_dict:
+                combobox.setToolTip(tt_dict[item])
+            else:
+                combobox.setToolTip('')
 
         combobox.currentTextChanged.connect(item_selected)
         self.vbox.addLayout(layout)
@@ -639,9 +652,13 @@ class EnemyPointEdit(DataEditor):
                                                         -inf, +inf)
         self.link = self.add_integer_input("Link", "link",
                                            MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
+        self.link.setToolTip(ttl.enemypoints['Link'])
         self.scale = self.add_decimal_input("Scale", "scale", -inf, inf)
+        self.scale.setToolTip(ttl.enemypoints['Scale'])
         self.itemsonly = self.add_checkbox("Items Only", "itemsonly", off_value=0, on_value=1)
+        self.itemsonly.setToolTip(ttl.enemypoints['Items Only'])
         self.swerve = self.add_dropdown_input("Swerve", "swerve", REVERSE_SWERVE_IDS)
+        self.swerve.setToolTip(ttl.enemypoints['Swerve'])
         self.group = self.add_integer_input("Group", "group",
                                             MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
         if not group_editable:
@@ -649,14 +666,20 @@ class EnemyPointEdit(DataEditor):
 
         self.driftdirection = self.add_dropdown_input("Drift Direction", "driftdirection",
                                                       DRIFT_DIRECTION_OPTIONS)
+        self.driftdirection.setToolTip(ttl.enemypoints['Drift Direction'])
         self.driftacuteness = self.add_integer_input("Drift Acuteness", "driftacuteness",
-                                                     MIN_UNSIGNED_BYTE, 180)
+                                                     MIN_UNSIGNED_BYTE, 250)
+        self.driftacuteness.setToolTip(ttl.enemypoints['Drift Acuteness'])
         self.driftduration = self.add_integer_input("Drift Duration", "driftduration",
                                                     MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
+        self.driftduration.setToolTip(ttl.enemypoints['Drift Duration'])
         self.driftsupplement = self.add_integer_input("Drift Supplement", "driftsupplement",
                                                       MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
+        self.driftsupplement.setToolTip(ttl.enemypoints['Drift Direction'])
         self.nomushroomzone = self.add_checkbox("No Mushroom Zone", "nomushroomzone",
                                                 off_value=0, on_value=1)
+        self.nomushroomzone.setToolTip(ttl.enemypoints['No Mushroom Zone'])
+
         for widget in self.position:
             widget.editingFinished.connect(self.catch_text_update)
         for widget in (self.itemsonly, self.nomushroomzone):
@@ -905,19 +928,28 @@ class ObjectEdit(DataEditor):
 
         self.route = self.add_integer_input("Object Path ID", "route",
                                              MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
+        self.pathid.setToolTip(ttl.objectdata['Route ID'])
 
-        self.unk_2a = self.add_integer_input("Object Path Point ID", "unk_2a",
-                                        MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
+        self.unk_2a = self.add_integer_input("Route Point ID", "unk_2a",
+                                             MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
+        self.unk_2a.setToolTip(ttl.objectdata['Route Point ID'])
+
 
         self.unk_28 = self.add_integer_input("Unknown 0x28", "unk_28",
                                              MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
 
         self.presence_filter = self.add_integer_input("Presence Mask", "presence_filter",
                                                       MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
+        self.presence_filter.setToolTip(ttl.objectdata['Presence Mask'])
+
         self.presence = self.add_integer_input("Presence", "presence",
                                                MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
+        self.presence.setToolTip(ttl.objectdata['Presence'])
+
         self.flag = self.add_checkbox("Collision", "unk_flag",
                                       off_value=0, on_value=1)
+        self.flag.setToolTip(ttl.objectdata['Collision'])
+
         self.unk_2f = self.add_integer_input("Unknown 0x2F", "unk_2f",
                                              MIN_UNSIGNED_BYTE, MAX_UNSIGNED_BYTE)
 
@@ -950,13 +982,17 @@ class ObjectEdit(DataEditor):
         self.assets.setSizePolicy(hint)
 
     def rename_object_parameters(self, current):
-        parameter_names, assets = load_parameter_names(current)
-        
+
+        if len(load_parameter_names(current)) == 2:
+            parameter_names, assets = load_parameter_names(current)
+        else:
+            parameter_names, assets, tooltips = load_parameter_names(current)
         if parameter_names is None:
             for i in range(8):
                 self.userdata[i][0].setText("Obj Data {0}".format(i+1))
                 self.userdata[i][0].setVisible(True)
                 self.userdata[i][1].setVisible(True)
+                self.userdata[i][1].setToolTip('')
             self.assets.setText("Required Assets: Unknown")
         else:
             for i in range(8):
@@ -971,6 +1007,9 @@ class ObjectEdit(DataEditor):
                     self.userdata[i][0].setVisible(True)
                     self.userdata[i][1].setVisible(True)
                     self.userdata[i][0].setText(parameter_names[i])
+                    self.userdata[i][1].setToolTip('')
+                    if len(load_parameter_names(current)) == 3:
+                        self.userdata[i][1].setToolTip(tooltips[i])
             if len(assets) == 0:
                 self.assets.setText("Required Assets: None")
             else:
@@ -1184,16 +1223,19 @@ class CameraEdit(DataEditor):
                                                    MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
         self.camduration = self.add_integer_input("Camera Duration", "camduration",
                                                   MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
+        self.camduration.setToolTip(ttl.camdata['Camera Duration'])
         self.startcamera = self.add_checkbox("Start Camera", "startcamera", off_value=0, on_value=1)
+        self.startcamera.setToolTip(ttl.camdata['Start Camera'])
         self.nextcam = self.add_integer_input("Next Cam", "nextcam",
-                                        MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
-
+                                              MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
+        self.nextcam.setToolTip(ttl.camdata['Next Cam'])
         self.shimmer = self.add_multiple_integer_input("Shimmer", "shimmer", ["z0", "z1"], 0, 4095)
-        self.route = self.add_integer_input("Route ID", "route", MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
+        self.route = self.add_integer_input("Route ID", "route",
+                                            MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
+        self.route.setToolTip(ttl.camdata['Route ID'])
         self.routespeed = self.add_integer_input("Route Speed", "routespeed",
                                                  MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
-
-
+        self.routespeed.setToolTip(ttl.camdata['Route Speed'])
         self.name = self.add_text_input("Camera Name", "name", 4)
 
        
@@ -1256,12 +1298,17 @@ class RespawnPointEdit(DataEditor):
         self.rotation = self.add_rotation_input()
         self.respawn_id = self.add_integer_input("Respawn ID", "respawn_id",
                                                  MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
+        self.respawn_id.setToolTip(ttl.respawn['Respawn ID'])
         self.unk1 = self.add_integer_input("Next Enemy Point", "unk1",
                                            MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
+        self.unk1.setToolTip(ttl.respawn['Next Enemy Point'])
+
         self.unk2 = self.add_integer_input("Unknown 2", "unk2",
                                            MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
         self.unk3 = self.add_integer_input("Previous Checkpoint", "unk3",
                                            MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
+        self.unk3.setToolTip(ttl.respawn['Previous Checkpoint'])
+
 
         self.respawn_id.editingFinished.connect(self.update_name)
 

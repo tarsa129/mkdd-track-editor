@@ -10,5 +10,15 @@
             "Unknown 8"],
   "Assets": ["car_kinoko1.bmd", "car_kinoko1.btk", "car_konoko1shadow.bmd"],
     "Default Values" : [30, 10, null,null, null, null, null, null],
-  "Route Info": 3
+  "Route Info": 3,
+  "Tooltips": [
+    "Vehicle speed",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+  ]
 }
