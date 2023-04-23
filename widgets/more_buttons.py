@@ -28,7 +28,7 @@ class MoreButtons(QWidget):
     def add_buttons(self, obj = None):
         self.clear_buttons()
 
-        if obj is None or isinstance(option, KMPHeader):
+        if obj is None or isinstance(obj, KMPHeader):
             return
 
         if isinstance(obj, (KMPPoint, PointGroup, PointGroups)):
