@@ -13,8 +13,16 @@ from widgets.tree_view import KMPHeader, EnemyRoutePoint
 class MoreButtons(QWidget):
     def __init__(self, parent, option = 0):
         super().__init__(parent)
-        self.parent = parent
+        #self.parent = parent
         self.vbox = QVBoxLayout(self)
+        self.vbox.setContentsMargins(0, 0, 0, 0)
+
+    def add_button(self, text, option, obj):
+        new_enemy_group = QPushButton(self)
+        new_enemy_group.setText(text)
+        new_enemy_group.clicked.connect(
+            lambda: self.parent().parent.button_side_button_action(option, obj) )
+        self.vbox.addWidget(new_enemy_group)
 
     #where the list of buttons is defined
     def add_buttons(self, obj = None):
@@ -58,6 +66,15 @@ class MoreButtons(QWidget):
                 copy_from_item.setText(action_text)
                 copy_from_item.clicked.connect(lambda: self.parent.button_add_from_addi_options(24) )
                 self.vbox.addWidget(copy_from_item)
+        if option is None or isinstance(option, BolHeader):
+            return
+
+        obj = option.bound_to
+
+        if isinstance(obj, EnemyPointGroups):
+            self.add_button("Add Enemy Path", "add_enemypath", obj)
+        elif isinstance(obj, (EnemyPointGroup, EnemyPoint)):
+            self.add_button("Add Enemy Points", "add_enemypoints", obj)
 
         elif isinstance(obj, CheckpointGroups):
             set_key_automatically = QPushButton(self)
@@ -143,7 +160,7 @@ class MoreButtons(QWidget):
         elif isinstance(obj, ReplayAreas):
             new_camera_cam_route = QPushButton(self)
             new_camera_cam_route.setText("Add Area/Stationary Cam")
-            new_camera_cam_route.clicked.connect(lambda: self.parent.button_add_from_addi_options(12.5) )
+            new_camera_cam_route.clicked.connect(lambda: self.parent().parent.button_add_from_addi_options(12.5) )
             self.vbox.addWidget(new_camera_cam_route)
 
             new_camera_cam_route = QPushButton(self)

@@ -1,6 +1,7 @@
 import os
 import json
 from copy import copy, deepcopy
+import widgets.tooltip_list as ttl
 
 from PyQt5.QtWidgets import QSizePolicy, QWidget, QHBoxLayout, QVBoxLayout, QLabel, QCheckBox, QLineEdit, QComboBox, QSizePolicy, QColorDialog, QPushButton
 from PyQt5.QtGui import QIntValidator, QDoubleValidator, QValidator, QColor
@@ -87,14 +88,20 @@ def load_parameter_names(objectname):
             data = json.load(f)
             parameter_names = data["Object Parameters"]
             assets = data["Assets"]
+            route_info = data["Route Info"]
+            if "Tooltips" in data:
+                tooltips = data["Tooltips"]
+            else:
+                tooltips = ""
             if len(parameter_names) != 8:
                 raise RuntimeError("Not enough or too many parameters: {0} (should be 8)".format(len(parameter_names)))
+            if tooltips != "":
+                return parameter_names, assets, route_info, tooltips
+            else:
+                return parameter_names, assets, route_info, None
 
-            route_info = data["Route Info"]
-
-            return parameter_names, assets, route_info
     else:
-        return None, None, None
+        return None, None, None, None
 
 class PythonIntValidator(QValidator):
     def __init__(self, min, max, parent):
@@ -118,6 +125,66 @@ class PythonIntValidator(QValidator):
 
     def fixup(self, s):
         pass
+
+
+class ClickableLabel(QtWidgets.QLabel):
+
+    clicked = pyqtSignal()
+
+    def mouseReleaseEvent(self, event):
+
+        if self.rect().contains(event.pos()):
+            event.accept()
+            self.clicked.emit()
+
+
+class ColorPicker(ClickableLabel):
+
+    color_changed = QtCore.pyqtSignal(QtGui.QColor)
+    color_picked = QtCore.pyqtSignal(QtGui.QColor)
+
+    def __init__(self, with_alpha=False):
+        super().__init__()
+
+        height = int(self.fontMetrics().height() / 1.5)
+        pixmap = QtGui.QPixmap(height, height)
+        pixmap.fill(QtCore.Qt.black)
+        self.setPixmap(pixmap)
+        self.setFixedWidth(height)
+
+        self.color = QtGui.QColor(0, 0, 0, 0)
+        self.with_alpha = with_alpha
+        self.tmp_color = QtGui.QColor(0, 0, 0, 0)
+
+        self.clicked.connect(self.show_color_dialog)
+
+    def show_color_dialog(self):
+        dialog = QtWidgets.QColorDialog(self)
+        dialog.setOption(QtWidgets.QColorDialog.DontUseNativeDialog, True)
+        if self.with_alpha:
+            dialog.setOption(QtWidgets.QColorDialog.ShowAlphaChannel, True)
+        dialog.setCurrentColor(self.color)
+        dialog.currentColorChanged.connect(self.update_color)
+        dialog.currentColorChanged.connect(self.color_changed)
+
+        color = self.color
+
+        accepted = dialog.exec_()
+        if accepted:
+            self.color = dialog.currentColor()
+            self.color_picked.emit(self.color)
+        else:
+            self.color = color
+            self.update_color(self.color)
+            self.color_changed.emit(self.color)
+
+    def update_color(self, color):
+        self.tmp_color = color
+        color = QtGui.QColor(color)
+        color.setAlpha(255)
+        pixmap = self.pixmap()
+        pixmap.fill(color)
+        self.setPixmap(pixmap)
 
 
 class DataEditor(QWidget):
@@ -373,6 +440,12 @@ class DataEditor(QWidget):
             val = keyval_dict[item]
             #print("selected", item)
             set_attr_mult(self.bound_to, attribute, val)
+
+            tt_dict = getattr(ttl, attribute, None)
+            if tt_dict is not None and item in tt_dict:
+                combobox.setToolTip(tt_dict[item])
+            else:
+                combobox.setToolTip('')
 
         combobox.currentTextChanged.connect(item_selected)
 
@@ -984,13 +1057,14 @@ class ObjectEdit(DataEditor):
 
     def rename_object_parameters(self, current):
 
-        parameter_names, assets, route_info = load_parameter_names(current)
+        parameter_names, assets, route_info, tooltips = load_parameter_names(current)
 
         if parameter_names is None:
             for i in range(8):
                 self.userdata[i][0].setText("Obj Data {0}".format(i+1))
                 self.userdata[i][0].setVisible(True)
                 self.userdata[i][1].setVisible(True)
+                self.userdata[i][1].setToolTip('')
             self.assets.setText("Required Assets: Unknown")
 
         else:
@@ -1007,6 +1081,9 @@ class ObjectEdit(DataEditor):
                     self.userdata[i][0].setVisible(True)
                     self.userdata[i][1].setVisible(True)
                     self.userdata[i][0].setText(parameter_names[i])
+                    self.userdata[i][1].setToolTip('')
+                    if len(load_parameter_names(current)) == 3:
+                        self.userdata[i][1].setToolTip(tooltips[i])
             if len(assets) == 0:
                 self.assets.setText("Required Assets: None")
             else:

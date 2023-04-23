@@ -10,11 +10,19 @@ def collides(face_v1, face_v2, face_v3, box_mid_x, box_mid_z, box_size_x, box_si
     max_z = max(face_v1.z, face_v2.z, face_v3.z) - box_mid_z
 
     half_x = box_size_x / 2.0
-    half_z = box_size_z / 2.0
-
-    if max_x < -half_x or min_x > +half_x:
+    min_x = min(face_v1[0], face_v2[0], face_v3[0]) - box_mid_x
+    if min_x > +half_x:
         return False
-    if max_z < -half_z or min_z > +half_z:
+    max_x = max(face_v1[0], face_v2[0], face_v3[0]) - box_mid_x
+    if max_x < -half_x:
+        return False
+
+    half_z = box_size_z / 2.0
+    min_z = min(face_v1[2], face_v2[2], face_v3[2]) - box_mid_z
+    if min_z > +half_z:
+        return False
+    max_z = max(face_v1[2], face_v2[2], face_v3[2]) - box_mid_z
+    if max_z < -half_z:
         return False
 
     return True
@@ -31,14 +39,11 @@ def subdivide_grid(minx, minz,
 
         return True
 
-    assert gridx_end > gridx_start or gridz_end > gridz_start
+    # assert gridx_end > gridx_start or gridz_end > gridz_start
 
     halfx = (gridx_start+gridx_end) // 2
     halfz = (gridz_start+gridz_end) // 2
 
-    quadrants = (
-        [], [], [], []
-    )
     # x->
     # 2 3 ^
     # 0 1 z
@@ -120,13 +125,13 @@ class Collision(object):
             col_type = 0x0100
             if len(face) > 3:
                 col_type = face[3]
-        
+
             #print(v1i, v2i, v3i, len(self.verts))
             v1 = Vector3(v1.x, -v1.z, v1.y)
             v2 = Vector3(v2.x, -v2.z, v2.y)
             v3 = Vector3(v3.x, -v3.z, v3.y)
 
-            
+
             self.triangles.append(Triangle(v1,v2,v3,col_type))
 
         self.cell_size = 2000

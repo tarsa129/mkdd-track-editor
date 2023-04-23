@@ -239,3 +239,5 @@ class PikminSideWidget(QWidget):
         self.comment_label.setText("")
 
 
+    def set_buttons(self, obj):
+        self.more_buttons.add_buttons(obj)

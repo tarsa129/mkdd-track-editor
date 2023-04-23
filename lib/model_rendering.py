@@ -1,14 +1,14 @@
 import json
+import math
+import os
 import re
 import sys
-from time import time
-from OpenGL.GL import *
-from .vectors import Vector3
-from struct import unpack
-import os
-from OpenGL.GL import *
 
-from PyQt5 import QtGui
+from OpenGL.GL import *
+from PIL import Image
+
+from .vectors import Vector3
+
 
 with open("lib/color_coding.json") as f:
     colors = json.load(f)
@@ -170,58 +170,41 @@ class TexturedMesh(object):
 
 class Material(object):
     def __init__(self, diffuse=None, texturepath=None):
-
-        ID = glGenTextures(1)
-        glBindTexture(GL_TEXTURE_2D, ID)
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0)
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0)
-
         if texturepath is not None:
+            ID = glGenTextures(1)
+            glBindTexture(GL_TEXTURE_2D, ID)
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0)
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0)
 
             if texturepath.endswith(".png"):
                 fmt = "png"
             elif texturepath.endswith(".jpg"):
                 fmt = "jpg"
             else:
-                fmt = None
-                #raise RuntimeError("unknown tex format: {0}".format(texturepath))
+                raise RuntimeError("unknown tex format: {0}".format(texturepath))
 
-            if fmt is not None:
-                qimage = QtGui.QImage(texturepath, fmt)
-                qimage = qimage.convertToFormat(QtGui.QImage.Format_ARGB32)
+            # When SuperBMD is used through Wine, it generates some odd filepaths that need to be
+            # corrected.
+            if sys.platform != "win32":
+                texturepath = re.sub("lib/temp/[A-Z]:", "", texturepath).replace("\\", "/")
 
-                if qimage.isNull():
-                    qimage = QtGui.QImage(32, 32, QtGui.QImage.Format_ARGB32)
-                    #print("make a qimage because the path couldn't be found")
-                    if diffuse is not None:
-                        qimage.fill(QtGui.QColor(diffuse[0] * 255, diffuse[1] * 255, diffuse[2] * 255, 255))
-                    else:
-                        qimage.fill(QtGui.QColor(0, 0, 0, 255))
-            else:
-                #print("make a qimage because fmt was null")
+            qimage = QtGui.QImage(texturepath, fmt)
+            qimage = qimage.convertToFormat(QtGui.QImage.Format_ARGB32)
+
+            if qimage.isNull():
                 qimage = QtGui.QImage(32, 32, QtGui.QImage.Format_ARGB32)
-                if diffuse is not None:
-                    qimage.fill(QtGui.QColor(diffuse[0] * 255, diffuse[1] * 255, diffuse[2]* 255, 255))
-                else:
-                    qimage.fill(QtGui.QColor(0, 0, 0, 255))
-
-
-        else:
-            #print("make a qimage because there was no texture")
-            qimage = QtGui.QImage(32, 32, QtGui.QImage.Format_ARGB32)
-            if diffuse is not None:
-                qimage.fill(QtGui.QColor(diffuse[0] * 255, diffuse[1] * 255, diffuse[2] * 255, 255))
-            else:
                 qimage.fill(QtGui.QColor(0, 0, 0, 255))
-        
-        imgdata = bytes(qimage.bits().asarray(qimage.width() * qimage.height() * 4))
 
-        glTexImage2D(GL_TEXTURE_2D, 0, 4, qimage.width(), qimage.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, imgdata)
+            imgdata = bytes(qimage.bits().asarray(qimage.width() * qimage.height() * 4))
 
-        del qimage
+            glTexImage2D(GL_TEXTURE_2D, 0, 4, qimage.width(), qimage.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, imgdata)
 
-        self.tex = ID
+            del qimage
+
+            self.tex = ID
+        else:
+            self.tex = None
 
         self.diffuse = diffuse
 
@@ -690,15 +673,15 @@ class GenericComplexObject(GenericObject):
 
 
 class TexturedPlane(object):
-    def __init__(self, planewidth, planeheight, qimage):
+    def __init__(self, planewidth, planeheight, image):
         ID = glGenTextures(1)
         glBindTexture(GL_TEXTURE_2D, ID)
         glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0)
 
-        imgdata = bytes(qimage.bits().asarray(qimage.width()*qimage.height()*4))
-        glTexImage2D(GL_TEXTURE_2D, 0, 4, qimage.width(), qimage.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, imgdata)
+        glTexImage2D(GL_TEXTURE_2D, 0, 4, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                     image.tobytes())
 
         self.ID = ID
         self.planewidth = planewidth
@@ -759,6 +742,77 @@ ORIENTATIONS = {
 }
 
 
+class Minimap(object):
+    def __init__(self, corner1, corner2, orientation, texpath=None):
+        self.ID = None
+        if texpath is not None:
+            self.set_texture(texpath)
+
+
+    def is_available(self):
+        return True
+
+    def set_texture(self, path):
+        if self.ID is not None:
+            glDeleteTextures(1, int(self.ID))
+
+        qimage = QtGui.QImage(path, "png")
+        qimage = qimage.convertToFormat(QtGui.QImage.Format_ARGB32)
+        ID = glGenTextures(1)
+        glBindTexture(GL_TEXTURE_2D, ID)
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0)
+
+        imgdata = bytes(qimage.bits().asarray(qimage.width() * qimage.height() * 4))
+        glTexImage2D(GL_TEXTURE_2D, 0, 4, qimage.width(), qimage.height(), 0, GL_BGRA, GL_UNSIGNED_BYTE, imgdata)
+        self.ID = ID
+
+    def render(self):
+        corner1, corner2 = self.corner1, self.corner2
+
+        glDisable(GL_ALPHA_TEST)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+        glEnable(GL_BLEND)
+
+        if self.ID is not None:
+            glColor4f(1.0, 1.0, 1.0, 0.70)
+            glEnable(GL_TEXTURE_2D)
+            glBindTexture(GL_TEXTURE_2D, self.ID)
+            glBegin(GL_TRIANGLE_FAN)
+            glTexCoord2f(*ORIENTATIONS[self.orientation][0])
+            glVertex3f(corner1.x, -corner1.z, corner1.y)
+            glTexCoord2f(*ORIENTATIONS[self.orientation][1])
+            glVertex3f(corner1.x, -corner2.z, corner1.y)
+            glTexCoord2f(*ORIENTATIONS[self.orientation][2])
+            glVertex3f(corner2.x, -corner2.z, corner1.y)
+            glTexCoord2f(*ORIENTATIONS[self.orientation][3])
+            glVertex3f(corner2.x, -corner1.z, corner1.y)
+            glEnd()
+            glDisable(GL_TEXTURE_2D)
+        else:
+            glColor4f(0.0, 0.0, 0.0, 0.70)
+            glPushMatrix()
+            glTranslate((corner2.x + corner1.x) / 2, -(corner2.z + corner1.z) / 2, corner1.y)
+            glScale(corner2.x - corner1.x, corner2.z - corner1.z, 1.0)
+            glRotate(90.0 * self.orientation, 0.0, 0.0, 1.0)
+            glBegin(GL_TRIANGLES)
+            glVertex3f(0.0, 0.5, 0.0)
+            glVertex3f(-0.5, 0.1, 0.0)
+            glVertex3f(0.5, 0.1, 0.0)
+            glVertex3f(-0.25, -0.5, 0.0)
+            glVertex3f(0.25, 0.1, 0.0)
+            glVertex3f(-0.25, 0.1, 0.0)
+            glVertex3f(-0.25, -0.5, 0.0)
+            glVertex3f(0.25, -0.5, 0.0)
+            glVertex3f(0.25, 0.1, 0.0)
+            glEnd()
+            glPopMatrix()
+
+        glColor4f(1.0, 1.0, 1.0, 1.0)
+        glDisable(GL_BLEND)
+        glBlendFunc(GL_ZERO, GL_ONE)
+        glEnable(GL_ALPHA_TEST)
 
 
 class Grid(Mesh):

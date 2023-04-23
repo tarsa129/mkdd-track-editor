@@ -1,0 +1,24 @@
+{
+  "Object Parameters":
+          ["Speed",
+            "Swerve",
+            "Unknown 3",
+            "Unknown 4",
+            "Unknown 5",
+            "Unknown 6",
+            "Unknown 7",
+            "Unknown 8"],
+  "Assets": ["car_bomb1.bmd", "car_bomb1.btk", "car_bomb1shadow.bmd"],
+  "Default Values" : [30, 10, null,null, null, null, null, null],
+  "Route Info": 3,
+  "Tooltips": [
+    "Vehicle speed",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+  ]
+}

@@ -1,4 +1,5 @@
 from argparse import _MutuallyExclusiveGroup
+import contextlib
 import pickle
 import traceback
 import os
@@ -7,6 +8,7 @@ from copy import deepcopy
 from io import TextIOWrapper, BytesIO, StringIO
 from math import sin, cos, atan2
 import json
+from PIL import Image
 import PyQt5.QtWidgets as QtWidgets
 import PyQt5.QtCore as QtCore
 from PyQt5.QtCore import Qt
@@ -20,6 +22,7 @@ import PyQt5.QtGui as QtGui
 import opengltext
 import py_obj
 
+from lib import bti
 from widgets.editor_widgets import catch_exception
 from widgets.editor_widgets import AddPikObjectWindow
 from widgets.tree_view import LevelDataTreeView
@@ -69,6 +72,7 @@ class GenEditor(QMainWindow):
 
         self.undo_history: list[UndoEntry] = []
         self.redo_history: list[UndoEntry] = []
+        self.undo_history_disabled_count: int  = 0
 
         try:
             self.configuration = read_config()
@@ -101,6 +105,7 @@ class GenEditor(QMainWindow):
         self._user_made_change = False
         self._justupdatingselectedobject = False
 
+        self.bco_coll = None
         self.loaded_archive = None
         self.loaded_archive_file = None
         self.last_position_clicked = []
@@ -131,12 +136,6 @@ class GenEditor(QMainWindow):
             self.setStyleSheet(lines)
         self.leveldatatreeview.set_objects(self.level_file)
         self.leveldatatreeview.bound_to_group(self.level_file)
-        self.level_view.do_redraw()
-
-        if self.editorconfig.get("default_view") == "3dview":
-            self.change_to_3dview(True)
-
-        self.update_3d()
 
         if self.editorconfig.get("default_view") == "3dview":
             self.change_to_3dview(True)
@@ -290,6 +289,10 @@ class GenEditor(QMainWindow):
             self.load_top_undo_entry()
 
     def on_document_potentially_changed(self, update_unsaved_changes=True):
+        # Early out if undo history is temporarily disabled.
+        if self.undo_history_disabled_count:
+            return
+
         undo_entry = self.generate_undo_entry()
 
         if self.undo_history[-1] != undo_entry:
@@ -308,6 +311,16 @@ class GenEditor(QMainWindow):
     def update_undo_redo_actions(self):
         self.undo_action.setEnabled(len(self.undo_history) > 1)
         self.redo_action.setEnabled(bool(self.redo_history))
+
+    @contextlib.contextmanager
+    def undo_history_disabled(self):
+        self.undo_history_disabled_count += 1
+        try:
+            yield
+        finally:
+            self.undo_history_disabled_count -= 1
+
+        self.on_document_potentially_changed()
 
     @catch_exception_with_dialog
     def do_goto_action(self, item, index):
@@ -421,6 +434,25 @@ class GenEditor(QMainWindow):
         if self.visibility_menu.missionsuccesspoints.is_visible():
             for karts_point in self.level_file.missionpoints:
                 extend(karts_point.position)
+
+        if self.level_view.collision is not None and self.level_view.collision.verts:
+            vertices = self.level_view.collision.verts
+            min_x = min(x for x, _y, _z in vertices)
+            min_y = min(y for _x, y, _z in vertices)
+            min_z = min(z for _x, _y, z in vertices)
+            max_y = max(y for _x, y, _z in vertices)
+            max_x = max(x for x, _y, _z in vertices)
+            max_z = max(z for _x, _y, z in vertices)
+
+            if extent:
+                extent[0] = min(extent[0], min_x)
+                extent[1] = min(extent[1], min_y)
+                extent[2] = min(extent[2], min_z)
+                extent[3] = max(extent[3], max_y)
+                extent[4] = max(extent[4], max_x)
+                extent[5] = max(extent[5], max_z)
+            else:
+                extend.extend([min_x, min_y, min_z, max_y, max_x, max_z])
 
         return tuple(extent) or (0, 0, 0, 0, 0, 0)
 
@@ -1283,6 +1315,7 @@ class GenEditor(QMainWindow):
 
         with open(collisionfile, "rb") as f:
             bco_coll.load_file(f)
+        self.bco_coll = bco_coll
 
         for vert in bco_coll.vertices:
             verts.append(vert)
@@ -1440,6 +1473,7 @@ class GenEditor(QMainWindow):
         self.setup_collision(faces, filepath, alternative_mesh=model)
 
     def clear_collision(self):
+        self.bco_coll = None
         self.level_view.clear_collision()
 
         # Synchronously force a draw operation to provide immediate feedback.
@@ -2294,6 +2328,30 @@ class GenEditor(QMainWindow):
         self.set_has_unsaved_changes(True)
 
 
+    def button_side_button_action(self, option, obj=None):
+        #stop adding new stuff
+        self.pik_control.button_add_object.setChecked(False)
+        self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_NONE)
+        self.object_to_be_added = None
+
+        if option == "add_enemypath":
+            self.level_file.enemypointgroups.add_group()
+            self.level_view.selected = [self.level_file.enemypointgroups.groups[-1]]
+            self.level_view.selected_positions = []
+            self.level_view.selected_rotations = []
+        elif option == "add_enemypoints":
+            if isinstance(obj, libbol.EnemyPointGroup):
+                group_id = obj.id
+                pos = 0
+            else:
+                group_id = obj.group
+                group: libbol.EnemyPointGroup = self.level_file.enemypointgroups.groups[obj.group]
+                pos = group.get_index_of_point(obj)
+            self.object_to_be_added = [libbol.EnemyPoint.new(), group_id, pos + 1]
+            self.pik_control.button_add_object.setChecked(True)
+            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)
+
+        self.leveldatatreeview.set_objects(self.level_file)
 
     @catch_exception
     def action_move_objects(self, deltax, deltay, deltaz):
@@ -2781,6 +2839,7 @@ class GenEditor(QMainWindow):
                     for i in range(self.leveldatatreeview.checkpointgroups.childCount()):
                         child = self.leveldatatreeview.checkpointgroups.child(i)
                         item = get_treeitem(child, currentobj)
+
                         if item is not None:
                             break
 
@@ -2809,10 +2868,32 @@ class GenEditor(QMainWindow):
                 elif isinstance(currentobj, libkmp.CannonPoint):
                     item = get_treeitem(self.leveldatatreeview.cannonpoints, currentobj)
                 #assert item is not None
+
+                # Temporarily suppress signals to prevent both checkpoints from
+                # being selected when just one checkpoint is selected in 3D view.
+                suppress_signal = False
+                if (isinstance(currentobj, libkmp.Checkpoint)
+                    and (currentobj.start in self.level_view.selected_positions
+                         or currentobj.end in self.level_view.selected_positions)):
+                    suppress_signal = True
+
+                if suppress_signal:
+                    self.leveldatatreeview.blockSignals(True)
+
                 if item is not None:
-                    #self._dontselectfromtree = True
                     self.leveldatatreeview.setCurrentItem(item)
                 self.pik_control.set_buttons(currentobj)
+
+                if suppress_signal:
+                    self.leveldatatreeview.blockSignals(False)
+
+            #if nothing is selected and the currentitem is something that can be selected
+            #clear out the buttons
+            curr_item = self.leveldatatreeview.currentItem()
+            if (not selected) and (curr_item is not None) and hasattr(curr_item, "bound_to"):
+                bound_to_obj = curr_item.bound_to
+                if bound_to_obj and hasattr(bound_to_obj, "position"):
+                    self.pik_control.set_buttons(None)
     @catch_exception
     def action_update_info(self):
         self.pik_control.reset_info()
