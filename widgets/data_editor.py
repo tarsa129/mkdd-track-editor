@@ -928,7 +928,7 @@ class ObjectEdit(DataEditor):
 
         self.route = self.add_integer_input("Object Path ID", "route",
                                              MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
-        self.pathid.setToolTip(ttl.objectdata['Route ID'])
+        self.route.setToolTip(ttl.objectdata['Route ID'])
 
         self.unk_2a = self.add_integer_input("Route Point ID", "unk_2a",
                                              MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)

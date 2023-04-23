@@ -73,7 +73,7 @@ def subdivide_grid(minx, minz,
         box_mid_z = minz + startz * cell_size + area_size_z // 2
 
         for triangle in triangles:
-            _i, (v1_index, v2_index, v3_index) = triangle
+            _i, (v1_index, v2_index, v3_index, _coltype)= triangle
 
             v1 = vertices[v1_index[0] - 1]
             v2 = vertices[v2_index[0] - 1]
@@ -115,13 +115,13 @@ class Collision(object):
         self.triangles = []
         #print(self.faces)
         for face in self.faces:
-                
+
             v1i, v2i, v3i = face[0:3]
-        
+
             col_type = 0x0100
             if len(face) > 3:
                 col_type = face[3]
-        
+
             #print(v1i, v2i, v3i, len(self.verts))
             x, y, z = verts[v1i[0]-1]
             v1 = Vector3(x, -z, y)
@@ -130,7 +130,7 @@ class Collision(object):
             x, y, z = verts[v3i[0]-1]
             v3 = Vector3(x, -z, y)
 
-            
+
             self.triangles.append(Triangle(v1,v2,v3,col_type))
 
         self.cell_size = 2000
