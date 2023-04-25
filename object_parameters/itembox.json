@@ -1,11 +1,11 @@
 {
     "Object Parameters": [
         "Unknown",
-        "[[Item_Settings_-_Item_Boxes|Item type (player)]]",
-        "[[Item_Settings_-_Item_Boxes|Item type (enemy)]]",
+        "Item type (player)",
+        "Item type (enemy)",
         "Disables shadow if set",
         "Unused",
-        "[[Item_Settings_-_Item_Boxes|Timing lottery]]",
+        "Timing lottery",
         "Additional height, multiplied with unknown number (always 1?).",
         "Unknown"
     ],
@@ -23,5 +23,15 @@
         44
     ],
     "Route Info": null,
-    "Description": "Spinning box with a question mark inside it. If touched, it snaps and an item lottery begins; after the lottery, the item shown is retrieved."
+    "Description": "Spinning box with a question mark inside it. If touched, it snaps and an item lottery begins; after the lottery, the item shown is retrieved.",
+    "Tooltips": [
+        "",
+        "1: mushroom",
+        "1: mushroom",
+        "1: mushroom",
+        "",
+        "1: mushroom",
+        "1: mushroom",
+        "1: mushroom"
+    ]
 }

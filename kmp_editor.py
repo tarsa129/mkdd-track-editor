@@ -1689,10 +1689,7 @@ class GenEditor(QMainWindow):
 
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
-        elif self.object_to_be_added is not None:
-            self.pik_control.button_add_object.setChecked(True)
-            self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
-        elif option == 2: #regarding assigning checkpoints to routes
+        elif option =="assign_jgpt_ckpt": #regarding assigning checkpoints to routes
             if isinstance(obj, Checkpoint):
                 obj.assign_to_closest(self.level_file.respawnpoints)
             elif isinstance(obj, JugemPoint):
@@ -1700,7 +1697,7 @@ class GenEditor(QMainWindow):
             else:
                 self.level_file.reassign_respawns()
                 self.level_view.do_redraw()
-        elif option == 3: #add item box
+        elif option == "add_object": #add item box
             #self.addobjectwindow_last_selected_category = 6
 
             default_item_box = libkmp.MapObject.new(obj)
@@ -1708,7 +1705,7 @@ class GenEditor(QMainWindow):
 
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
-        elif option == 4:   #generic copy
+        elif option == "generic_copy":   #generic copy
             #self.addobjectwindow_last_selected_category = 6
             self.objects_to_be_added = []
             self.pik_control.button_add_object.setChecked(True)
@@ -1716,7 +1713,7 @@ class GenEditor(QMainWindow):
 
             self.obj_to_copy = obj
             self.copy_current_obj(False)
-        elif option == 4.5:  #copy with new route
+        elif option == "generic_copy_routed":  #copy with new route
 
             self.objects_to_be_added = []
             self.object_to_be_added = None
@@ -1754,7 +1751,7 @@ class GenEditor(QMainWindow):
         elif option == 5.5: #new camera route
             new_route_group = libkmp.CameraRoute.new()
             self.level_file.cameraroutes.append(new_route_group)
-        elif option == 6: #add route point to end of route
+        elif option == "add_routepoints_end": #add route point to end of route
             if obj.route_obj is None:
                 route_collec = self.level_file.get_route_container(obj)
                 new_route = self.level_file.get_route_for_obj(obj)
@@ -1768,19 +1765,19 @@ class GenEditor(QMainWindow):
 
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
-        elif option == 7: #add new area
+        elif option == "add_area_gener": #add new area
             #self.addobjectwindow_last_selected_category = 7
             self.object_to_be_added = [libkmp.Area.default(obj), None, None ]
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
-        elif option == 7.5: #add new type 8/9 areas
+        elif option == "add_area_objs": #add new type 8/9 areas
             self.objects_to_be_added = []
             self.objects_to_be_added.append( [libkmp.Area.default(8), None, None ]  )
             self.objects_to_be_added.append( [libkmp.Area.default(9), None, None ]  )
             self.object_to_be_added = None
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
-        elif option == 8:  #add new camera with route
+        elif option == "add_camera":  #add new camera with route
 
             if obj == 0:
                 self.level_file.cameras.add_goal_camera()
@@ -1810,14 +1807,14 @@ class GenEditor(QMainWindow):
 
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
-        elif option == 9: #add new respawn point
+        elif option == "add_jgpt": #add new respawn point
             rsp = libkmp.JugemPoint.new()
             self.object_to_be_added = [rsp, obj, None ]
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
-        elif option == 10: #merge enemy/item/route
+        elif option == "merge_groups": #merge enemy/item/route
             obj.merge_groups()
-        elif option == 11: #new enemy point here
+        elif option == "new_enemy_points": #new enemy point here
             #find its position in the enemy point group
             to_deal_with = self.level_file.get_to_deal_with(obj)
             if to_deal_with.num_total_points() == 255:
@@ -1831,7 +1828,7 @@ class GenEditor(QMainWindow):
             #actively adding objects
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
-        elif option == 12: #area camera route add
+        elif option == "add_rarea_rout": #area camera route add
             self.objects_to_be_added = []
             new_area = libkmp.Area.default()
             new_camera = libkmp.ReplayCamera.default(2)
@@ -1852,7 +1849,7 @@ class GenEditor(QMainWindow):
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
 
             self.object_to_be_added = None
-        elif option == 12.5: #area camera add
+        elif option == "add_rarea_stat": #area camera add
             self.objects_to_be_added = []
             new_area = libkmp.Area.default()
             new_camera = libkmp.ReplayCamera.default(1)
@@ -1864,12 +1861,12 @@ class GenEditor(QMainWindow):
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
 
             self.object_to_be_added = None
-        elif option == 13:
+        elif option == "copy_area_camera":
             self.object_to_be_added = [obj, None, None ]
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
             self.objects_to_be_added = None
-        elif option == 15: #add new route point here
+        elif option == "add_routepoints": #add new route point here - 15
             group_id = -1
             pos_in_grp = -1
             idx = 0
@@ -1888,9 +1885,9 @@ class GenEditor(QMainWindow):
             self.object_to_be_added = [libkmp.RoutePoint.new_partof(obj), group_id, pos_in_grp + 1 ]
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkwii_widgets.MOUSE_MODE_ADDWP)
-        elif option == 16: #auto route single
+        elif option == "auto_route_single": #auto route single
             self.auto_route_obj(obj)
-        elif option == 17: #auto route group
+        elif option == "auto_route": #auto route group
             if isinstance(obj, ObjectContainer) and obj.assoc is Camera:
                 for camera in self.level_file.cameras:
                     self.auto_route_obj(camera)
@@ -1898,27 +1895,27 @@ class GenEditor(QMainWindow):
                 self.leveldatatreeview.objects.bound_to = self.level_file.objects
                 for object in self.level_file.objects.objects:
                     self.auto_route_obj(object)
-        elif option == 21: #key checkpoints
+        elif option == "auto_keycheckpoints": #key checkpoints
             self.level_file.checkpoints.set_key_cps()
             self.level_view.do_redraw()
-        elif option == 22: #respawns
+        elif option == "autocreate_jgpt": #respawns
             self.level_file.create_respawns()
             self.level_view.do_redraw()
         elif option == 22.5: #reassign respawns
             self.level_file.reassign_respawns()
             self.level_view.do_redraw()
-        elif option == 23: #remove unused object routes
+        elif option == "remove_unused": #remove unused object routes
             self.level_file.remove_unused_object_routes()
             self.level_view.do_redraw()
         elif option == 23.5: #remove unused camera routes
             self.level_file.remove_unused_camera_routes()
             self.level_view.do_redraw()
-        elif option == 24: #copy enemy to item
+        elif option == "copy_enemy_item": #copy enemy to item
             self.level_file.copy_enemy_to_item()
-        elif option == 25: #remove unused cameras
+        elif option == "remove_unused_cams": #remove unused cameras
             self.level_file.remove_unused_cameras()
             self.level_view.do_redraw()
-        elif option == 26: #remove unused respawns:
+        elif option == "removed_unused_jgpt": #remove unused respawns:
             self.level_file.remove_unused_respawns()
         elif option == 27:
             obj.find_closest_enemypoint()
@@ -1926,13 +1923,13 @@ class GenEditor(QMainWindow):
 
     @catch_exception
     def button_add_from_addi_options_multi(self, option, objs = None):
-        if option == -1 or option == -1.5:
+        if option == "align_x" or option == "align_z":
             sum_x = 0
             count_x = 0
             for object in objs:
 
                 if hasattr(object, "position"):
-                    if option == -1:
+                    if option == "align_x":
 
                         sum_x += object.position.x
                     else:
@@ -1943,12 +1940,12 @@ class GenEditor(QMainWindow):
             for object in objs:
 
                 if hasattr(object, "position"):
-                    if option == -1:
+                    if option == "align_x":
                         object.position.x = mean_x
                     else:
                         object.position.z = mean_x
 
-        elif option == 0:
+        elif option == "add_items_between":
             added_item_boxes = []
             diff_vector = objs[1].position - objs[0].position
             diff_angle = Vector3( *objs[1].rotation.get_euler()) - Vector3( *objs[0].rotation.get_euler())
@@ -1963,7 +1960,7 @@ class GenEditor(QMainWindow):
 
             self.leveldatatreeview.set_objects(self.level_file)
             return added_item_boxes
-        elif option == 0.5:
+        elif option == "add_items_between_ground":
             to_ground = self.button_add_from_addi_options_multi(0, objs)
             for obj in to_ground:
                 self.action_ground_spec_object(obj)
@@ -1972,10 +1969,10 @@ class GenEditor(QMainWindow):
             for obj in objs:
                 if isinstance(obj, MapObject) and obj.route_info is not None:
                     pass
-        elif option == 2: #decrease scale
+        elif option == "dec_enemy_scale": #decrease scale
             for obj in objs:
                 obj.scale = max(0, obj.scale - 5)
-        elif option == 2.5: #increase scale
+        elif option == "inc_enemy_scale": #increase scale
             for obj in objs:
                 obj.scale += 5
 

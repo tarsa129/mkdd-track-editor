@@ -1082,7 +1082,7 @@ class ObjectEdit(DataEditor):
                     self.userdata[i][1].setVisible(True)
                     self.userdata[i][0].setText(parameter_names[i])
                     self.userdata[i][1].setToolTip('')
-                    if len(load_parameter_names(current)) == 3:
+                    if tooltips is not None:
                         self.userdata[i][1].setToolTip(tooltips[i])
             if len(assets) == 0:
                 self.assets.setText("Required Assets: None")

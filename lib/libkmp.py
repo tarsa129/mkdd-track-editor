@@ -2527,7 +2527,7 @@ class KMP(object):
 
         invalid_nonreplay = []
         for camera in self.cameras:
-            if camera.type not in (0, 4, 5, 7, 8, 9):
+            if camera.type not in (0, 1, 4, 5, 7, 8, 9):
                 return_string += "A camera of type {0} was found among the non-replay cams. It will be removed.\n".format(camera.type)
                 invalid_nonreplay.append(camera)
         for camera in invalid_nonreplay:
@@ -2538,7 +2538,8 @@ class KMP(object):
         """split camera routes into replay routes and other routes"""
         self.replaycameraroutes.extend( [camera.route_obj for camera in self.replaycameras if camera.route_obj is not None]  )
         for route in self.replaycameraroutes:
-            self.cameraroutes.remove(route)
+            if route in self.cameraroutes:
+                self.cameraroutes.remove(route)
 
 
         """set respawn_obj for checkpoints"""
