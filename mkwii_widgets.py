@@ -10,6 +10,7 @@ import json
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+from PyQt5 import QtGui
 from PyQt5.QtGui import QCursor, QMouseEvent, QWheelEvent, QPainter, QColor, QFont, QFontMetrics, QPolygon, QImage, QPixmap, QKeySequence
 from PyQt5.QtWidgets import (QWidget, QListWidget, QListWidgetItem, QDialog, QMenu, QLineEdit,
                             QMdiSubWindow, QHBoxLayout, QVBoxLayout, QLabel, QPushButton, QTextEdit, QAction, QShortcut)
@@ -685,6 +686,19 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
             #
             click_x, click_y, clickwidth, clickheight, shiftpressed, do_gizmo = self.selectionqueue.queue_pop()
             click_y = height - click_y
+
+            # Clamp to viewport dimensions.
+            if click_x < 0:
+                clickwidth += click_x
+                click_x = 0
+            if click_y < 0:
+                clickheight += click_y
+                click_y = 0
+            clickwidth = max(0, min(clickwidth, width - click_x))
+            clickheight = max(0, min(clickheight, height - click_y))
+            if not clickwidth or not clickheight:
+                continue
+
             hit = 0xFF
 
             #print("received request", do_gizmo)
@@ -1868,18 +1882,89 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
         return Line(pos, dir)
 
 
+def create_object_type_pixmap(canvas_size: int, directed: bool,
+                              colors: 'tuple[tuple[int]]') -> QtGui.QPixmap:
+    border = int(canvas_size * 0.12)
+    size = canvas_size // 2 - border
+    margin = (canvas_size - size) // 2
+
+    pixmap = QtGui.QPixmap(canvas_size, canvas_size)
+    pixmap.fill(QtCore.Qt.transparent)
+
+    painter = QtGui.QPainter(pixmap)
+    painter.setRenderHints(QtGui.QPainter.Antialiasing)
+
+    pen = QtGui.QPen()
+    pen.setJoinStyle(QtCore.Qt.RoundJoin)
+    pen.setWidth(border)
+    painter.setPen(pen)
+
+    main_color = QtGui.QColor(colors[0][0], colors[0][1], colors[0][2])
+
+    if directed:
+        polygon = QtGui.QPolygonF((
+            QtCore.QPointF(margin - size // 2, margin),
+            QtCore.QPointF(margin - size // 2, margin + size),
+            QtCore.QPointF(margin + size - size // 2, margin + size),
+            QtCore.QPointF(margin + size + size - size // 2, margin + size - size // 2),
+            QtCore.QPointF(margin + size - size // 2, margin),
+        ))
+        head = QtGui.QPolygonF((
+            QtCore.QPointF(margin + size - size // 2 + size // 4, margin + size - size // 4),
+            QtCore.QPointF(margin + size + size - size // 2, margin + size - size // 2),
+            QtCore.QPointF(margin + size - size // 2 + size // 4, margin + size // 4),
+        ))
+
+        painter.setPen(QtCore.Qt.NoPen)
+        painter.setBrush(main_color)
+        painter.drawPolygon(polygon)
+        head_color = QtGui.QColor(9, 147, 0)
+        painter.setBrush(head_color)
+        painter.drawPolygon(head)
+
+        painter.setPen(pen)
+        painter.setBrush(QtCore.Qt.transparent)
+        painter.drawPolygon(polygon)
+    else:
+        polygon = QtGui.QPolygonF((
+            QtCore.QPointF(margin, margin),
+            QtCore.QPointF(margin, margin + size),
+            QtCore.QPointF(margin + size, margin + size),
+            QtCore.QPointF(margin + size, margin),
+        ))
+
+        if len(colors) > 1:
+            secondary_color = QtGui.QColor(colors[1][0], colors[1][1], colors[1][2])
+            painter.setBrush(secondary_color)
+            painter.drawPolygon(polygon.translated(size // 3, size // 3))
+            painter.setBrush(main_color)
+            painter.drawPolygon(polygon.translated(-size // 3, -size // 3))
+        else:
+            painter.setBrush(main_color)
+            painter.drawPolygon(polygon)
+
+    del painter
+
+    return pixmap
+
 
 class ObjectViewSelectionToggle(object):
-    def __init__(self, name, menuparent):
+    def __init__(self, name, menuparent, directed, colors):
         self.name = name
         self.menuparent = menuparent
 
-        self.action_view_toggle = QAction("{0} visible".format(name), menuparent)
+        icon = QtGui.QIcon()
+        for size in (16, 22, 24, 28, 32, 40, 48, 64, 80, 96):
+            icon.addPixmap(create_object_type_pixmap(size, directed, colors))
+
+        self.action_view_toggle = QAction("{0}".format(name), menuparent)
         self.action_select_toggle = QAction("{0} selectable".format(name), menuparent)
         self.action_view_toggle.setCheckable(True)
         self.action_view_toggle.setChecked(True)
+        self.action_view_toggle.setIcon(icon)
         self.action_select_toggle.setCheckable(True)
         self.action_select_toggle.setChecked(True)
+        self.action_select_toggle.setIcon(icon)
 
         self.action_view_toggle.triggered.connect(self.handle_view_toggle)
         self.action_select_toggle.triggered.connect(self.handle_select_toggle)
@@ -1934,23 +2019,31 @@ class FilterViewMenu(QMenu):
         self.hide_all.triggered.connect(self.handle_hide_all)
         self.addAction(self.hide_all)
 
-        self.kartstartpoints = ObjectViewSelectionToggle("Kart Start Points", self)
-        self.enemyroutes = ObjectViewSelectionToggle("Enemy Routes", self)
-        self.itemroutes = ObjectViewSelectionToggle("Item Routes", self)
-        self.checkpoints = ObjectViewSelectionToggle("Checkpoints", self)
-        self.respawnpoints = ObjectViewSelectionToggle("Respawn Points", self)
+        self.addSeparator()
 
-        self.objects = ObjectViewSelectionToggle("Objects", self)
-        #self.objectroutes = ObjectViewSelectionToggle("Object Paths", self)
+        with open("lib/color_coding.json", "r") as f:
+            colors = json.load(f)
+            colors = {k: (r * 255, g * 255, b * 255) for k, (r, g, b, _a) in colors.items()}
 
-        self.areas = ObjectViewSelectionToggle("Areas", self)
-        self.replaycameras = ObjectViewSelectionToggle("Replay Cameras", self)
-        self.cameras = ObjectViewSelectionToggle("Cameras", self)
-        #self.cameraroutes = ObjectViewSelectionToggle("Camera Paths", self)
+        self.kartstartpoints = ObjectViewSelectionToggle("Kart Start Points", self, True,
+                                                         [colors["StartPoints"]])
 
-        self.cannonpoints = ObjectViewSelectionToggle("Cannon Points", self)
-        self.missionsuccesspoints = ObjectViewSelectionToggle("Mission Success Points", self)
+        self.enemyroute = ObjectViewSelectionToggle("Enemy Paths", self, False,
+                                                    [colors["EnemyPaths"]])
+        self.checkpoints = ObjectViewSelectionToggle(
+            "Checkpoints", self, False, [colors["CheckpointLeft"], colors["CheckpointRight"]])
+        self.respawnpoints = ObjectViewSelectionToggle("Respawn Points", self, True,
+                                                       [colors["Respawn"]])
+        self.objects = ObjectViewSelectionToggle("Objects", self, True, [colors["Objects"]])
+        self.objectroutes = ObjectViewSelectionToggle("Object Routes", self, False,
+                                                      [colors["ObjectRoutes"]])
+        self.areas = ObjectViewSelectionToggle("Areas", self, True, [colors["Areas"]])
+        self.cameras = ObjectViewSelectionToggle("Cameras", self, True, [colors["Camera"]])
+        self.cameraroutes = ObjectViewSelectionToggle("Camera Routes", self, False,
+                                                      [colors["CameraRoutes"]])
+        self.lightparams = ObjectViewSelectionToggle("Light Positions", self, False, [colors["LightParam"]])
 
+        self.minimap = ObjectViewSelectionToggle("Minimap", self, False, [colors["Minimap"]])
 
         for action in self.get_entries():
             action.action_view_toggle.triggered.connect(self.emit_update)
@@ -1995,4 +2088,3 @@ class FilterViewMenu(QMenu):
                 QMenu.mouseReleaseEvent(self, e)
         except:
             traceback.print_exc()
-
