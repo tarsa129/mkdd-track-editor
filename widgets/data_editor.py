@@ -928,7 +928,8 @@ class ObjectEdit(DataEditor):
 
         self.route = self.add_integer_input("Object Path ID", "route",
                                              MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
-        self.route.setToolTip(ttl.objectdata['Route ID'])
+        self.pathid.setToolTip(ttl.objectdata['Route ID'])
+        self.pathid.editingFinished.connect(self.catch_text_update)
 
         self.unk_2a = self.add_integer_input("Route Point ID", "unk_2a",
                                              MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
@@ -1236,6 +1237,7 @@ class CameraEdit(DataEditor):
         self.route = self.add_integer_input("Route ID", "route",
                                             MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
         self.route.setToolTip(ttl.camdata['Route ID'])
+        self.route.editingFinished.connect(self.catch_text_update)
         self.routespeed = self.add_integer_input("Route Speed", "routespeed",
                                                  MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
         self.routespeed.setToolTip(ttl.camdata['Route Speed'])
@@ -1305,12 +1307,14 @@ class RespawnPointEdit(DataEditor):
         self.unk1 = self.add_integer_input("Next Enemy Point", "unk1",
                                            MIN_UNSIGNED_SHORT, MAX_UNSIGNED_SHORT)
         self.unk1.setToolTip(ttl.respawn['Next Enemy Point'])
+        self.unk1.editingFinished.connect(self.catch_text_update)
 
         self.unk2 = self.add_integer_input("Unknown 2", "unk2",
                                            MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
         self.unk3 = self.add_integer_input("Previous Checkpoint", "unk3",
                                            MIN_SIGNED_SHORT, MAX_SIGNED_SHORT)
         self.unk3.setToolTip(ttl.respawn['Previous Checkpoint'])
+        self.unk3.editingFinished.connect(self.catch_text_update)
 
 
         self.respawn_id.editingFinished.connect(self.update_name)

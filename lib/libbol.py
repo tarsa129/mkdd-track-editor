@@ -686,6 +686,17 @@ class CheckpointGroups(object):
             for point in group.points:
                 yield point
 
+    def add_group(self):
+        new_check_group = CheckpointGroup(self.new_group_id())
+        self.groups.append(new_check_group)
+
+    def find_group_of_point(self, checkpoint: Checkpoint):
+        for i, group in enumerate(self.groups):
+            if checkpoint in group.points:
+                return i, group.points.index(checkpoint)
+        return -1
+
+
 # Section 3
 # Routes/Paths for cameras, objects and other things
 class Route(object):
@@ -1642,7 +1653,7 @@ class BOL(object):
             bol.starting_point_count = bol.kartpoints.positions
             if len(bol.kartpoints.positions) > 0:
                 bol.kartpoints.positions[0].playerid = 0xFF
-            
+
         f.seek(sectionoffsets[AREA])
         bol.areas = Areas.from_file(f, sectioncounts[AREA])
 

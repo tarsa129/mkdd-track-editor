@@ -32,6 +32,7 @@ class ObjectModels(object):
         self.startpoints = GenericObject(colors["StartPoints"])
         self.lightsource = Cube(colors["LightSource"])
         self.lightparam = Cube(colors["LightParam"])
+        self.minimap = Cube(colors["Minimap"])
         #self.purplecube = Cube((0.7, 0.7, 1.0, 1.0))
 
         self.playercolors = [Cube(color) for color in ((1.0, 0.0, 0.0, 1.0),
@@ -82,7 +83,7 @@ class ObjectModels(object):
                     objectname = filename.rsplit(".", 1)[0]
                     self.models[objectname] = TexturedModel.from_obj_path(os.path.join(dirpath, file), rotate=True)
         for cube in (self.cube, self.checkpointleft, self.checkpointright, self.objectpoint, self.camerapoint, self.unusedpoint, self.enemypoint,
-                     self.objects, self.areas, self.respawn, self.startpoints, self.camera, self.lightparam, self.lightsource):
+                     self.objects, self.areas, self.respawn, self.startpoints, self.camera, self.lightparam, self.lightsource, self.minimap):
             cube.generate_displists()
 
         for cube in self.playercolors:

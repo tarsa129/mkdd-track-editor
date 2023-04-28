@@ -212,6 +212,19 @@ class GenEditor(QMainWindow):
     def closeEvent(self, event: QtGui.QCloseEvent):
         self.save_geometry()
 
+        if self._user_made_change:
+            msgbox = QtWidgets.QMessageBox(self)
+            size = self.fontMetrics().height() * 3
+            msgbox.setIconPixmap(QtGui.QIcon('resources/warning.svg').pixmap(size, size))
+            msgbox.setWindowTitle("Unsaved Changes")
+            msgbox.setText('Are you sure you want to exit the application?')
+            msgbox.addButton('Cancel', QtWidgets.QMessageBox.RejectRole)
+            exit_button = msgbox.addButton('Exit', QtWidgets.QMessageBox.DestructiveRole)
+            msgbox.exec_()
+            if msgbox.clickedButton() != exit_button:
+                event.ignore()
+                return
+
         super().closeEvent(event)
 
     @catch_exception
@@ -891,6 +904,9 @@ class GenEditor(QMainWindow):
         if not self.level_view.minimap.has_texture():
             open_info_dialog('No minimap image has been loaded yet.', self)
             return
+
+        if "minimap_image" not in self.pathsconfig:
+            self.pathsconfig["minimap_image"] = ""
 
         initial_filepath = self.pathsconfig["minimap_image"]
         stem, _ext = os.path.splitext(initial_filepath)
@@ -2672,8 +2688,20 @@ class GenEditor(QMainWindow):
 
                 if group == 0 and not self.level_file.checkpoints.groups:
                     self.level_file.checkpoints.groups.append(libbol.CheckpointGroup.new())
-                self.level_file.checkpoints.groups[group].points.insert(position + self.points_added, placeobject)
-                self.points_added += 1
+                insertion_index = position
+                # If a selection exists, use it as reference for the insertion point.
+                selected_items = self.leveldatatreeview.selectedItems()
+                if selected_items:
+                    selected_item = selected_items[-1]
+                    if isinstance(selected_item.bound_to, libbol.Checkpoint):
+                        group = selected_item.parent().get_index_in_parent()
+                        insertion_index = selected_item.get_index_in_parent() + 1
+                    elif isinstance(selected_item.bound_to, libbol.CheckpointGroup):
+                        group = selected_item.get_index_in_parent()
+                        insertion_index = 0
+
+                self.level_file.checkpoints.groups[group].points.insert(
+                    insertion_index, placeobject)
                 self.level_view.do_redraw()
                 self.set_has_unsaved_changes(True)
                 self.leveldatatreeview.set_objects(self.level_file)
@@ -2911,6 +2939,20 @@ class GenEditor(QMainWindow):
             self.pik_control.button_add_object.setChecked(True)
             self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)
 
+        elif option == "add_checkpointgroup":
+            self.level_file.checkpoints.add_group()
+            self.level_view.selected = [self.level_file.checkpoints.groups[-1]]
+            self.level_view.selected_positions = []
+            self.level_view.selected_rotations = []
+        elif option == "add_checkpoints":
+            if isinstance(obj, libbol.CheckpointGroup):
+                group_id = obj.grouplink
+                pos = 0
+            else:
+                group_id, pos = self.level_file.checkpoints.find_group_of_point(obj)
+            self.object_to_be_added = [libbol.Checkpoint.new(), group_id, pos + 1]
+            self.pik_control.button_add_object.setChecked(True)
+            self.level_view.set_mouse_mode(mkdd_widgets.MOUSE_MODE_ADDWP)
         self.leveldatatreeview.set_objects(self.level_file)
 
     @catch_exception
@@ -3547,12 +3589,12 @@ class GenEditor(QMainWindow):
         if len(selected) == 1 and hasattr(selected[0], "position"):
 
             obj_pos = selected[0].position
-            display_string += f" | 📦 ({obj_pos.x:.2f}, {obj_pos.y:.2f}, {obj_pos.z:.2f})"
+            display_string += f"   📦 ({obj_pos.x:.2f}, {obj_pos.y:.2f}, {obj_pos.z:.2f})"
 
             if self.level_view.collision is not None:
                 height = self.level_view.collision.collide_ray_closest(obj_pos.x, obj_pos.z, obj_pos.y)
                 if height is not None:
-                    display_string += f" | 📏 {obj_pos.y - height:.2f}"
+                    display_string += f"   📏 {obj_pos.y - height:.2f}"
 
         self.statusbar.showMessage(display_string)
 
