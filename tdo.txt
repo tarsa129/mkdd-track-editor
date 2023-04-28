@@ -31,5 +31,4 @@ error analyzer
 create dialog for auto generation and auto cleanup
 add conditional out of bounds? - not yet
 make 'c' work in 3d
-make sure that arrows work in toportho (do not consider y value)
 add option to select x to y points

@@ -90,8 +90,6 @@ class ObjectModels(object):
 
         self.generic.generate_displists()
 
-        # self.generic_wall = TexturedModel.from_obj_path("resources/generic_object_wall2.obj", rotate=True, scale=20.0)
-
     def draw_arrow_head(self, frompos, topos):
         glPushMatrix()
         dir = topos-frompos

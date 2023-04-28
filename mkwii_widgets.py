@@ -1837,7 +1837,15 @@ class KMPMapViewer(QtWidgets.QOpenGLWidget):
         if self.shift_is_pressed:
             speedup *= self._wasdscrolling_speedupfactor
         speed = self._wasdscrolling_speed / 2
-        self.camera_height -= speed * speedup
+
+        self.camera_direction.normalize()
+        view = self.camera_direction.copy()
+        view = view * speed * speedup
+
+        self.offset_x += view.x
+        self.camera_height += view.z
+        self.offset_z += view.y
+
         self.do_redraw()
 
     def create_ray_from_mouseclick(self, mousex, mousey, yisup=False):
@@ -2025,25 +2033,26 @@ class FilterViewMenu(QMenu):
             colors = json.load(f)
             colors = {k: (r * 255, g * 255, b * 255) for k, (r, g, b, _a) in colors.items()}
 
+
+
         self.kartstartpoints = ObjectViewSelectionToggle("Kart Start Points", self, True,
                                                          [colors["StartPoints"]])
 
-        self.enemyroute = ObjectViewSelectionToggle("Enemy Paths", self, False,
-                                                    [colors["EnemyPaths"]])
+        self.enemyroutes = ObjectViewSelectionToggle("Enemy Paths", self, False,
+                                                    [colors["EnemyRoutes"]])
+        self.itemroutes = ObjectViewSelectionToggle("Enemy Paths", self, False,
+                                                    [colors["ItemRoutes"]])
         self.checkpoints = ObjectViewSelectionToggle(
             "Checkpoints", self, False, [colors["CheckpointLeft"], colors["CheckpointRight"]])
         self.respawnpoints = ObjectViewSelectionToggle("Respawn Points", self, True,
                                                        [colors["Respawn"]])
         self.objects = ObjectViewSelectionToggle("Objects", self, True, [colors["Objects"]])
-        self.objectroutes = ObjectViewSelectionToggle("Object Routes", self, False,
-                                                      [colors["ObjectRoutes"]])
         self.areas = ObjectViewSelectionToggle("Areas", self, True, [colors["Areas"]])
+        self.replaycameras = ObjectViewSelectionToggle("Cameras", self, True, [colors["Camera"]])
         self.cameras = ObjectViewSelectionToggle("Cameras", self, True, [colors["Camera"]])
-        self.cameraroutes = ObjectViewSelectionToggle("Camera Routes", self, False,
-                                                      [colors["CameraRoutes"]])
-        self.lightparams = ObjectViewSelectionToggle("Light Positions", self, False, [colors["LightParam"]])
 
-        self.minimap = ObjectViewSelectionToggle("Minimap", self, False, [colors["Minimap"]])
+        self.cannonpoints = ObjectViewSelectionToggle("Cannon Points", self, True, [colors["Cannons"]])
+        self.missionsuccesspoints = ObjectViewSelectionToggle("Mission Success Points", self, True, [colors["Missions"]])
 
         for action in self.get_entries():
             action.action_view_toggle.triggered.connect(self.emit_update)

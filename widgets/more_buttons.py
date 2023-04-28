@@ -2,7 +2,7 @@ import os
 import json
 
 from collections import OrderedDict
-from PyQt5.QtWidgets import QSizePolicy, QWidget, QVBoxLayout, QPushButton
+from PyQt5.QtWidgets import QSizePolicy, QWidget, QVBoxLayout, QPushButton, QGridLayout
 from lib.vectors import Vector3
 from PyQt5.QtCore import pyqtSignal
 from lib.libkmp import *
@@ -63,6 +63,9 @@ class MoreButtons(QWidget):
             self.add_button("Add Generic Object", "add_object", 0)
             self.add_button("Add Item Box", "add_object", 101)
             self.add_button("Add group_enemy_c", "add_object", 702)
+            self.objgrid = QGridLayout()
+
+            self.vbox.addLayout(self.objgrid)
 
         elif isinstance(obj, MapObject):
 
